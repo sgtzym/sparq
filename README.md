@@ -1,6 +1,7 @@
 # SPARQ ✨
 
-A declarative, type-safe SQL query builder for TypeScript — made with [Deno](https://deno.com/) 🦕
+A declarative, type-safe SQL query builder for TypeScript — made with
+[Deno](https://deno.com/) 🦕
 
 ## Usage
 

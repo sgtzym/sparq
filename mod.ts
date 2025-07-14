@@ -1,4 +1,4 @@
-import { and, eq, ne, not, where, select } from '@/core/constructors.ts'
+import { and, eq, ne, not, select, where } from '@/core/constructors.ts'
 import { Query } from '@/core/query.ts'
 
 // Test 🪓
