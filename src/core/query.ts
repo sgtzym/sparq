@@ -1,6 +1,6 @@
 import type { SupportedValueType } from 'node:sqlite'
 import type { SelectCtor, WhereCtor } from './constructors.ts'
-import { ctx } from './node.ts'
+import { ctx } from './context.ts'
 
 export class Query {
     select: SelectCtor | undefined = undefined
@@ -14,17 +14,17 @@ export class Query {
     }
 
     build(): [string, SupportedValueType] {
-        const queryCtx = ctx()
+        const context = ctx()
         const sql: string[] = []
 
         if (this.select) {
-            sql.push(this.select().interpret(queryCtx))
+            sql.push(this.select().interpret(context))
         }
 
         if (this.where) {
-            sql.push(this.where().interpret(queryCtx))
+            sql.push(this.where().interpret(context))
         }
 
-        return [sql.join(' '), queryCtx.values]
+        return [sql.join(' '), context.values]
     }
 }
