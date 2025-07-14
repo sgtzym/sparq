@@ -1,5 +1,6 @@
 import { castSupportedValueType } from '../core/utils.ts'
-import type { Node, Context } from '../core/node.ts'
+import type { Context } from '../core/context.ts'
+import type { Node } from '../core/node.ts'
 
 // ---
 
