@@ -1,4 +1,4 @@
-import { type ArrayLike, castArray, type Maybe } from './utils.ts'
+import { type ArrayLike, castArray, type Maybe } from '@/core/utils.ts'
 
 export class Context<T = unknown> {
     private _entries: Map<number, T> = new Map()

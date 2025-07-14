@@ -1,6 +1,6 @@
 import type { SupportedValueType } from 'node:sqlite'
-import type { SelectCtor, WhereCtor } from './constructors.ts'
-import { Context } from './context.ts'
+import type { SelectCtor, WhereCtor } from '@/core/constructors.ts'
+import { Context } from '@/core/context.ts'
 
 export class Query {
     select: SelectCtor | undefined = undefined

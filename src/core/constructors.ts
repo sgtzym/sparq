@@ -2,7 +2,7 @@ import { BinaryNode, ComparisonOperator } from '@/nodes/binary.ts'
 import { IdentifierNode, LiteralNode } from '@/nodes/primitives.ts'
 import { LogicalNode, LogicalOperator } from '@/nodes/logical.ts'
 import { WhereNode } from '@/nodes/where.ts'
-import { SelectNode } from '../nodes/select.ts'
+import { SelectNode } from '@/nodes/select.ts'
 
 export type SelectCtor = () => SelectNode
 export type WhereCtor = () => WhereNode
