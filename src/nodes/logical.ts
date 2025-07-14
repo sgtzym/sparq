@@ -1,4 +1,4 @@
-import type { Node, NodeContext } from '../core/node.ts'
+import type { Node, Context } from '../core/node.ts'
 
 export enum LogicalOperator {
     $and = 'AND',
@@ -12,7 +12,7 @@ export class LogicalNode implements Node {
         private nodes: Node[],
     ) {}
 
-    interpret(ctx: NodeContext): string {
+    interpret(ctx: Context): string {
         if (this.op === LogicalOperator.$not && this.nodes.length === 1) {
             return `NOT ${this.nodes[0].interpret(ctx)}`
         }

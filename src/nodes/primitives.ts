@@ -1,12 +1,12 @@
 import { castSupportedValueType } from '../core/utils.ts'
-import type { Node, NodeContext } from '../core/node.ts'
+import type { Node, Context } from '../core/node.ts'
 
 // ---
 
 export class RawNode implements Node {
     constructor(private readonly value: string) {}
 
-    interpret(_ctx: NodeContext): string {
+    interpret(_ctx: Context): string {
         return this.value
     }
 }
@@ -16,7 +16,7 @@ export class RawNode implements Node {
 export class LiteralNode implements Node {
     constructor(private readonly value: unknown) {}
 
-    interpret(ctx: NodeContext): string {
+    interpret(ctx: Context): string {
         let value = castSupportedValueType(this.value)
 
         if (typeof value === 'string') {
@@ -37,7 +37,7 @@ export class IdentifierNode implements Node {
         private readonly alias?: string,
     ) {}
 
-    interpret(_ctx: NodeContext): string {
+    interpret(_ctx: Context): string {
         return this.alias
             ? `"${this.name}" AS "${this.alias}"`
             : `"${this.name}"`

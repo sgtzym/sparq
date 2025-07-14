@@ -8,8 +8,6 @@ export function castArray<T>(value: ArrayLike<T>): T[] {
     return Array.isArray(value) ? value : [value]
 }
 
-export type AnyObject = { [key: string]: any }
-
 // ---
 
 export type Maybe<T> = T | null | undefined

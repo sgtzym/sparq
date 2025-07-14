@@ -1,4 +1,4 @@
-import type { Node, NodeContext } from '../core/node.ts'
+import type { Node, Context } from '../core/node.ts'
 
 export enum ComparisonOperator {
     $eq = '=',
@@ -18,7 +18,7 @@ export class BinaryNode implements Node {
         private right: Node,
     ) {}
 
-    interpret(ctx: NodeContext): string {
+    interpret(ctx: Context): string {
         return `${this.left.interpret(ctx)} ${this.op} ${
             this.right.interpret(ctx)
         }`

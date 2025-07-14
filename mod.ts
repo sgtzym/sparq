@@ -1,10 +1,10 @@
-import { and, eq, ne, not, where } from '@/core/constructors.ts'
+import { and, eq, ne, not, where, select } from '@/core/constructors.ts'
 import { Query } from '@/core/query.ts'
 
 // Test 🪓
 
 const [sql, params] = new Query(
-    undefined,
+    select('asdf', 'asdf'),
     where(
         eq('asdf', 100),
         and(
