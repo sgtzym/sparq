@@ -20,11 +20,11 @@ export class LiteralNode implements Node {
     interpret(ctx: Context): string {
         let value = castSupportedValueType(this.value)
 
+        ctx.set(value)
+
         if (typeof value === 'string') {
             value = `'${value.replace(/'/g, "''")}'`
         }
-
-        ctx.set(value)
 
         return `:${ctx.current}`
     }
