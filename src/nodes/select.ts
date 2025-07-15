@@ -2,8 +2,8 @@ import type { Context } from '@/core/context.ts'
 import type { Node } from '@/core/node.ts'
 import { type ArrayLike, castArray } from '../core/utils.ts'
 import { IdentifierNode } from './primitives.ts'
-import { DistinctModNode } from './modifiers/distinct.ts'
-import { TopModNode } from './modifiers/top.ts'
+import { DistinctNode } from './modifiers/distinct.ts'
+import { TopNode } from './modifiers/top.ts'
 
 export class SelectNode implements Node {
     constructor(
@@ -25,8 +25,8 @@ export class SelectNode implements Node {
 
         return [
             'SELECT',
-            modifiers.get(DistinctModNode.name)?.interpret(ctx) ?? '',
-            modifiers.get(TopModNode.name)?.interpret(ctx) ?? '',
+            modifiers.get(DistinctNode.name)?.interpret(ctx) ?? '',
+            modifiers.get(TopNode.name)?.interpret(ctx) ?? '',
             columns.map((n) => n.interpret(ctx)).join(', '),
         ].filter(Boolean).join(' ')
     }

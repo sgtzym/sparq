@@ -10,6 +10,7 @@ export const query = (
 ): [string, SupportedValueType] => {
     const ctx = new Context()
     const sql: Map<string, string> = new Map()
+
     const clauseOrder: string[] = [SelectNode.name, WhereNode.name]
 
     clauses.forEach((clause) => {

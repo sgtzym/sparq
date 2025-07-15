@@ -1,7 +1,7 @@
 import type { Context } from '@/core/context.ts'
 import type { Node } from '@/core/node.ts'
 
-export class DistinctModNode implements Node {
+export class DistinctNode implements Node {
     constructor(
         private readonly distinct: boolean = true,
     ) {}

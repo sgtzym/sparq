@@ -1,6 +1,5 @@
 import {
     and,
-    count,
     distinct,
     eq,
     gt,
@@ -14,7 +13,7 @@ import { query } from '@/core/query.ts'
 // Test 🪓
 
 const [sql, params] = query(
-    select(distinct(), top(100), 'asdf'),
+    select(distinct(), top(100), 'asdf', 'test', top(200)),
     where(
         eq('score', 100),
         and(

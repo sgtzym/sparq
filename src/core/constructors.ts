@@ -3,17 +3,17 @@ import { IdentifierNode, LiteralNode, RawNode } from '@/nodes/primitives.ts'
 import { LogicalNode, LogicalOperator } from '@/nodes/logical.ts'
 import { WhereNode } from '@/nodes/where.ts'
 import { SelectNode } from '@/nodes/select.ts'
-import { TopModNode } from '../nodes/modifiers/top.ts'
-import { DistinctModNode } from '../nodes/modifiers/distinct.ts'
+import { TopNode } from '../nodes/modifiers/top.ts'
+import { DistinctNode } from '../nodes/modifiers/distinct.ts'
 import type { Node } from './node.ts'
 
-export type LogicalExpr = () => LogicalNode
-export type BinaryExpr = () => BinaryNode
-type TopExpr = () => TopModNode
-type DistinctExpr = () => DistinctModNode
+type Logical = () => LogicalNode
+type Binary = () => BinaryNode
+type Top = () => TopNode
+type Distinct = () => DistinctNode
 
 export type SelectClause = () => SelectNode
-export type SelectModifier = TopExpr | DistinctExpr
+type SelectModifier = Top | Distinct
 
 export type WhereClause = () => WhereNode
 
@@ -36,16 +36,14 @@ export const select =
         return new SelectNode(nodes)
     }
 
-export const where =
-    (...node: (BinaryExpr | LogicalExpr)[]): WhereClause => () =>
-        new WhereNode(node.map((n) => n()))
+export const where = (...node: (Binary | Logical)[]): WhereClause => () =>
+    new WhereNode(node.map((n) => n()))
 
 // ---
 
 const logicalConstructor =
-    (operator: LogicalOperator) =>
-    (...node: (BinaryExpr | LogicalExpr)[]) =>
-    () => new LogicalNode(operator, node.map((n) => n()))
+    (operator: LogicalOperator) => (...node: (Binary | Logical)[]) => () =>
+        new LogicalNode(operator, node.map((n) => n()))
 
 export const and = logicalConstructor(LogicalOperator.$and)
 export const or = logicalConstructor(LogicalOperator.$or)
@@ -55,7 +53,7 @@ export const not = logicalConstructor(LogicalOperator.$not)
 
 const binaryConstructor =
     (operator: ComparisonOperator) =>
-    (column: string, value: any): BinaryExpr =>
+    (column: string, value: any): Binary =>
     () =>
         new BinaryNode(
             new IdentifierNode(column),
@@ -78,5 +76,5 @@ export const alias = null
 
 // ---
 
-export const distinct = () => () => new DistinctModNode()
-export const top = (count: number) => () => new TopModNode(count)
+export const distinct = () => () => new DistinctNode()
+export const top = (count: number) => () => new TopNode(count)
