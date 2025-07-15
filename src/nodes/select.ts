@@ -11,7 +11,7 @@ export class SelectNode implements Node {
 
     interpret(ctx: Context): string {
         const modifiers: Map<string, Node> = new Map()
-        const columns: Node[] = []
+        const fields: Node[] = []
 
         for (const node of castArray(this.nodes)) {
             const name: string = node.constructor.name
@@ -19,7 +19,7 @@ export class SelectNode implements Node {
             if (name === DistinctNode.name || name === TopNode.name) {
                 modifiers.set(name, node)
             } else {
-                columns.push(node)
+                fields.push(node)
             }
         }
 
@@ -27,7 +27,7 @@ export class SelectNode implements Node {
             'SELECT',
             modifiers.get(DistinctNode.name)?.interpret(ctx) ?? '',
             modifiers.get(TopNode.name)?.interpret(ctx) ?? '',
-            columns.map((n) => n.interpret(ctx)).join(', '),
+            fields.map((n) => n.interpret(ctx)).join(', '),
         ].filter(Boolean).join(' ')
     }
 }

@@ -15,7 +15,8 @@ type Top = () => TopNode
 type Distinct = () => DistinctNode
 type Alias = () => AliasNode
 type Count = () => AggregateNode
-type Aggregate = Count
+type Sum = () => AggregateNode
+type Aggregate = Count | Sum
 
 export type SelectClause = () => SelectNode
 export type WhereClause = () => WhereNode
@@ -25,19 +26,20 @@ export type WhereClause = () => WhereNode
 export const select =
     (...args: (Top | Distinct | string | Alias | Aggregate)[]): SelectClause =>
     () => {
-        const nodes: Node[] = []
+        const modifiers: Node[] = []
+        const fields: Node[] = []
 
         for (const arg of args) {
             if (typeof arg === 'string') {
-                nodes.push(new IdentifierNode(arg))
+                fields.push(new IdentifierNode(arg))
             } else {
-                nodes.push(arg()) // modifier
+                modifiers.push(arg()) // modifier
             }
         }
 
-        if (args.length === 0) nodes.push(new RawNode('*'))
+        if (fields.length === 0) fields.push(new RawNode('*'))
 
-        return new SelectNode(nodes)
+        return new SelectNode([...modifiers, ...fields])
     }
 
 export const where = (...args: (Binary | Logical)[]): WhereClause => () =>
@@ -57,10 +59,10 @@ export const not = logicalConstructor(LogicalOperator.$not)
 
 const binaryConstructor =
     (operator: ComparisonOperator) =>
-    (column: string, value: any): Binary =>
+    (field: string, value: any): Binary =>
     () =>
         new BinaryNode(
-            new IdentifierNode(column),
+            new IdentifierNode(field),
             operator,
             new LiteralNode(value),
         )
@@ -88,8 +90,27 @@ export const alias = (name: string | Count, asName: string): Alias => () =>
 
 // ---
 
-export const count = (column?: string): Count => () =>
-    new AggregateNode(
-        AggregateFunction.$count,
-        column ? new IdentifierNode(column) : new RawNode('1'),
-    )
+const aggregateConstructor =
+    (fn: AggregateFunction) => (...args: (string | Distinct)[]): Count =>
+    () => {
+        const modifiers: Node[] = []
+        const fields: Node[] = []
+
+        for (const arg of args) {
+            if (typeof arg === 'string') {
+                fields.push(new IdentifierNode(arg))
+            } else {
+                modifiers.push(arg()) // modifier
+            }
+        }
+
+        if (fields.length === 0) fields.push(new RawNode('1'))
+
+        return new AggregateNode(fn, [...modifiers, ...fields])
+    }
+
+export const avg = aggregateConstructor(AggregateFunction.$avg)
+export const min = aggregateConstructor(AggregateFunction.$min)
+export const max = aggregateConstructor(AggregateFunction.$max)
+export const count = aggregateConstructor(AggregateFunction.$count)
+export const sum = aggregateConstructor(AggregateFunction.$sum)

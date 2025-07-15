@@ -2,6 +2,7 @@ import {
     alias,
     and,
     count,
+    distinct,
     eq,
     gt,
     like,
@@ -17,11 +18,12 @@ import { query } from '@/core/query.ts'
 const [sql, params] = query(
     select(
         top(100),
-        'column1',
-        alias('column2', 'test'),
-        'column3',
-        count('column4'),
-        alias(count('column5'), 'mamboNo5'),
+        distinct(),
+        'field1',
+        alias('field2', 'test'),
+        'field3',
+        count('field4'),
+        alias(count(distinct(), 'field5'), 'mamboNo5'),
     ),
     where(
         eq('field1', 'active'),
