@@ -33,14 +33,8 @@ export class LiteralNode implements Node {
 // ---
 
 export class IdentifierNode implements Node {
-    constructor(
-        private readonly name: string,
-        private readonly alias?: string,
-    ) {}
-
+    constructor(private readonly name: string) {}
     interpret(_ctx: Context): string {
-        return this.alias
-            ? `"${this.name}" AS "${this.alias}"`
-            : `"${this.name}"`
+        return `"${this.name}"`
     }
 }

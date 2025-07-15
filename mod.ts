@@ -1,8 +1,10 @@
 import {
+    alias,
     and,
-    distinct,
+    count,
     eq,
     gt,
+    like,
     lt,
     select,
     top,
@@ -13,14 +15,21 @@ import { query } from '@/core/query.ts'
 // Test 🪓
 
 const [sql, params] = query(
-    select(distinct(), top(100), 'asdf', 'test', top(200)),
+    select(
+        top(100),
+        'column1',
+        alias('column2', 'test'),
+        'column3',
+        count('column4'),
+        alias(count('column5'), 'mamboNo5'),
+    ),
     where(
-        eq('score', 100),
+        eq('field1', 'active'),
         and(
-            gt('age', '18'),
-            lt('age', '30'),
+            gt('field2', 0),
+            lt('field2', 99),
         ),
-        lt('asdf', 50),
+        like('field3', '%test%'),
     ),
 )
 

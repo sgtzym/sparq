@@ -6,21 +6,25 @@ import { SelectNode } from '@/nodes/select.ts'
 import { TopNode } from '../nodes/modifiers/top.ts'
 import { DistinctNode } from '../nodes/modifiers/distinct.ts'
 import type { Node } from './node.ts'
+import { AliasNode } from '../nodes/modifiers/alias.ts'
+import { AggregateFunction, AggregateNode } from '../nodes/aggregates.ts'
 
 type Logical = () => LogicalNode
 type Binary = () => BinaryNode
 type Top = () => TopNode
 type Distinct = () => DistinctNode
+type Alias = () => AliasNode
+type Count = () => AggregateNode
+type Aggregate = Count
 
 export type SelectClause = () => SelectNode
-type SelectModifier = Top | Distinct
-
 export type WhereClause = () => WhereNode
 
 // ---
 
 export const select =
-    (...args: (string | SelectModifier)[]): SelectClause => () => {
+    (...args: (Top | Distinct | string | Alias | Aggregate)[]): SelectClause =>
+    () => {
         const nodes: Node[] = []
 
         for (const arg of args) {
@@ -36,14 +40,14 @@ export const select =
         return new SelectNode(nodes)
     }
 
-export const where = (...node: (Binary | Logical)[]): WhereClause => () =>
-    new WhereNode(node.map((n) => n()))
+export const where = (...args: (Binary | Logical)[]): WhereClause => () =>
+    new WhereNode(args.map((n) => n()))
 
 // ---
 
 const logicalConstructor =
-    (operator: LogicalOperator) => (...node: (Binary | Logical)[]) => () =>
-        new LogicalNode(operator, node.map((n) => n()))
+    (operator: LogicalOperator) => (...args: (Binary | Logical)[]) => () =>
+        new LogicalNode(operator, args.map((n) => n()))
 
 export const and = logicalConstructor(LogicalOperator.$and)
 export const or = logicalConstructor(LogicalOperator.$or)
@@ -71,10 +75,21 @@ export const like = binaryConstructor(ComparisonOperator.$like)
 
 // ---
 
-export const count = null
-export const alias = null
+export const distinct = (): Distinct => () => new DistinctNode()
+export const top = (count: number): Top => () => new TopNode(count)
 
 // ---
 
-export const distinct = () => () => new DistinctNode()
-export const top = (count: number) => () => new TopNode(count)
+export const alias = (name: string | Count, alias: string): Alias => () =>
+    new AliasNode(
+        typeof name === 'string' ? new IdentifierNode(name) : name(),
+        new IdentifierNode(alias),
+    )
+
+// ---
+
+export const count = (column?: string): Count => () =>
+    new AggregateNode(
+        AggregateFunction.$count,
+        column ? new IdentifierNode(column) : new RawNode('1'),
+    )

@@ -1,9 +1,8 @@
 import type { Context } from '@/core/context.ts'
 import type { Node } from '@/core/node.ts'
-import { type ArrayLike, castArray } from '../core/utils.ts'
-import { IdentifierNode } from './primitives.ts'
-import { DistinctNode } from './modifiers/distinct.ts'
-import { TopNode } from './modifiers/top.ts'
+import { type ArrayLike, castArray } from '@/core/utils.ts'
+import { DistinctNode } from '@/nodes/modifiers/distinct.ts'
+import { TopNode } from '@/nodes/modifiers/top.ts'
 
 export class SelectNode implements Node {
     constructor(
@@ -16,7 +15,7 @@ export class SelectNode implements Node {
 
         for (const node of castArray(this.nodes)) {
             const name: string = node.constructor.name
-            if (name !== IdentifierNode.name) {
+            if (name in [DistinctNode.name, TopNode.name]) {
                 modifiers.set(name, node)
             } else {
                 columns.push(node)
