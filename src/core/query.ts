@@ -1,30 +1,28 @@
 import type { SupportedValueType } from 'node:sqlite'
 import type { SelectCtor, WhereCtor } from '@/core/constructors.ts'
 import { Context } from '@/core/context.ts'
+import type { Node } from './node.ts'
+import { SelectNode } from '../nodes/select.ts'
+import { WhereNode } from '../nodes/where.ts'
 
-export class Query {
-    select: SelectCtor | undefined = undefined
-    where: WhereCtor | undefined = undefined
+export const query = (
+    ...clauses: (SelectCtor | WhereCtor)[]
+): [string, SupportedValueType] => {
+    const ctx = new Context()
+    const sql: Map<string, string> = new Map()
+    const clauseOrder: string[] = [SelectNode.name, WhereNode.name]
 
-    constructor(
-        select?: SelectCtor,
-        where?: WhereCtor,
-    ) {
-        this.select = select, this.where = where
-    }
+    clauses.forEach((clause) => {
+        const node: Node = clause()
+        const clauseName: string = node.constructor.name
 
-    build(): [string, SupportedValueType] {
-        const ctx = new Context()
-        const sql: string[] = []
+        sql.set(clauseName, node.interpret(ctx))
+    })
 
-        if (this.select) {
-            sql.push(this.select().interpret(ctx))
-        }
-
-        if (this.where) {
-            sql.push(this.where().interpret(ctx))
-        }
-
-        return [sql.join(' '), ctx.values]
-    }
+    return [
+        clauseOrder.filter((name) => sql.has(name))
+            .map((name) => sql.get(name))
+            .join(' '),
+        ctx.values,
+    ]
 }

@@ -1,22 +1,18 @@
-import { and, eq, ne, not, select, where } from '@/core/constructors.ts'
-import { Query } from '@/core/query.ts'
+import { and, eq, gt, lt, select, where } from '@/core/constructors.ts'
+import { query } from '@/core/query.ts'
 
 // Test 🪓
 
-const [sql, params] = new Query(
-    select('asdf', 'asdf'),
+const [sql, params] = query(
+    select('column1', 'column2'),
     where(
-        eq('asdf', 100),
+        eq('score', 100),
         and(
-            eq('asdf', 'asdf'),
-            and(
-                eq('asdasd', 12312321),
-                eq('asdasd', 'yeet'),
-                not(eq('aasda', 55)),
-            ),
+            gt('age', '18'),
+            lt('age', '30'),
         ),
-        ne('asd', 123),
     ),
-).build()
+    select('*'),
+)
 
 console.log(sql, params)
