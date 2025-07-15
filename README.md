@@ -6,20 +6,21 @@ A declarative, type-safe SQL query builder for TypeScript — made with
 ## Usage
 
 ```ts
-const [sql, params] = new Query(
+const [sql, params] = query(
     from('users'),
     select(
-        alias(count('name'), 'age'),
+        alias(count('field1'), 'f1_count'),
+        'field2',
+        'field3'
     ),
     where(
-        eq('age', 30),
-        eq('status', 'approved'),
+        eq('field2', true),
+        eq('field3', 'test'),
         or(
-            gt('dob', 1990),
-            lt('dob', 2000),
+            gt('field4', 0),
+            lt('field4', 99),
         ),
-        eq('fraud', false),
-    ),
-    having(),
-).build()
+        like('field5', '%test%')
+    )
+)
 ```

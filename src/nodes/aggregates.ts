@@ -4,11 +4,11 @@ import { type ArrayLike, castArray } from '@/core/utils.ts'
 import { DistinctNode } from '@/nodes/modifiers/distinct.ts'
 
 export enum AggregateFunction {
-    $avg = 'AVG',
-    $count = 'COUNT',
-    $max = 'MAX',
-    $min = 'MIN',
-    $sum = 'SUM',
+    Avg = 'AVG',
+    Count = 'COUNT',
+    Max = 'MAX',
+    Min = 'MIN',
+    Sum = 'SUM',
 }
 
 export class AggregateNode implements Node {

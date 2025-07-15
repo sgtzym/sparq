@@ -51,9 +51,9 @@ const logicalConstructor =
     (operator: LogicalOperator) => (...args: (Binary | Logical)[]) => () =>
         new LogicalNode(operator, args.map((n) => n()))
 
-export const and = logicalConstructor(LogicalOperator.$and)
-export const or = logicalConstructor(LogicalOperator.$or)
-export const not = logicalConstructor(LogicalOperator.$not)
+export const and = logicalConstructor(LogicalOperator.And)
+export const or = logicalConstructor(LogicalOperator.Or)
+export const not = logicalConstructor(LogicalOperator.Not)
 
 // ---
 
@@ -67,13 +67,13 @@ const binaryConstructor =
             new LiteralNode(value),
         )
 
-export const eq = binaryConstructor(ComparisonOperator.$eq)
-export const ne = binaryConstructor(ComparisonOperator.$ne)
-export const lt = binaryConstructor(ComparisonOperator.$lt)
-export const le = binaryConstructor(ComparisonOperator.$le)
-export const gt = binaryConstructor(ComparisonOperator.$gt)
-export const ge = binaryConstructor(ComparisonOperator.$ge)
-export const like = binaryConstructor(ComparisonOperator.$like)
+export const eq = binaryConstructor(ComparisonOperator.Eq)
+export const ne = binaryConstructor(ComparisonOperator.Ne)
+export const lt = binaryConstructor(ComparisonOperator.Lt)
+export const le = binaryConstructor(ComparisonOperator.Le)
+export const gt = binaryConstructor(ComparisonOperator.Gt)
+export const ge = binaryConstructor(ComparisonOperator.Ge)
+export const like = binaryConstructor(ComparisonOperator.Like)
 
 // ---
 
@@ -109,8 +109,8 @@ const aggregateConstructor =
         return new AggregateNode(fn, [...modifiers, ...fields])
     }
 
-export const avg = aggregateConstructor(AggregateFunction.$avg)
-export const min = aggregateConstructor(AggregateFunction.$min)
-export const max = aggregateConstructor(AggregateFunction.$max)
-export const count = aggregateConstructor(AggregateFunction.$count)
-export const sum = aggregateConstructor(AggregateFunction.$sum)
+export const avg = aggregateConstructor(AggregateFunction.Avg)
+export const min = aggregateConstructor(AggregateFunction.Min)
+export const max = aggregateConstructor(AggregateFunction.Max)
+export const count = aggregateConstructor(AggregateFunction.Count)
+export const sum = aggregateConstructor(AggregateFunction.Sum)

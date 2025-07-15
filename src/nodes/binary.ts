@@ -2,14 +2,14 @@ import type { Context } from '@/core/context.ts'
 import type { Node } from '@/core/node.ts'
 
 export enum ComparisonOperator {
-    $eq = '=',
-    $ne = '!=',
-    $gt = '>',
-    $ge = '>=',
-    $lt = '<',
-    $le = '<=',
-    $in = 'IN',
-    $like = 'LIKE',
+    Eq = '=',
+    Ne = '!=',
+    Gt = '>',
+    Ge = '>=',
+    Lt = '<',
+    Le = '<=',
+    In = 'IN',
+    Like = 'LIKE',
 }
 
 export class BinaryNode implements Node {
