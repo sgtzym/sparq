@@ -80,10 +80,10 @@ export const top = (count: number): Top => () => new TopNode(count)
 
 // ---
 
-export const alias = (name: string | Count, alias: string): Alias => () =>
+export const alias = (name: string | Count, asName: string): Alias => () =>
     new AliasNode(
         typeof name === 'string' ? new IdentifierNode(name) : name(),
-        new IdentifierNode(alias),
+        new IdentifierNode(asName),
     )
 
 // ---

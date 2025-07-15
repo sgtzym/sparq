@@ -4,10 +4,10 @@ import type { Node } from '@/core/node.ts'
 export class AliasNode implements Node {
     constructor(
         private readonly name: Node,
-        private readonly alias: Node,
+        private readonly asName: Node,
     ) {}
 
     interpret(ctx: Context): string {
-        return `${this.name.interpret(ctx)} AS ${this.alias.interpret(ctx)}`
+        return `${this.name.interpret(ctx)} AS ${this.asName.interpret(ctx)}`
     }
 }
