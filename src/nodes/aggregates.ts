@@ -13,7 +13,7 @@ export enum AggregateFunction {
 
 export class AggregateNode implements Node {
     constructor(
-        private readonly func: AggregateFunction,
+        private readonly fn: AggregateFunction,
         private readonly nodes: ArrayLike<Node>,
     ) {}
 
@@ -31,7 +31,7 @@ export class AggregateNode implements Node {
             }
         }
 
-        return `${this.func}(${
+        return `${this.fn}(${
             [
                 modifiers.get(DistinctNode.name)?.interpret(ctx) ?? '',
                 fields[0].interpret(ctx),
