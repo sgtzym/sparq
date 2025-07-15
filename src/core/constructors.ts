@@ -1,27 +1,50 @@
 import { BinaryNode, ComparisonOperator } from '@/nodes/binary.ts'
-import { IdentifierNode, LiteralNode } from '@/nodes/primitives.ts'
+import { IdentifierNode, LiteralNode, RawNode } from '@/nodes/primitives.ts'
 import { LogicalNode, LogicalOperator } from '@/nodes/logical.ts'
 import { WhereNode } from '@/nodes/where.ts'
 import { SelectNode } from '@/nodes/select.ts'
+import { TopModNode } from '../nodes/modifiers/top.ts'
+import { DistinctModNode } from '../nodes/modifiers/distinct.ts'
+import type { Node } from './node.ts'
 
-export type SelectCtor = () => SelectNode
-export type WhereCtor = () => WhereNode
-export type LogicalCtor = () => LogicalNode
-export type BinaryCtor = () => BinaryNode
+export type LogicalExpr = () => LogicalNode
+export type BinaryExpr = () => BinaryNode
+type TopExpr = () => TopModNode
+type DistinctExpr = () => DistinctModNode
+
+export type SelectClause = () => SelectNode
+export type SelectModifier = TopExpr | DistinctExpr
+
+export type WhereClause = () => WhereNode
 
 // ---
 
-export const select = (...column: string[]): SelectCtor => () =>
-    new SelectNode(column.map((c) => new IdentifierNode(c)))
+export const select =
+    (...args: (string | SelectModifier)[]): SelectClause => () => {
+        const nodes: Node[] = []
 
-export const where = (...node: (BinaryCtor | LogicalCtor)[]): WhereCtor => () =>
-    new WhereNode(node.map((n) => n()))
+        for (const arg of args) {
+            if (typeof arg === 'string') {
+                nodes.push(new IdentifierNode(arg))
+            } else {
+                nodes.push(arg()) // modifier
+            }
+        }
+
+        if (args.length === 0) nodes.push(new RawNode('*'))
+
+        return new SelectNode(nodes)
+    }
+
+export const where =
+    (...node: (BinaryExpr | LogicalExpr)[]): WhereClause => () =>
+        new WhereNode(node.map((n) => n()))
 
 // ---
 
 const logicalConstructor =
     (operator: LogicalOperator) =>
-    (...node: (BinaryCtor | LogicalCtor)[]) =>
+    (...node: (BinaryExpr | LogicalExpr)[]) =>
     () => new LogicalNode(operator, node.map((n) => n()))
 
 export const and = logicalConstructor(LogicalOperator.$and)
@@ -32,7 +55,7 @@ export const not = logicalConstructor(LogicalOperator.$not)
 
 const binaryConstructor =
     (operator: ComparisonOperator) =>
-    (column: string, value: any): BinaryCtor =>
+    (column: string, value: any): BinaryExpr =>
     () =>
         new BinaryNode(
             new IdentifierNode(column),
@@ -52,3 +75,8 @@ export const like = binaryConstructor(ComparisonOperator.$like)
 
 export const count = null
 export const alias = null
+
+// ---
+
+export const distinct = () => () => new DistinctModNode()
+export const top = (count: number) => () => new TopModNode(count)
