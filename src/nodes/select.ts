@@ -15,7 +15,8 @@ export class SelectNode implements Node {
 
         for (const node of castArray(this.nodes)) {
             const name: string = node.constructor.name
-            if (name in [DistinctNode.name, TopNode.name]) {
+
+            if (name === DistinctNode.name || name === TopNode.name) {
                 modifiers.set(name, node)
             } else {
                 columns.push(node)
