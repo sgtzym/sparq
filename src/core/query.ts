@@ -1,17 +1,26 @@
 import type { SupportedValueType } from 'node:sqlite'
-import type { SelectClause, WhereClause } from '@/core/constructors.ts'
+import type {
+    FromClause,
+    SelectClause,
+    WhereClause,
+} from '@/core/constructors.ts'
 import { Context } from '@/core/context.ts'
 import type { Node } from './node.ts'
-import { SelectNode } from '../nodes/select.ts'
-import { WhereNode } from '../nodes/where.ts'
+import { SelectNode } from '../nodes/clauses/select.ts'
+import { WhereNode } from '../nodes/clauses/where.ts'
+import { FromNode } from '../nodes/clauses/from.ts'
 
 export const query = (
-    ...clauses: (SelectClause | WhereClause)[]
+    ...clauses: (SelectClause | FromClause | WhereClause)[]
 ): [string, SupportedValueType] => {
     const ctx = new Context()
     const sql: Map<string, string> = new Map()
 
-    const clauseOrder: string[] = [SelectNode.name, WhereNode.name]
+    const clauseOrder: string[] = [
+        SelectNode.name,
+        FromNode.name,
+        WhereNode.name,
+    ]
 
     clauses.forEach((clause) => {
         const node: Node = clause()

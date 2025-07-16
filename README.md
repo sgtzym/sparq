@@ -11,7 +11,7 @@ const [sql, params] = query(
     select(
         alias(count('field1'), 'f1_count'),
         'field2',
-        'field3'
+        'field3',
     ),
     where(
         eq('field2', true),
@@ -20,7 +20,7 @@ const [sql, params] = query(
             gt('field4', 0),
             lt('field4', 99),
         ),
-        like('field5', '%test%')
-    )
+        like('field5', '%test%'),
+    ),
 )
 ```

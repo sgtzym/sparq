@@ -1,45 +1,52 @@
 import { BinaryNode, ComparisonOperator } from '@/nodes/binary.ts'
 import { IdentifierNode, LiteralNode, RawNode } from '@/nodes/primitives.ts'
 import { LogicalNode, LogicalOperator } from '@/nodes/logical.ts'
-import { WhereNode } from '@/nodes/where.ts'
-import { SelectNode } from '@/nodes/select.ts'
+import { FromNode } from '../nodes/clauses/from.ts'
+import { SelectNode } from '../nodes/clauses/select.ts'
+import { WhereNode } from '../nodes/clauses/where.ts'
 import { TopNode } from '../nodes/modifiers/top.ts'
 import { DistinctNode } from '../nodes/modifiers/distinct.ts'
 import type { Node } from './node.ts'
-import { AliasNode } from '../nodes/modifiers/alias.ts'
+import { AliasNode } from '../nodes/alias.ts'
 import { AggregateFunction, AggregateNode } from '../nodes/aggregates.ts'
+import { JoinNode, JoinType } from '../nodes/join.ts'
+
+type Name = string | Alias
 
 type Logical = () => LogicalNode
 type Binary = () => BinaryNode
 type Top = () => TopNode
 type Distinct = () => DistinctNode
 type Alias = () => AliasNode
-type Count = () => AggregateNode
-type Sum = () => AggregateNode
-type Aggregate = Count | Sum
 
+type Aggregate = () => AggregateNode
+type Join = () => JoinNode
+
+export type FromClause = () => FromNode
 export type SelectClause = () => SelectNode
 export type WhereClause = () => WhereNode
 
 // ---
 
+export const from = (...args: (Name | Join)[]): FromClause => () => {
+    const nodes: Node[] = args.map((arg) =>
+        typeof arg === 'string' ? new IdentifierNode(arg) : arg()
+    )
+
+    return new FromNode(nodes)
+}
+
+// ---
+
 export const select =
-    (...args: (Top | Distinct | string | Alias | Aggregate)[]): SelectClause =>
-    () => {
-        const modifiers: Node[] = []
-        const fields: Node[] = []
+    (...args: (Top | Distinct | Name | Aggregate)[]): SelectClause => () => {
+        const nodes: Node[] = args.map((arg) =>
+            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
+        )
 
-        for (const arg of args) {
-            if (typeof arg === 'string') {
-                fields.push(new IdentifierNode(arg))
-            } else {
-                modifiers.push(arg()) // modifier
-            }
-        }
+        if (nodes.length === 0) nodes.push(new RawNode('*'))
 
-        if (fields.length === 0) fields.push(new RawNode('*'))
-
-        return new SelectNode([...modifiers, ...fields])
+        return new SelectNode(nodes)
     }
 
 export const where = (...args: (Binary | Logical)[]): WhereClause => () =>
@@ -48,8 +55,9 @@ export const where = (...args: (Binary | Logical)[]): WhereClause => () =>
 // ---
 
 const logicalConstructor =
-    (operator: LogicalOperator) => (...args: (Binary | Logical)[]) => () =>
-        new LogicalNode(operator, args.map((n) => n()))
+    (operator: LogicalOperator) =>
+    (...args: (Binary | Logical)[]): Logical =>
+    () => new LogicalNode(operator, args.map((n) => n()))
 
 export const and = logicalConstructor(LogicalOperator.And)
 export const or = logicalConstructor(LogicalOperator.Or)
@@ -82,7 +90,7 @@ export const top = (count: number): Top => () => new TopNode(count)
 
 // ---
 
-export const alias = (name: string | Count, asName: string): Alias => () =>
+export const alias = (name: string | Aggregate, asName: string): Alias => () =>
     new AliasNode(
         typeof name === 'string' ? new IdentifierNode(name) : name(),
         new IdentifierNode(asName),
@@ -91,22 +99,16 @@ export const alias = (name: string | Count, asName: string): Alias => () =>
 // ---
 
 const aggregateConstructor =
-    (fn: AggregateFunction) => (...args: (string | Distinct)[]): Count =>
+    (fn: AggregateFunction) =>
+    (...args: (string | Distinct)[]): Aggregate =>
     () => {
-        const modifiers: Node[] = []
-        const fields: Node[] = []
+        const nodes: Node[] = args.map((arg) =>
+            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
+        )
 
-        for (const arg of args) {
-            if (typeof arg === 'string') {
-                fields.push(new IdentifierNode(arg))
-            } else {
-                modifiers.push(arg()) // modifier
-            }
-        }
+        if (nodes.length === 0) nodes.push(new RawNode('1'))
 
-        if (fields.length === 0) fields.push(new RawNode('1'))
-
-        return new AggregateNode(fn, [...modifiers, ...fields])
+        return new AggregateNode(fn, nodes)
     }
 
 export const avg = aggregateConstructor(AggregateFunction.Avg)
@@ -114,3 +116,11 @@ export const min = aggregateConstructor(AggregateFunction.Min)
 export const max = aggregateConstructor(AggregateFunction.Max)
 export const count = aggregateConstructor(AggregateFunction.Count)
 export const sum = aggregateConstructor(AggregateFunction.Sum)
+
+// ---
+
+const joinConstructor = (type: JoinType) => (): Join => () => new JoinNode(type) // TODO
+
+export const innerJoin = joinConstructor(JoinType.Inner)
+export const crossJoin = joinConstructor(JoinType.Cross)
+export const leftJoin = joinConstructor(JoinType.Left)
