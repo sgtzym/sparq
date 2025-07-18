@@ -10,7 +10,7 @@ export class FromNode implements Node {
 
     interpret(ctx: Context): string {
         const tables: Node[] = []
-        const joins: Node[] =[]
+        const joins: Node[] = []
 
         for (const node of castArray(this.nodes)) {
             const name: string = node.constructor.name
@@ -24,7 +24,7 @@ export class FromNode implements Node {
 
         return [
             `FROM ${tables[0].interpret(ctx)}`,
-            joins.map((join) => join.interpret(ctx)).join(' ')
+            joins.map((join) => join.interpret(ctx)).join(' '),
         ].filter(Boolean).join(' ')
     }
 }

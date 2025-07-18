@@ -17,8 +17,8 @@ export const query = (
     const sql: Map<string, string> = new Map()
 
     const clauseOrder: string[] = [
-        SelectNode.name,
         FromNode.name,
+        SelectNode.name,
         WhereNode.name,
     ]
 

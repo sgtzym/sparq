@@ -35,6 +35,22 @@ export class LiteralNode implements Node {
 export class IdentifierNode implements Node {
     constructor(private readonly name: string) {}
     interpret(_ctx: Context): string {
-        return `"${this.name}"`
+        const parts: string[] = this.name.split('.')
+        const qualifiedName: string = parts.map((p) => this.escape(p)).join('.')
+
+        return qualifiedName
+    }
+
+    private escape(part: string): string {
+        return this.needsQuoting(part) ? `"${part}"` : part
+    }
+
+    private needsQuoting(name: string): boolean {
+        return (
+            name.includes('-') ||
+            name.includes(' ') ||
+            /^\d/.test(name) || // starts with a number
+            /[^a-zA-Z0-9_]/.test(name) // contains special chars excl. underscores
+        )
     }
 }

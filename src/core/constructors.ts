@@ -119,8 +119,13 @@ export const sum = aggregateConstructor(AggregateFunction.Sum)
 
 // ---
 
-const joinConstructor = (type: JoinType) => (): Join => () => new JoinNode(type) // TODO
+const joinConstructor =
+    (type: JoinType) => (table: string, condition: Binary): Join => () =>
+        new JoinNode(type, new IdentifierNode(table), condition())
 
-export const innerJoin = joinConstructor(JoinType.Inner)
-export const crossJoin = joinConstructor(JoinType.Cross)
-export const leftJoin = joinConstructor(JoinType.Left)
+export const joinInner = joinConstructor(JoinType.Inner)
+export const joinLeft = joinConstructor(JoinType.Left)
+export const joinLeftOuter = joinConstructor(JoinType.LeftOuter)
+
+export const joinCross = (table: string): Join => () =>
+    new JoinNode(JoinType.Cross, new IdentifierNode(table))
