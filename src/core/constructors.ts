@@ -10,6 +10,7 @@ import type { Node } from './node.ts'
 import { AliasNode } from '../nodes/alias.ts'
 import { AggregateFunction, AggregateNode } from '../nodes/aggregates.ts'
 import { JoinNode, JoinType } from '../nodes/join.ts'
+import { LimitNode } from '../nodes/clauses/limit.ts'
 
 type Name = string | Alias
 
@@ -25,6 +26,7 @@ type Join = () => JoinNode
 export type FromClause = () => FromNode
 export type SelectClause = () => SelectNode
 export type WhereClause = () => WhereNode
+export type LimitClause = () => LimitNode
 
 // ---
 
@@ -51,6 +53,11 @@ export const select =
 
 export const where = (...args: (Binary | Logical)[]): WhereClause => () =>
     new WhereNode(args.map((n) => n()))
+
+// ---
+
+export const limit = (count: number, offset?: number): LimitClause => () =>
+    new LimitNode(count, offset)
 
 // ---
 
