@@ -12,12 +12,6 @@ A declarative, type-safe SQLite query builder for TypeScript — made with
 - Casts parameters to valid types
 - Escapes field and table names if needed (e.g. "table 1".column1)
 
-## Installation
-
-```bash
-deno install @sgtzym/sparq
-```
-
 ## Usage
 
 Queries are composed by combining clause functions. The query function returns a
