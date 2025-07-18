@@ -1,7 +1,7 @@
+import { type ArrayLike, castArray } from '@/core/utils.ts'
 import type { Context } from '@/core/context.ts'
 import type { Node } from '@/core/node.ts'
-import { type ArrayLike, castArray } from '@/core/utils.ts'
-import { SetQuantifierNode } from './modifiers.ts'
+import { SetQuantifierNode } from '@/nodes/modifiers.ts'
 
 export enum AggregateFunction {
     Avg = 'AVG',

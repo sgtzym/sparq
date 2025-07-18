@@ -1,6 +1,6 @@
+import { type ArrayLike, castArray } from '@/core/utils.ts'
 import type { Context } from '@/core/context.ts'
 import type { Node } from '@/core/node.ts'
-import { type ArrayLike, castArray } from '../../core/utils.ts'
 
 export class OrderByNode implements Node {
     constructor(

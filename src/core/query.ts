@@ -1,15 +1,17 @@
 import type { SupportedValueType } from 'node:sqlite'
+
 import type { Node } from '@/core/node.ts'
-import { type NodeArg, toNode } from '@/core/constructors.ts'
+import { type NodeArg, toNode } from '@/core/utils.ts'
 import { Context } from '@/core/context.ts'
+
 import { SelectNode } from '@/nodes/clauses/select.ts'
 import { FromNode } from '@/nodes/clauses/from.ts'
 import { JoinNode } from '@/nodes/clauses/join.ts'
 import { WhereNode } from '@/nodes/clauses/where.ts'
+import { HavingNode } from '@/nodes/clauses/having.ts'
 import { GroupByNode } from '@/nodes/clauses/group-by.ts'
-import { LimitNode } from '../nodes/limit.ts'
-import { OrderByNode } from '../nodes/clauses/order-by.ts'
-import { HavingNode } from '../nodes/clauses/having.ts'
+import { OrderByNode } from '@/nodes/clauses/order-by.ts'
+import { LimitNode } from '@/nodes/clauses/limit.ts'
 
 export const query = (...args: NodeArg[]): [string, SupportedValueType] => {
     const ctx = new Context()
@@ -20,8 +22,8 @@ export const query = (...args: NodeArg[]): [string, SupportedValueType] => {
         FromNode.name,
         JoinNode.name,
         WhereNode.name,
-        GroupByNode.name,
         HavingNode.name,
+        GroupByNode.name,
         OrderByNode.name,
         LimitNode.name,
     ]
@@ -40,8 +42,8 @@ export const query = (...args: NodeArg[]): [string, SupportedValueType] => {
     })
 
     return [
-        clauseOrder.filter((name) => sql.has(name))
-            .map((name) => sql.get(name))
+        clauseOrder.filter((clause) => sql.has(clause))
+            .map((c) => sql.get(c))
             .join(' '),
         ctx.values,
     ]

@@ -1,25 +1,48 @@
 import type { SupportedValueType } from 'node:sqlite'
+import type { Node } from '@/core/node.ts'
+import { IdentifierNode, RawNode } from '@/nodes/primitives.ts'
 
-// ---
+// Array helpers
 
-export type ArrayLike<T> = T | T[]
+type ArrayLike<T> = T | T[]
 
-export function castArray<T>(value: ArrayLike<T>): T[] {
+function castArray<T>(value: ArrayLike<T>): T[] {
     return Array.isArray(value) ? value : [value]
 }
 
-// ---
+export { type ArrayLike, castArray }
 
-export type Maybe<T> = T | null | undefined
+// Misc. helpers
 
-export function isDefined<T>(value: Maybe<T>): value is T {
+type Maybe<T> = T | null | undefined
+
+function isDefined<T>(value: Maybe<T>): value is T {
     return value !== null && value !== undefined
 }
 
-// ---
+export { isDefined, type Maybe }
 
-// 🛡️ Type-guards values.
-export function isSupportedValueType(
+// Node helpers
+
+type NodeArg = number | string | (() => Node)
+
+/**
+ * Casts args to Nodes 🧼
+ * @param arg any string, number or Node function - e.g. select()
+ * @returns a single Node instance
+ */
+function toNode(arg: NodeArg) {
+    return typeof arg === 'function'
+        ? arg()
+        : typeof arg === 'number'
+        ? new RawNode(arg)
+        : new IdentifierNode(arg)
+}
+
+export { type NodeArg, toNode }
+
+// Type-guards values 🛡️
+function isSupportedValueType(
     value: unknown,
 ): value is SupportedValueType {
     switch (true) {
@@ -35,8 +58,12 @@ export function isSupportedValueType(
     }
 }
 
-// 🧼 Casts values to supported types.
-export function castSupportedValueType(value: any): SupportedValueType {
+/**
+ * Casts values to supported types 🧼
+ * @param value any input value
+ * @returns input value as a supported type
+ */
+function castSupportedValueType(value: any): SupportedValueType {
     switch (true) {
         case isSupportedValueType(value):
             return value
@@ -60,3 +87,5 @@ export function castSupportedValueType(value: any): SupportedValueType {
             )
     }
 }
+
+export { castSupportedValueType, isSupportedValueType }

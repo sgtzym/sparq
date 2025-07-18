@@ -1,2 +1,2 @@
-export * from '@/core/constructors.ts'
+export * from '@/core/dsl.ts'
 export { query } from '@/core/query.ts'
