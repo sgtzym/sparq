@@ -13,6 +13,11 @@ import { GroupByNode } from '@/nodes/clauses/group-by.ts'
 import { OrderByNode } from '@/nodes/clauses/order-by.ts'
 import { LimitNode } from '@/nodes/clauses/limit.ts'
 
+/**
+ * SQLite Query
+ * @param args SQLite clauses
+ * @returns a parameterized sql string and a list of supported values
+ */
 export const query = (...args: NodeArg[]): [string, SupportedValueType[]] => {
     const ctx = new Context()
     const sql: Map<string, string> = new Map()
