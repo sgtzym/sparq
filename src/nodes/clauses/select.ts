@@ -6,7 +6,6 @@ import { SetQuantifierNode } from '../modifiers.ts'
 export class SelectNode implements Node {
     constructor(
         private readonly nodes: ArrayLike<Node>,
-        private readonly distinct?: boolean,
     ) {}
 
     interpret(ctx: Context): string {

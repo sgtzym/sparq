@@ -1,191 +1,179 @@
 import { BinaryNode, ComparisonOperator } from '@/nodes/binary.ts'
-import { IdentifierNode, LiteralNode, RawNode } from '@/nodes/primitives.ts'
+import { IdentifierNode, RawNode } from '@/nodes/primitives.ts'
 import { LogicalNode, LogicalOperator } from '@/nodes/logical.ts'
-import { FromNode } from '../nodes/clauses/from.ts'
-import { SelectNode } from '../nodes/clauses/select.ts'
-import { WhereNode } from '../nodes/clauses/where.ts'
+import { FromNode } from '@/nodes/clauses/from.ts'
+import { SelectNode } from '@/nodes/clauses/select.ts'
+import { WhereNode } from '@/nodes/clauses/where.ts'
 import {
-    SetQuantifierKeyword,
+    SetQuantifier,
     SetQuantifierNode,
-    SortingDirectionKeyword,
+    SortingDirection,
     SortingDirectionNode,
-} from '../nodes/modifiers.ts'
-import type { Node } from './node.ts'
-import { AliasNode } from '../nodes/alias.ts'
-import { AggregateFunction, AggregateNode } from '../nodes/aggregates.ts'
-import { JoinNode, JoinType } from '../nodes/clauses/join.ts'
-import { LimitNode, OffsetNode } from '../nodes/limit.ts'
-import { GroupByNode } from '../nodes/clauses/group-by.ts'
-import { OrderByNode } from '../nodes/clauses/order-by.ts'
+} from '@/nodes/modifiers.ts'
+import type { Node } from '@/core/node.ts'
+import { AliasNode } from '@/nodes/alias.ts'
+import { AggregateFunction, AggregateNode } from '@/nodes/aggregates.ts'
+import { JoinNode, JoinType } from '@/nodes/clauses/join.ts'
+import { LimitNode, OffsetNode } from '@/nodes/limit.ts'
+import { GroupByNode } from '@/nodes/clauses/group-by.ts'
+import { OrderByNode } from '@/nodes/clauses/order-by.ts'
+import { HavingNode } from '@/nodes/clauses/having.ts'
 
-type Name = string | Alias
+type NodeArg = number | string | (() => Node)
 
-type Logical = () => LogicalNode
-type Binary = () => BinaryNode
-
-type SetQuantifier = () => SetQuantifierNode // DISTINCT, ALL
-
-type Alias = () => AliasNode
-
-type Offset = () => OffsetNode
-type SortingDirection = () => SortingDirectionNode
-
-type Aggregate = () => AggregateNode
-
-export type SelectClause = () => SelectNode
-export type FromClause = () => FromNode
-export type JoinClause = () => JoinNode
-export type WhereClause = () => WhereNode
-export type GroupByClause = () => GroupByNode
-export type OrderByClause = () => OrderByNode
-export type LimitClause = () => LimitNode
-
-// ---
-
-export const from = (...args: Name[]): FromClause => () => {
-    const nodes: Node[] = args.map((arg) =>
-        typeof arg === 'string' ? new IdentifierNode(arg) : arg()
-    )
-
-    return new FromNode(nodes)
+// 🧙‍♂️ Cast args to Nodes
+function toNode(arg: NodeArg) {
+    return typeof arg === 'function'
+        ? arg()
+        : typeof arg === 'number'
+        ? new RawNode(arg)
+        : new IdentifierNode(arg)
 }
 
+export { type NodeArg, toNode }
+
 // ---
 
-export const select =
-    (...args: (SetQuantifier | Name | Aggregate)[]): SelectClause => () => {
-        const nodes: Node[] = args.map((arg) =>
-            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
-        )
+const select = (...args: NodeArg[]) => (): Node => {
+    const nodes: Node[] = args.map(toNode)
+    if (nodes.length === 0) nodes.push(new RawNode('*'))
 
-        if (nodes.length === 0) nodes.push(new RawNode('*'))
+    return new SelectNode(nodes)
+}
 
-        return new SelectNode(nodes)
+const from = (...args: NodeArg[]) => (): Node => {
+    return new FromNode(args.map(toNode))
+}
+
+const where = (...args: NodeArg[]) => (): Node =>
+    new WhereNode(args.map(toNode))
+
+const having = (...args: NodeArg[]) => (): Node =>
+    new HavingNode(args.map(toNode))
+
+// ---
+
+const groupBy = (...args: NodeArg[]) => (): Node =>
+    new GroupByNode(args.map((n) => toNode(n)))
+
+// ---
+
+const limit = (...args: NodeArg[]) => (): Node => {
+    if (args.length === 0) {
+        throw new Error('limit requires at least one argument')
     }
 
-export const where = (...args: (Binary | Logical)[]): WhereClause => () =>
-    new WhereNode(args.map((n) => n()))
+    const [count, offset] = args.map(toNode)
 
-// ---
+    return new LimitNode(count, offset)
+}
 
-export const groupBy =
-    (...args: (string | Aggregate)[]): GroupByClause => () => {
-        const nodes: Node[] = args.map((arg) =>
-            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
-        )
+const offset = (arg: NodeArg) => (): Node => new OffsetNode(toNode(arg))
 
-        return new GroupByNode(nodes)
-    }
+const orderBy = (...args: NodeArg[]) => (): Node =>
+    new OrderByNode(args.map(toNode))
 
-// ---
-
-export const limit = (count: number, offset?: Offset): LimitClause => () =>
-    new LimitNode(
-        new RawNode(count),
-        offset ? offset() : undefined,
-    )
-
-export const offset = (count: number): Offset => () =>
-    new OffsetNode(new RawNode(count))
-
-// ---
-
-export const orderBy =
-    (...args: (string | SortingDirection)[]): OrderByClause => () => {
-        const nodes: Node[] = args.map((arg) =>
-            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
-        )
-
-        return new OrderByNode(nodes)
-    }
+export { from, groupBy, having, limit, offset, orderBy, select, where }
 
 // ---
 
 const logicalConstructor =
-    (operator: LogicalOperator) =>
-    (...args: (Binary | Logical)[]): Logical =>
-    () => new LogicalNode(operator, args.map((n) => n()))
+    (operator: LogicalOperator) => (...args: NodeArg[]) => (): Node =>
+        new LogicalNode(operator, args.map(toNode))
 
-export const and = logicalConstructor(LogicalOperator.And)
-export const or = logicalConstructor(LogicalOperator.Or)
-export const not = logicalConstructor(LogicalOperator.Not)
+const and = logicalConstructor(LogicalOperator.And)
+const or = logicalConstructor(LogicalOperator.Or)
+const not = logicalConstructor(LogicalOperator.Not)
+
+export { and, not, or }
 
 // ---
 
 const binaryConstructor =
-    (operator: ComparisonOperator) =>
-    (field: string, value: any): Binary =>
-    () =>
-        new BinaryNode(
-            new IdentifierNode(field),
-            operator,
-            new LiteralNode(value),
-        )
+    (operator: ComparisonOperator) => (...args: NodeArg[]) => (): Node => {
+        if (args.length !== 2) {
+            throw new Error('binary requires exactly two arguments')
+        }
+        const [left, right] = args
+        return new BinaryNode(operator, toNode(left), toNode(right))
+    }
 
-export const eq = binaryConstructor(ComparisonOperator.Eq)
-export const ne = binaryConstructor(ComparisonOperator.Ne)
-export const lt = binaryConstructor(ComparisonOperator.Lt)
-export const le = binaryConstructor(ComparisonOperator.Le)
-export const gt = binaryConstructor(ComparisonOperator.Gt)
-export const ge = binaryConstructor(ComparisonOperator.Ge)
-export const like = binaryConstructor(ComparisonOperator.Like)
+const eq = binaryConstructor(ComparisonOperator.Eq)
+const ne = binaryConstructor(ComparisonOperator.Ne)
+const lt = binaryConstructor(ComparisonOperator.Lt)
+const le = binaryConstructor(ComparisonOperator.Le)
+const gt = binaryConstructor(ComparisonOperator.Gt)
+const ge = binaryConstructor(ComparisonOperator.Ge)
+const like = binaryConstructor(ComparisonOperator.Like)
+
+export { eq, ge, gt, le, like, lt, ne }
 
 // ---
 
 const setQuantifierConstructor =
-    (quantifier: SetQuantifierKeyword) => (): SetQuantifier => () =>
+    (quantifier: SetQuantifier) => () => (): Node =>
         new SetQuantifierNode(quantifier)
 
-export const distinct = setQuantifierConstructor(SetQuantifierKeyword.Distinct)
-export const all = setQuantifierConstructor(SetQuantifierKeyword.All)
+const distinct = setQuantifierConstructor(SetQuantifier.Distinct)
+const all = setQuantifierConstructor(SetQuantifier.All)
+
+export { all, distinct }
 
 // ---
 
-export const alias = (name: string | Aggregate, asName: string): Alias => () =>
-    new AliasNode(
-        typeof name === 'string' ? new IdentifierNode(name) : name(),
-        new IdentifierNode(asName),
-    )
+export const alias = (...args: NodeArg[]) => (): Node => {
+    if (args.length !== 2) {
+        throw new Error('alias requires exactly two arguments')
+    }
+    const [name, asName] = args.map(toNode)
+    return new AliasNode(name, asName)
+}
 
 // ---
 
 const aggregateConstructor =
-    (fn: AggregateFunction) =>
-    (...args: (string | SetQuantifier)[]): Aggregate =>
-    () => {
-        const nodes: Node[] = args.map((arg) =>
-            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
-        )
-
+    (fn: AggregateFunction) => (...args: NodeArg[]) => (): Node => {
+        const nodes: Node[] = args.map(toNode)
         if (nodes.length === 0) nodes.push(new RawNode(1))
 
         return new AggregateNode(fn, nodes)
     }
 
-export const avg = aggregateConstructor(AggregateFunction.Avg)
-export const min = aggregateConstructor(AggregateFunction.Min)
-export const max = aggregateConstructor(AggregateFunction.Max)
-export const count = aggregateConstructor(AggregateFunction.Count)
-export const sum = aggregateConstructor(AggregateFunction.Sum)
+const avg = aggregateConstructor(AggregateFunction.Avg)
+const min = aggregateConstructor(AggregateFunction.Min)
+const max = aggregateConstructor(AggregateFunction.Max)
+const count = aggregateConstructor(AggregateFunction.Count)
+const sum = aggregateConstructor(AggregateFunction.Sum)
+
+export { avg, count, max, min, sum }
 
 // ---
 
 const joinConstructor =
-    (type: JoinType) => (table: string, condition: Binary): JoinClause => () =>
-        new JoinNode(type, new IdentifierNode(table), condition())
+    (type: JoinType) => (...args: NodeArg[]) => (): Node => {
+        if (args.length !== 2) {
+            throw new Error('join requires exactly two arguments')
+        }
+        const [table, condition] = args.map(toNode)
+        return new JoinNode(type, table, condition)
+    }
 
-export const joinInner = joinConstructor(JoinType.Inner)
-export const joinLeft = joinConstructor(JoinType.Left)
-export const joinLeftOuter = joinConstructor(JoinType.LeftOuter)
+const joinInner = joinConstructor(JoinType.Inner)
+const joinLeft = joinConstructor(JoinType.Left)
+const joinLeftOuter = joinConstructor(JoinType.LeftOuter)
 
-export const joinCross = (table: string): JoinClause => () =>
-    new JoinNode(JoinType.Cross, new IdentifierNode(table))
+const joinCross = (arg: NodeArg) => (): Node =>
+    new JoinNode(JoinType.Cross, toNode(arg))
+
+export { joinCross, joinInner, joinLeft, joinLeftOuter }
 
 // ---
 
 const sortingDirectionConstructor =
-    (dir: SortingDirectionKeyword) => (field: string): SortingDirection => () =>
-        new SortingDirectionNode(dir, new IdentifierNode(field))
+    (dir: SortingDirection) => (arg: NodeArg) => (): Node =>
+        new SortingDirectionNode(dir, toNode(arg))
 
-export const asc = sortingDirectionConstructor(SortingDirectionKeyword.Asc)
-export const desc = sortingDirectionConstructor(SortingDirectionKeyword.Desc)
+const asc = sortingDirectionConstructor(SortingDirection.Asc)
+const desc = sortingDirectionConstructor(SortingDirection.Desc)
+
+export { asc, desc }

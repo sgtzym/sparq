@@ -14,8 +14,8 @@ export enum ComparisonOperator {
 
 export class BinaryNode implements Node {
     constructor(
-        private left: Node,
         private op: ComparisonOperator,
+        private left: Node,
         private right: Node,
     ) {}
 

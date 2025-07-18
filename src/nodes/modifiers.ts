@@ -1,14 +1,14 @@
 import type { Context } from '../core/context.ts'
 import type { Node } from '../core/node.ts'
 
-export enum SetQuantifierKeyword {
+export enum SetQuantifier {
     Distinct = 'DISTINCT',
     All = 'ALL',
 }
 
 export class SetQuantifierNode implements Node {
     constructor(
-        private readonly quantifier: SetQuantifierKeyword,
+        private readonly quantifier: SetQuantifier,
     ) {}
 
     interpret(_ctx: Context): string {
@@ -16,14 +16,14 @@ export class SetQuantifierNode implements Node {
     }
 }
 
-export enum SortingDirectionKeyword {
+export enum SortingDirection {
     Asc = 'ASC',
     Desc = 'DESC',
 }
 
 export class SortingDirectionNode implements Node {
     constructor(
-        private readonly dir: SortingDirectionKeyword,
+        private readonly dir: SortingDirection,
         private readonly node: Node,
     ) {}
 
