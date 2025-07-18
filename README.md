@@ -6,6 +6,7 @@ A declarative, type-safe SQLite query builder for TypeScript — made with
 ## Features
 
 - Type-safe, modular SQL query construction
+- Builds on Deno's [sqlite](https://docs.deno.com/api/node/sqlite/) implementation
 - Supports all common SQL clauses
 - Aggregate functions and alias support
 - Composes SQL queries with parameterized values
