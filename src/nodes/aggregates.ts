@@ -1,7 +1,7 @@
 import type { Context } from '@/core/context.ts'
 import type { Node } from '@/core/node.ts'
 import { type ArrayLike, castArray } from '@/core/utils.ts'
-import { DistinctNode } from '@/nodes/modifiers/distinct.ts'
+import { SetQuantifierNode } from './modifiers.ts'
 
 export enum AggregateFunction {
     Avg = 'AVG',
@@ -18,14 +18,12 @@ export class AggregateNode implements Node {
     ) {}
 
     interpret(ctx: Context): string {
-        const modifiers: Map<string, Node> = new Map()
+        let quantifier: SetQuantifierNode | undefined
         const fields: Node[] = []
 
         for (const node of castArray(this.nodes)) {
-            const name: string = node.constructor.name
-
-            if (name === DistinctNode.name) {
-                modifiers.set(name, node)
+            if (node instanceof SetQuantifierNode) {
+                quantifier = node
             } else {
                 fields.push(node)
             }
@@ -33,8 +31,8 @@ export class AggregateNode implements Node {
 
         return `${this.fn}(${
             [
-                modifiers.get(DistinctNode.name)?.interpret(ctx) ?? '',
-                fields[0].interpret(ctx),
+                quantifier?.interpret(ctx),
+                fields.map((n) => n.interpret(ctx)).join(', '),
             ].filter(Boolean).join(' ')
         })`
     }

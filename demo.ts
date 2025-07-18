@@ -1,23 +1,30 @@
 import {
     alias,
+    all,
     count,
-    crossJoin,
     distinct,
     eq,
     from,
-    leftJoin,
+    joinCross,
+    joinInner,
+    joinLeft,
+    limit,
+    offset,
+    orderBy,
     select,
-    top,
     where,
+    asc,
+    desc
 } from './src/core/constructors.ts'
 import { query } from './src/core/query.ts'
 
 const [sql, params] = query(
-    select(distinct(), top(100), alias(count(), 'total')),
-    from('table1', leftJoin(), crossJoin()),
-    where(
-        eq('field1', 'test'),
-    ),
+    select(distinct(), 't', alias(count(all(), 'asdf', 'aaaaffff'), 'test')),
+    from(alias('ttt', 't')),
+    joinCross('möpp'),
+    joinLeft('aa', eq('a', 'b')),
+    limit(10, offset(50)),
+    orderBy('snek', asc('asddf'), desc('aaafff'))
 )
 
 console.log(sql, params)

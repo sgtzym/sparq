@@ -4,33 +4,45 @@ import { LogicalNode, LogicalOperator } from '@/nodes/logical.ts'
 import { FromNode } from '../nodes/clauses/from.ts'
 import { SelectNode } from '../nodes/clauses/select.ts'
 import { WhereNode } from '../nodes/clauses/where.ts'
-import { TopNode } from '../nodes/modifiers/top.ts'
-import { DistinctNode } from '../nodes/modifiers/distinct.ts'
+import {
+    SetQuantifierKeyword,
+    SetQuantifierNode,
+    SortingDirectionKeyword,
+    SortingDirectionNode,
+} from '../nodes/modifiers.ts'
 import type { Node } from './node.ts'
 import { AliasNode } from '../nodes/alias.ts'
 import { AggregateFunction, AggregateNode } from '../nodes/aggregates.ts'
-import { JoinNode, JoinType } from '../nodes/join.ts'
-import { LimitNode } from '../nodes/clauses/limit.ts'
+import { JoinNode, JoinType } from '../nodes/clauses/join.ts'
+import { LimitNode, OffsetNode } from '../nodes/limit.ts'
+import { GroupByNode } from '../nodes/clauses/group-by.ts'
+import { OrderByNode } from '../nodes/clauses/order-by.ts'
 
 type Name = string | Alias
 
 type Logical = () => LogicalNode
 type Binary = () => BinaryNode
-type Top = () => TopNode
-type Distinct = () => DistinctNode
+
+type SetQuantifier = () => SetQuantifierNode // DISTINCT, ALL
+
 type Alias = () => AliasNode
 
-type Aggregate = () => AggregateNode
-type Join = () => JoinNode
+type Offset = () => OffsetNode
+type SortingDirection = () => SortingDirectionNode
 
-export type FromClause = () => FromNode
+type Aggregate = () => AggregateNode
+
 export type SelectClause = () => SelectNode
+export type FromClause = () => FromNode
+export type JoinClause = () => JoinNode
 export type WhereClause = () => WhereNode
+export type GroupByClause = () => GroupByNode
+export type OrderByClause = () => OrderByNode
 export type LimitClause = () => LimitNode
 
 // ---
 
-export const from = (...args: (Name | Join)[]): FromClause => () => {
+export const from = (...args: Name[]): FromClause => () => {
     const nodes: Node[] = args.map((arg) =>
         typeof arg === 'string' ? new IdentifierNode(arg) : arg()
     )
@@ -41,7 +53,7 @@ export const from = (...args: (Name | Join)[]): FromClause => () => {
 // ---
 
 export const select =
-    (...args: (Top | Distinct | Name | Aggregate)[]): SelectClause => () => {
+    (...args: (SetQuantifier | Name | Aggregate)[]): SelectClause => () => {
         const nodes: Node[] = args.map((arg) =>
             typeof arg === 'string' ? new IdentifierNode(arg) : arg()
         )
@@ -56,8 +68,36 @@ export const where = (...args: (Binary | Logical)[]): WhereClause => () =>
 
 // ---
 
-export const limit = (count: number, offset?: number): LimitClause => () =>
-    new LimitNode(count, offset)
+export const groupBy =
+    (...args: (string | Aggregate)[]): GroupByClause => () => {
+        const nodes: Node[] = args.map((arg) =>
+            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
+        )
+
+        return new GroupByNode(nodes)
+    }
+
+// ---
+
+export const limit = (count: number, offset?: Offset): LimitClause => () =>
+    new LimitNode(
+        new RawNode(count),
+        offset ? offset() : undefined,
+    )
+
+export const offset = (count: number): Offset => () =>
+    new OffsetNode(new RawNode(count))
+
+// ---
+
+export const orderBy =
+    (...args: (string | SortingDirection)[]): OrderByClause => () => {
+        const nodes: Node[] = args.map((arg) =>
+            typeof arg === 'string' ? new IdentifierNode(arg) : arg()
+        )
+
+        return new OrderByNode(nodes)
+    }
 
 // ---
 
@@ -92,8 +132,12 @@ export const like = binaryConstructor(ComparisonOperator.Like)
 
 // ---
 
-export const distinct = (): Distinct => () => new DistinctNode()
-export const top = (count: number): Top => () => new TopNode(count)
+const setQuantifierConstructor =
+    (quantifier: SetQuantifierKeyword) => (): SetQuantifier => () =>
+        new SetQuantifierNode(quantifier)
+
+export const distinct = setQuantifierConstructor(SetQuantifierKeyword.Distinct)
+export const all = setQuantifierConstructor(SetQuantifierKeyword.All)
 
 // ---
 
@@ -107,13 +151,13 @@ export const alias = (name: string | Aggregate, asName: string): Alias => () =>
 
 const aggregateConstructor =
     (fn: AggregateFunction) =>
-    (...args: (string | Distinct)[]): Aggregate =>
+    (...args: (string | SetQuantifier)[]): Aggregate =>
     () => {
         const nodes: Node[] = args.map((arg) =>
             typeof arg === 'string' ? new IdentifierNode(arg) : arg()
         )
 
-        if (nodes.length === 0) nodes.push(new RawNode('1'))
+        if (nodes.length === 0) nodes.push(new RawNode(1))
 
         return new AggregateNode(fn, nodes)
     }
@@ -127,12 +171,21 @@ export const sum = aggregateConstructor(AggregateFunction.Sum)
 // ---
 
 const joinConstructor =
-    (type: JoinType) => (table: string, condition: Binary): Join => () =>
+    (type: JoinType) => (table: string, condition: Binary): JoinClause => () =>
         new JoinNode(type, new IdentifierNode(table), condition())
 
 export const joinInner = joinConstructor(JoinType.Inner)
 export const joinLeft = joinConstructor(JoinType.Left)
 export const joinLeftOuter = joinConstructor(JoinType.LeftOuter)
 
-export const joinCross = (table: string): Join => () =>
+export const joinCross = (table: string): JoinClause => () =>
     new JoinNode(JoinType.Cross, new IdentifierNode(table))
+
+// ---
+
+const sortingDirectionConstructor =
+    (dir: SortingDirectionKeyword) => (field: string): SortingDirection => () =>
+        new SortingDirectionNode(dir, new IdentifierNode(field))
+
+export const asc = sortingDirectionConstructor(SortingDirectionKeyword.Asc)
+export const desc = sortingDirectionConstructor(SortingDirectionKeyword.Desc)

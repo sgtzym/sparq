@@ -20,8 +20,10 @@ export class BinaryNode implements Node {
     ) {}
 
     interpret(ctx: Context): string {
-        return `${this.left.interpret(ctx)} ${this.op} ${
-            this.right.interpret(ctx)
-        }`
+        return [
+            this.left.interpret(ctx),
+            this.op,
+            this.right.interpret(ctx),
+        ].join(' ')
     }
 }

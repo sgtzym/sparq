@@ -5,10 +5,10 @@ import type { Node } from '@/core/node.ts'
 // ---
 
 export class RawNode implements Node {
-    constructor(private readonly value: string) {}
+    constructor(private readonly value: string | number) {}
 
     interpret(_ctx: Context): string {
-        return this.value
+        return String(this.value)
     }
 }
 
