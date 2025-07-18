@@ -13,7 +13,7 @@ import { GroupByNode } from '@/nodes/clauses/group-by.ts'
 import { OrderByNode } from '@/nodes/clauses/order-by.ts'
 import { LimitNode } from '@/nodes/clauses/limit.ts'
 
-export const query = (...args: NodeArg[]): [string, SupportedValueType] => {
+export const query = (...args: NodeArg[]): [string, SupportedValueType[]] => {
     const ctx = new Context()
     const sql: Map<string, string> = new Map()
 
@@ -45,6 +45,6 @@ export const query = (...args: NodeArg[]): [string, SupportedValueType] => {
         clauseOrder.filter((clause) => sql.has(clause))
             .map((c) => sql.get(c))
             .join(' '),
-        ctx.values,
+        ctx.values as SupportedValueType[],
     ]
 }

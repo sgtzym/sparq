@@ -25,8 +25,10 @@ import {
 
 import { AggregateFunction, AggregateNode } from '@/nodes/aggregates.ts'
 
+type NodeConstructor = (...args: NodeArg[]) => () => Node
+
 /** SQL SELECT clause */
-const select = (...args: NodeArg[]) => (): Node => {
+const select: NodeConstructor = (...args: NodeArg[]) => (): Node => {
     const nodes: Node[] = args.map(toNode)
     if (nodes.length === 0) nodes.push(new RawNode('*'))
 
@@ -34,28 +36,28 @@ const select = (...args: NodeArg[]) => (): Node => {
 }
 
 /** SQL FROM clause */
-const from = (...args: NodeArg[]) => (): Node => {
+const from: NodeConstructor = (...args: NodeArg[]) => (): Node => {
     return new FromNode(args.map(toNode))
 }
 
 /** SQL WHERE clause */
-const where = (...args: NodeArg[]) => (): Node =>
+const where: NodeConstructor = (...args: NodeArg[]) => (): Node =>
     new WhereNode(args.map(toNode))
 
 /** SQL HAVING clause */
-const having = (...args: NodeArg[]) => (): Node =>
+const having: NodeConstructor = (...args: NodeArg[]) => (): Node =>
     new HavingNode(args.map(toNode))
 
 /** SQL GROUP BY clause */
-const groupBy = (...args: NodeArg[]) => (): Node =>
+const groupBy: NodeConstructor = (...args: NodeArg[]) => (): Node =>
     new GroupByNode(args.map(toNode))
 
 /** SQL ORDER BY clause */
-const orderBy = (...args: NodeArg[]) => (): Node =>
+const orderBy: NodeConstructor = (...args: NodeArg[]) => (): Node =>
     new OrderByNode(args.map(toNode))
 
 /** SQL LIMIT clause */
-const limit = (...args: NodeArg[]) => (): Node => {
+const limit: NodeConstructor = (...args: NodeArg[]) => (): Node => {
     if (args.length === 0) {
         throw new Error('limit requires at least one argument')
     }
@@ -66,7 +68,8 @@ const limit = (...args: NodeArg[]) => (): Node => {
 }
 
 /** SQL OFFSET clause */
-const offset = (arg: NodeArg) => (): Node => new OffsetNode(toNode(arg))
+const offset: NodeConstructor = (arg: NodeArg) => (): Node =>
+    new OffsetNode(toNode(arg))
 
 export { from, groupBy, having, limit, offset, orderBy, select, where }
 
@@ -81,13 +84,19 @@ const logicalConstructor =
     }
 
 /** SQL AND operator */
-const and = logicalConstructor(LogicalOperator.And)
+const and: NodeConstructor = logicalConstructor(
+    LogicalOperator.And,
+)
 
 /** SQL OR operator */
-const or = logicalConstructor(LogicalOperator.Or)
+const or: NodeConstructor = logicalConstructor(
+    LogicalOperator.Or,
+)
 
 /** SQL NOT operator */
-const not = logicalConstructor(LogicalOperator.Not)
+const not: NodeConstructor = logicalConstructor(
+    LogicalOperator.Not,
+)
 
 export { and, not, or }
 
@@ -103,25 +112,25 @@ const binaryConstructor =
     }
 
 /** SQL "=" operator */
-const eq = binaryConstructor(ComparisonOperator.Eq)
+const eq: NodeConstructor = binaryConstructor(ComparisonOperator.Eq)
 
 /** SQL "!=" operator */
-const ne = binaryConstructor(ComparisonOperator.Ne)
+const ne: NodeConstructor = binaryConstructor(ComparisonOperator.Ne)
 
 /** SQL "<" operator */
-const lt = binaryConstructor(ComparisonOperator.Lt)
+const lt: NodeConstructor = binaryConstructor(ComparisonOperator.Lt)
 
 /** SQL "<=" operator */
-const le = binaryConstructor(ComparisonOperator.Le)
+const le: NodeConstructor = binaryConstructor(ComparisonOperator.Le)
 
 /** SQL ">" operator */
-const gt = binaryConstructor(ComparisonOperator.Gt)
+const gt: NodeConstructor = binaryConstructor(ComparisonOperator.Gt)
 
 /** SQL ">=" operator */
-const ge = binaryConstructor(ComparisonOperator.Ge)
+const ge: NodeConstructor = binaryConstructor(ComparisonOperator.Ge)
 
 /** SQL LIKE operator */
-const like = binaryConstructor(ComparisonOperator.Like)
+const like: NodeConstructor = binaryConstructor(ComparisonOperator.Like)
 
 export { eq, ge, gt, le, like, lt, ne }
 
@@ -132,17 +141,19 @@ const setQuantifierConstructor =
         new SetQuantifierNode(quantifier)
 
 /** SQL DISTINCT modifier */
-const distinct = setQuantifierConstructor(SetQuantifier.Distinct)
+const distinct: NodeConstructor = setQuantifierConstructor(
+    SetQuantifier.Distinct,
+)
 
 /** SQL All modifier */
-const all = setQuantifierConstructor(SetQuantifier.All)
+const all: NodeConstructor = setQuantifierConstructor(SetQuantifier.All)
 
 export { all, distinct }
 
 // ---
 
 /** SQL AS keyword (alias) */
-const alias = (...args: NodeArg[]) => (): Node => {
+const alias: NodeConstructor = (...args: NodeArg[]) => (): Node => {
     if (args.length !== 2) {
         throw new Error('alias requires exactly two arguments')
     }
@@ -163,19 +174,19 @@ const aggregateConstructor =
     }
 
 /** SQL AVG(...) function */
-const avg = aggregateConstructor(AggregateFunction.Avg)
+const avg: NodeConstructor = aggregateConstructor(AggregateFunction.Avg)
 
 /** SQL COUNT(...) function */
-const count = aggregateConstructor(AggregateFunction.Count)
+const count: NodeConstructor = aggregateConstructor(AggregateFunction.Count)
 
 /** SQL MIN(...) function */
-const min = aggregateConstructor(AggregateFunction.Min)
+const min: NodeConstructor = aggregateConstructor(AggregateFunction.Min)
 
 /** SQL MAX(...) function */
-const max = aggregateConstructor(AggregateFunction.Max)
+const max: NodeConstructor = aggregateConstructor(AggregateFunction.Max)
 
 /** SQL SUM(...) function */
-const sum = aggregateConstructor(AggregateFunction.Sum)
+const sum: NodeConstructor = aggregateConstructor(AggregateFunction.Sum)
 
 export { avg, count, max, min, sum }
 
@@ -191,16 +202,16 @@ const joinConstructor =
     }
 
 /** SQL INNER JOIN clause */
-const joinInner = joinConstructor(JoinType.Inner)
+const joinInner: NodeConstructor = joinConstructor(JoinType.Inner)
 
 /** SQL LEFT JOIN clause */
-const joinLeft = joinConstructor(JoinType.Left)
+const joinLeft: NodeConstructor = joinConstructor(JoinType.Left)
 
 /** SQL LEFT OUTER JOIN clause */
-const joinLeftOuter = joinConstructor(JoinType.LeftOuter)
+const joinLeftOuter: NodeConstructor = joinConstructor(JoinType.LeftOuter)
 
 /** SQL CROSS JOIN clause */
-const joinCross = (arg: NodeArg) => (): Node =>
+const joinCross: NodeConstructor = (arg: NodeArg) => (): Node =>
     new JoinNode(JoinType.Cross, toNode(arg))
 
 export { joinCross, joinInner, joinLeft, joinLeftOuter }
@@ -212,9 +223,9 @@ const sortingDirectionConstructor =
         new SortingDirectionNode(dir, toNode(arg))
 
 /** SQL ASC modifier */
-const asc = sortingDirectionConstructor(SortingDirection.Asc)
+const asc: NodeConstructor = sortingDirectionConstructor(SortingDirection.Asc)
 
 /** SQL DESC modifier */
-const desc = sortingDirectionConstructor(SortingDirection.Desc)
+const desc: NodeConstructor = sortingDirectionConstructor(SortingDirection.Desc)
 
 export { asc, desc }

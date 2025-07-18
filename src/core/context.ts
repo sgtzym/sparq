@@ -1,6 +1,7 @@
+import type { SupportedValueType } from 'node:sqlite'
 import { type ArrayLike, castArray, type Maybe } from '@/core/utils.ts'
 
-export class Context<T = unknown> {
+export class Context<T = SupportedValueType> {
     private _entries: Map<number, T> = new Map()
     private _next: number = 1
 
