@@ -8,6 +8,8 @@ export class FromNode implements Node {
     ) {}
 
     interpret(ctx: Context): string {
-        return `FROM ${castArray(this.nodes)[0].interpret(ctx)}`
+        return `FROM ${
+            castArray(this.nodes).map((n) => n.interpret(ctx)).join(', ')
+        }`
     }
 }
