@@ -21,11 +21,11 @@ export class Context<T = SupportedValueType> {
         return Array.from(this._entries.values()) as readonly T[]
     }
 
-    keys(): IterableIterator<number> {
+    get keys(): IterableIterator<number> {
         return this._entries.keys()
     }
 
-    entries(): IterableIterator<[number, T]> {
+    get entries(): IterableIterator<[number, T]> {
         return this._entries.entries()
     }
 
