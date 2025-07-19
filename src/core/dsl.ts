@@ -14,7 +14,7 @@ import { HavingNode } from '@/nodes/clauses/having.ts'
 import { GroupByNode } from '@/nodes/clauses/group-by.ts'
 import { OrderByNode } from '@/nodes/clauses/order-by.ts'
 import { JoinNode, JoinType } from '@/nodes/clauses/join.ts'
-import { LimitNode, OffsetNode } from '../nodes/clauses/limit.ts'
+import { LimitNode, OffsetNode } from '@/nodes/clauses/limit.ts'
 
 import {
     SetQuantifier,
