@@ -18,13 +18,7 @@ export class LiteralNode implements Node {
     constructor(private readonly value: unknown) {}
 
     interpret(ctx: Context): string {
-        let value = castSupportedValueType(this.value)
-
-        ctx.set(value)
-
-        if (typeof value === 'string') {
-            value = `'${value.replace(/'/g, "''")}'`
-        }
+        ctx.set(castSupportedValueType(this.value))
 
         return `:${ctx.current}`
     }
