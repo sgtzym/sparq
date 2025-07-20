@@ -1,11 +1,16 @@
-import { castSupportedValueType } from '@/core/utils.ts'
-import type { Context } from '@/core/context.ts'
+import {
+    needsQuoting,
+    type SqlIdentifier,
+    type SqlValue,
+    toSqlValue,
+} from '@/core/sqlite.ts'
 import type { Node } from '@/core/node.ts'
+import type { Context } from '@/core/context.ts'
 
 // ---
 
 export class RawNode implements Node {
-    constructor(private readonly value: string | number) {}
+    constructor(private readonly value: string) {}
 
     interpret(_ctx: Context): string {
         return String(this.value)
@@ -15,10 +20,10 @@ export class RawNode implements Node {
 // ---
 
 export class LiteralNode implements Node {
-    constructor(private readonly value: unknown) {}
+    constructor(private readonly value: SqlValue) {}
 
     interpret(ctx: Context): string {
-        ctx.set(castSupportedValueType(this.value))
+        ctx.set(toSqlValue(this.value))
 
         return `:${ctx.current}`
     }
@@ -27,24 +32,13 @@ export class LiteralNode implements Node {
 // ---
 
 export class IdentifierNode implements Node {
-    constructor(private readonly name: string) {}
+    constructor(private readonly name: SqlIdentifier) {}
+
     interpret(_ctx: Context): string {
         const parts: string[] = this.name.split('.')
-        const qualifiedName: string = parts.map((p) => this.escape(p)).join('.')
-
+        const qualifiedName: string = parts.map((p) =>
+            needsQuoting(p) ? `"${p}"` : p
+        ).join('.')
         return qualifiedName
-    }
-
-    private escape(part: string): string {
-        return this.needsQuoting(part) ? `"${part}"` : part
-    }
-
-    private needsQuoting(name: string): boolean {
-        return (
-            name.includes('-') ||
-            name.includes(' ') ||
-            /^\d/.test(name) || // starts with a number
-            /[^a-zA-Z0-9_]/.test(name) // contains special chars excl. underscores
-        )
     }
 }

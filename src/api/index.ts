@@ -1,11 +1,10 @@
-import type { Node } from '@/core/node.ts'
-import { type NodeArg, toNode } from '@/core/utils.ts'
+import { type Node, type NodeArg, toNode } from '@/core/node.ts'
 
-import { RawNode } from '@/nodes/primitives.ts'
+import { IdentifierNode, LiteralNode, RawNode } from '@/nodes/primitives.ts'
 import { AliasNode } from '@/nodes/alias.ts'
 
-import { BinaryNode, ComparisonOperator } from '@/nodes/binary.ts'
-import { LogicalNode, LogicalOperator } from '@/nodes/logical.ts'
+import { BinaryNode, ComparisonOperator } from '@/nodes/expressions/binary.ts'
+import { LogicalNode, LogicalOperator } from '@/nodes/expressions/logical.ts'
 
 import { SelectNode } from '@/nodes/clauses/select.ts'
 import { FromNode } from '@/nodes/clauses/from.ts'
@@ -23,7 +22,11 @@ import {
     SortingDirectionNode,
 } from '@/nodes/modifiers.ts'
 
-import { AggregateFunction, AggregateNode } from '@/nodes/aggregates.ts'
+import {
+    AggregateFunction,
+    AggregateNode,
+} from '@/nodes/expressions/aggregates.ts'
+import { isIdentifier, isSqlValue } from '../core/sqlite.ts'
 
 type NodeConstructor = (...args: NodeArg[]) => () => Node
 
@@ -157,7 +160,7 @@ export { alias }
 const aggregateConstructor =
     (fn: AggregateFunction) => (...args: NodeArg[]) => (): Node => {
         const nodes: Node[] = args.map(toNode)
-        if (nodes.length === 0) nodes.push(new RawNode(1))
+        if (nodes.length === 0) nodes.push(new RawNode(String(1)))
 
         return new AggregateNode(fn, nodes)
     }
@@ -215,3 +218,34 @@ const asc: NodeConstructor = sortingDirectionConstructor(SortingDirection.Asc)
 const desc: NodeConstructor = sortingDirectionConstructor(SortingDirection.Desc)
 
 export { asc, desc }
+
+// ---
+
+/** Raw SQL value */
+const raw: NodeConstructor = (arg: NodeArg) => (): Node => {
+    if (!arg || !(typeof arg === 'string')) {
+        throw new Error(`${arg} is not a string value`)
+    }
+
+    return new RawNode(arg)
+}
+
+/** Table/field identifier */
+const id: NodeConstructor = (arg: NodeArg) => (): Node => {
+    if (!isIdentifier(arg)) {
+        throw new Error(`${arg} is not a identifier`)
+    }
+
+    return new IdentifierNode(arg)
+}
+
+/** Parameterized literal value */
+const val: NodeConstructor = (arg: NodeArg) => (): Node => {
+    if (!isSqlValue(arg)) {
+        throw new Error(`${arg} is not a valid SQL value`)
+    }
+
+    return new LiteralNode(arg)
+}
+
+export { id, raw, val }

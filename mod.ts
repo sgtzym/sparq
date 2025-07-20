@@ -1,2 +1,2 @@
-export * from '@/core/dsl.ts'
-export { query } from '@/core/query.ts'
+export * from '@/api/index.ts'
+export { query } from '@/api/query.ts'

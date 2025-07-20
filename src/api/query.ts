@@ -1,7 +1,5 @@
-import type { SupportedValueType } from 'node:sqlite'
-
-import type { Node } from '@/core/node.ts'
-import { type NodeArg, toNode } from '@/core/utils.ts'
+import type { SqlValue } from '../core/sqlite.ts'
+import { type Node, type NodeArg, toNode } from '@/core/node.ts'
 import { Context } from '@/core/context.ts'
 
 import { SelectNode } from '@/nodes/clauses/select.ts'
@@ -18,7 +16,7 @@ import { LimitNode } from '@/nodes/clauses/limit.ts'
  * @param args SQLite clauses
  * @returns a parameterized sql string and a list of supported values
  */
-export const query = (...args: NodeArg[]): [string, SupportedValueType[]] => {
+export const query = (...args: NodeArg[]): [string, SqlValue[]] => {
     const ctx = new Context()
     const sql: Map<string, string> = new Map()
 
@@ -50,6 +48,6 @@ export const query = (...args: NodeArg[]): [string, SupportedValueType[]] => {
         clauseOrder.filter((clause) => sql.has(clause))
             .map((c) => sql.get(c))
             .join(' '),
-        ctx.values as SupportedValueType[],
+        ctx.values as SqlValue[],
     ]
 }
