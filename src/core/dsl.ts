@@ -58,12 +58,7 @@ const orderBy: NodeConstructor = (...args: NodeArg[]) => (): Node =>
 
 /** SQL LIMIT clause */
 const limit: NodeConstructor = (...args: NodeArg[]) => (): Node => {
-    if (args.length === 0) {
-        throw new Error('limit requires at least one argument')
-    }
-
     const [count, offset] = args.map(toNode)
-
     return new LimitNode(count, offset)
 }
 
@@ -77,9 +72,6 @@ export { from, groupBy, having, limit, offset, orderBy, select, where }
 
 const logicalConstructor =
     (operator: LogicalOperator) => (...args: NodeArg[]) => (): Node => {
-        if (args.length < 2) {
-            throw new Error('logical requires at least two arguments')
-        }
         return new LogicalNode(operator, args.map(toNode))
     }
 
@@ -104,9 +96,6 @@ export { and, not, or }
 
 const binaryConstructor =
     (operator: ComparisonOperator) => (...args: NodeArg[]) => (): Node => {
-        if (args.length !== 2) {
-            throw new Error('binary requires exactly two arguments')
-        }
         const [left, right] = args
         return new BinaryNode(operator, toNode(left), toNode(right))
     }
@@ -129,10 +118,13 @@ const gt: NodeConstructor = binaryConstructor(ComparisonOperator.Gt)
 /** SQL ">=" operator */
 const ge: NodeConstructor = binaryConstructor(ComparisonOperator.Ge)
 
+/** SQL IN operator */
+const in_: NodeConstructor = binaryConstructor(ComparisonOperator.In)
+
 /** SQL LIKE operator */
 const like: NodeConstructor = binaryConstructor(ComparisonOperator.Like)
 
-export { eq, ge, gt, le, like, lt, ne }
+export { eq, ge, gt, in_, le, like, lt, ne }
 
 // ---
 
@@ -154,9 +146,6 @@ export { all, distinct }
 
 /** SQL AS keyword (alias) */
 const alias: NodeConstructor = (...args: NodeArg[]) => (): Node => {
-    if (args.length !== 2) {
-        throw new Error('alias requires exactly two arguments')
-    }
     const [name, asName] = args.map(toNode)
     return new AliasNode(name, asName)
 }
@@ -194,9 +183,6 @@ export { avg, count, max, min, sum }
 
 const joinConstructor =
     (type: JoinType) => (...args: NodeArg[]) => (): Node => {
-        if (args.length !== 2) {
-            throw new Error('join requires exactly two arguments')
-        }
         const [table, condition] = args.map(toNode)
         return new JoinNode(type, table, condition)
     }

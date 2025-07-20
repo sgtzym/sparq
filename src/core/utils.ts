@@ -23,8 +23,8 @@ function isDefined<T>(value: Maybe<T>): value is T {
 export { isDefined, type Maybe }
 
 // Node helpers
-
-type NodeArg = number | string | (() => Node)
+type NodeValue = SupportedValueType | boolean | Date | undefined
+type NodeArg = NodeValue | (() => Node)
 
 /**
  * Casts args to Nodes 🧼
