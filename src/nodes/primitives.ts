@@ -3,7 +3,7 @@ import {
     type SqlIdentifier,
     type SqlValue,
     toSqlValue,
-} from '@/core/sqlite.ts'
+} from '@/core/sql-types.ts'
 import type { Node } from '@/core/node.ts'
 import type { Context } from '@/core/context.ts'
 

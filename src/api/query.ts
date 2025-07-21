@@ -1,4 +1,4 @@
-import type { SqlValue } from '../core/sqlite.ts'
+import type { SqlValue } from '@/core/sql-types.ts'
 import { type Node, type NodeArg, toNode } from '@/core/node.ts'
 import { Context } from '@/core/context.ts'
 
@@ -34,6 +34,7 @@ export const query = (...args: NodeArg[]): [string, SqlValue[]] => {
     args.map(toNode).forEach((node: Node) => {
         const clauseName: string = node.constructor.name
 
+        // allow multiple joins
         clauseName === JoinNode.name
             ? sql.set(
                 clauseName,

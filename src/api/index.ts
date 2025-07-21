@@ -26,7 +26,7 @@ import {
     AggregateFunction,
     AggregateNode,
 } from '@/nodes/expressions/aggregates.ts'
-import { isIdentifier, isSqlValue } from '../core/sqlite.ts'
+import { isIdentifier, isSqlValue } from '@/core/sql-types.ts'
 
 type NodeConstructor = (...args: NodeArg[]) => () => Node
 
