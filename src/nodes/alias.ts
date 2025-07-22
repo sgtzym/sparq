@@ -1,5 +1,4 @@
-import type { Context } from '@/core/context.ts'
-import type { Node } from '@/core/node.ts'
+import type { Node, NodeContext } from '~/core/node.ts'
 
 export class AliasNode implements Node {
     constructor(
@@ -7,7 +6,7 @@ export class AliasNode implements Node {
         private readonly asName: Node,
     ) {}
 
-    interpret(ctx: Context): string {
+    interpret(ctx: NodeContext): string {
         return `${this.name.interpret(ctx)} AS ${this.asName.interpret(ctx)}`
     }
 }

@@ -1,23 +1,23 @@
-import type { SqlValue } from '@/core/sql-types.ts'
-import { type Node, type NodeArg, toNode } from '@/core/node.ts'
-import { Context } from '@/core/context.ts'
+import type { SqlValue } from '~/core/sql-types.ts'
 
-import { SelectNode } from '@/nodes/clauses/select.ts'
-import { FromNode } from '@/nodes/clauses/from.ts'
-import { JoinNode } from '@/nodes/clauses/join.ts'
-import { WhereNode } from '@/nodes/clauses/where.ts'
-import { HavingNode } from '@/nodes/clauses/having.ts'
-import { GroupByNode } from '@/nodes/clauses/group-by.ts'
-import { OrderByNode } from '@/nodes/clauses/order-by.ts'
-import { LimitNode } from '@/nodes/clauses/limit.ts'
+import { type Node, type NodeArg, toNode } from '~/core/node.ts'
 
-/**
- * SQLite Query
- * @param args SQLite clauses
- * @returns a parameterized sql string and a list of supported values
- */
-export const query = (...args: NodeArg[]): [string, SqlValue[]] => {
-    const ctx = new Context()
+import { Registry } from '~/core/registry.ts'
+
+import {
+    FromNode,
+    GroupByNode,
+    HavingNode,
+    JoinNode,
+    LimitNode,
+    OrderByNode,
+    SelectNode,
+    WhereNode,
+} from '~/nodes/clauses.ts'
+
+/** */
+const query = (...args: NodeArg[]): [string, SqlValue[]] => {
+    const ctx = new Registry<SqlValue>()
     const sql: Map<string, string> = new Map()
 
     const clauseOrder: string[] = [
@@ -52,3 +52,5 @@ export const query = (...args: NodeArg[]): [string, SqlValue[]] => {
         ctx.values as SqlValue[],
     ]
 }
+
+export { query }

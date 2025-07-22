@@ -1,7 +1,6 @@
-import { type ArrayLike, castArray } from '@/core/utils.ts'
-import type { Context } from '@/core/context.ts'
-import type { Node } from '@/core/node.ts'
-import { SetQuantifierNode } from '@/nodes/modifiers.ts'
+import { type ArrayLike, castArray } from '~/core/utils.ts'
+import type { Node, NodeContext } from '~/core/node.ts'
+import { SetQuantifierNode } from '~/nodes/modifiers.ts'
 
 export enum AggregateFunction {
     Avg = 'AVG',
@@ -17,7 +16,7 @@ export class AggregateNode implements Node {
         private readonly nodes: ArrayLike<Node>,
     ) {}
 
-    interpret(ctx: Context): string {
+    interpret(ctx: NodeContext): string {
         let quantifier: SetQuantifierNode | undefined
         const fields: Node[] = []
 

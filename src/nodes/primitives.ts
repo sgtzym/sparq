@@ -3,16 +3,15 @@ import {
     type SqlIdentifier,
     type SqlValue,
     toSqlValue,
-} from '@/core/sql-types.ts'
-import type { Node } from '@/core/node.ts'
-import type { Context } from '@/core/context.ts'
+} from '~/core/sql-types.ts'
+import type { Node, NodeContext } from '~/core/node.ts'
 
 // ---
 
 export class RawNode implements Node {
     constructor(private readonly value: string) {}
 
-    interpret(_ctx: Context): string {
+    interpret(_ctx: NodeContext): string {
         return String(this.value)
     }
 }
@@ -22,7 +21,7 @@ export class RawNode implements Node {
 export class LiteralNode implements Node {
     constructor(private readonly value: SqlValue) {}
 
-    interpret(ctx: Context): string {
+    interpret(ctx: NodeContext): string {
         ctx.set(toSqlValue(this.value))
 
         return `:${ctx.current}`
@@ -34,7 +33,7 @@ export class LiteralNode implements Node {
 export class IdentifierNode implements Node {
     constructor(private readonly name: SqlIdentifier) {}
 
-    interpret(_ctx: Context): string {
+    interpret(_ctx: NodeContext): string {
         const parts: string[] = this.name.split('.')
         const qualifiedName: string = parts.map((p) =>
             needsQuoting(p) ? `"${p}"` : p

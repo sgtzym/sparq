@@ -1,7 +1,6 @@
-import { type ArrayLike, castArray, type Maybe } from '@/core/utils.ts'
-import type { SqlValue } from './sql-types.ts'
+import { type ArrayLike, castArray, type Maybe } from '~/core/utils.ts'
 
-export class Context<T = SqlValue> {
+export class Registry<T> {
     private _entries: Map<number, T> = new Map()
     private _next: number = 1
 

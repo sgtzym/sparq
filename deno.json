@@ -3,7 +3,7 @@
     "version": "0.2.3",
     "license": "MIT",
     "imports": {
-        "@/": "./src/",
+        "~/": "./src/",
         "sqlite": "npm:sqlite@^5.1.1"
     },
     "exports": "./mod.ts",

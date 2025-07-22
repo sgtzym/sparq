@@ -1,23 +1,33 @@
-import type { Context } from '@/core/context.ts'
-import { isIdentifier, type SqlValue } from '@/core/sql-types.ts'
-import { IdentifierNode, LiteralNode, RawNode } from '@/nodes/primitives.ts'
+import type { Registry } from './registry.ts'
+import { isIdentifier, type SqlValue } from '~/core/sql-types.ts'
+import { IdentifierNode, LiteralNode } from '~/nodes/primitives.ts'
+
+/** Extended SQL values */
+type NodeValue = SqlValue | boolean | Date | undefined
+
+/** Primitive or Node */
+type NodeArg = NodeValue | (() => Node)
+
+/** Node context (parameter handling) */
+type NodeContext = Registry<SqlValue>
 
 /** Basic Node interface used for AST construction */
 interface Node {
-    interpret(ctx?: Context): string
+    interpret(ctx?: NodeContext): string
 }
 
-type NodeValue = SqlValue | boolean | Date | undefined
-type NodeArg = NodeValue | (() => Node) // value or node constructor (see api)
+/**
+ * Constructor for API functions.
+ * These functions need to resolve any arg to a Node.
+ */
+type NodeConstructor = (...args: NodeArg[]) => () => Node
 
 /**
  * Casts args to Nodes 🧼
  * @param arg any string, number or Node function - e.g. select()
  * @returns a single Node instance
  */
-function toNode(
-    arg: NodeArg,
-): Node {
+function toNode(arg: NodeArg): Node {
     if (typeof arg === 'function') return arg()
 
     return isIdentifier(arg)
@@ -31,4 +41,11 @@ function toNode(
  * Sets could probably help here!
  */
 
-export { type Node, type NodeArg, type NodeValue, toNode }
+export {
+    type Node,
+    type NodeArg,
+    type NodeConstructor,
+    type NodeContext,
+    type NodeValue,
+    toNode,
+}

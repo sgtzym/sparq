@@ -1,5 +1,4 @@
-import type { Context } from '@/core/context.ts'
-import type { Node } from '@/core/node.ts'
+import type { Node, NodeContext } from '~/core/node.ts'
 
 export enum SetQuantifier {
     Distinct = 'DISTINCT',
@@ -11,7 +10,7 @@ export class SetQuantifierNode implements Node {
         private readonly quantifier: SetQuantifier,
     ) {}
 
-    interpret(_ctx: Context): string {
+    interpret(_ctx: NodeContext): string {
         return this.quantifier
     }
 }
@@ -27,7 +26,7 @@ export class SortingDirectionNode implements Node {
         private readonly node: Node,
     ) {}
 
-    interpret(ctx: Context): string {
+    interpret(ctx: NodeContext): string {
         return `${this.node.interpret(ctx)} ${this.dir}`
     }
 }
