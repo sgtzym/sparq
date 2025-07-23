@@ -11,46 +11,67 @@ import {
     JoinNode,
     LimitNode,
     OrderByNode,
-    SelectNode,
     WhereNode,
 } from '~/nodes/clauses.ts'
 
-/** */
-const query = (...args: NodeArg[]): [string, SqlValue[]] => {
-    const ctx = new Registry<SqlValue>()
-    const sql: Map<string, string> = new Map()
+import { SetNode } from '~/nodes/set.ts'
+import { SelectNode, UpdateNode } from '~/nodes/statements.ts'
 
-    const clauseOrder: string[] = [
-        SelectNode.name,
-        FromNode.name,
-        JoinNode.name,
-        WhereNode.name,
-        HavingNode.name,
-        GroupByNode.name,
-        OrderByNode.name,
-        LimitNode.name,
-    ]
-
-    args.map(toNode).forEach((node: Node) => {
-        const clauseName: string = node.constructor.name
-
-        // allow multiple joins
-        clauseName === JoinNode.name
-            ? sql.set(
-                clauseName,
-                [sql.get(clauseName), node.interpret(ctx)].filter(Boolean).join(
-                    ' ',
-                ),
-            )
-            : sql.set(clauseName, node.interpret(ctx))
-    })
-
-    return [
-        clauseOrder.filter((clause) => sql.has(clause))
-            .map((c) => sql.get(c))
-            .join(' '),
-        ctx.values as SqlValue[],
-    ]
+enum Delimiter {
+    Space = ' ',
+    Comma = ', '
 }
 
-export { query }
+// indicates if clauses can appear multiple times in one statement, separated by the given delimiter
+type ClauseDelimiter = Delimiter | undefined
+
+type ClauseOrder = Record<string, ClauseDelimiter>
+type QueryResult = [string, SqlValue[]]
+
+/** SQL statement wrapper - interprets parts in given order */
+const queryConstructor =
+    (clauseOrder: ClauseOrder) => (...args: NodeArg[]): QueryResult => {
+        const ctx = new Registry<SqlValue>()
+        const parts: Map<string, string> = new Map()
+
+        args.map(toNode).forEach((node: Node) => {
+            const nodeType: string = node.constructor.name
+
+            clauseOrder[nodeType] !== undefined
+                ? parts.set(
+                    nodeType,
+                    [parts.get(nodeType), node.interpret(ctx)].filter(Boolean)
+                        .join(clauseOrder[nodeType]),
+                )
+                : parts.set(nodeType, node.interpret(ctx))
+        })
+
+        return [
+            Object.keys(clauseOrder)
+                .filter((clause) => parts.has(clause))
+                .map((clause) => parts.get(clause))
+                .join(' '),
+            ctx.values as SqlValue[],
+        ]
+    }
+
+const selectQuery = queryConstructor({
+    [SelectNode.name]: undefined,
+    [FromNode.name]: undefined,
+    [JoinNode.name]: Delimiter.Space,
+    [WhereNode.name]: undefined,
+    [HavingNode.name]: undefined,
+    [GroupByNode.name]: undefined,
+    [OrderByNode.name]: undefined,
+    [LimitNode.name]: undefined,
+})
+
+const updateQuery = queryConstructor({
+    [UpdateNode.name]: undefined,
+    [SetNode.name]: Delimiter.Comma,
+    [WhereNode.name]: undefined,
+    [OrderByNode.name]: undefined,
+    [LimitNode.name]: undefined,
+})
+
+export { selectQuery, updateQuery }

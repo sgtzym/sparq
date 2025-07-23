@@ -20,7 +20,7 @@ interface Node {
  * Constructor for API functions.
  * These functions need to resolve any arg to a Node.
  */
-type NodeConstructor = (...args: NodeArg[]) => () => Node
+type NodeConstructor = <T>(...args: NodeArg[]) => () => Node
 
 /**
  * Casts args to Nodes 🧼

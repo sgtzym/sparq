@@ -17,28 +17,28 @@ const binaryConstructor =
         )
     }
 
-/** SQL "=" operator */
+/** SQL "=" binary expr */
 const eq: NodeConstructor = binaryConstructor(ComparisonOperator.Eq)
 
-/** SQL "!=" operator */
+/** SQL "!=" binary expr */
 const ne: NodeConstructor = binaryConstructor(ComparisonOperator.Ne)
 
-/** SQL "<" operator */
+/** SQL "<" binary expr */
 const lt: NodeConstructor = binaryConstructor(ComparisonOperator.Lt)
 
-/** SQL "<=" operator */
+/** SQL "<=" binary expr */
 const le: NodeConstructor = binaryConstructor(ComparisonOperator.Le)
 
-/** SQL ">" operator */
+/** SQL ">" binary expr */
 const gt: NodeConstructor = binaryConstructor(ComparisonOperator.Gt)
 
-/** SQL ">=" operator */
+/** SQL ">=" binary expr */
 const ge: NodeConstructor = binaryConstructor(ComparisonOperator.Ge)
 
-/** SQL IN operator */
+/** SQL IN binary expr */
 const in_: NodeConstructor = binaryConstructor(ComparisonOperator.In)
 
-/** SQL LIKE operator */
+/** SQL LIKE binary expr */
 const like: NodeConstructor = binaryConstructor(ComparisonOperator.Like)
 
 export { eq, ge, gt, in_, le, like, lt, ne }

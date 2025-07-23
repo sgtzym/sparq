@@ -1,6 +1,5 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
 import type { Node, NodeContext } from '~/core/node.ts'
-import { SetQuantifierNode } from '~/nodes/modifiers.ts'
 
 class FromNode implements Node {
     constructor(
@@ -99,31 +98,6 @@ class OrderByNode implements Node {
     }
 }
 
-class SelectNode implements Node {
-    constructor(
-        private readonly nodes: ArrayLike<Node>,
-    ) {}
-
-    interpret(ctx: NodeContext): string {
-        let quantifier: SetQuantifierNode | undefined
-        const fields: Node[] = []
-
-        for (const node of castArray(this.nodes)) {
-            if (node instanceof SetQuantifierNode) {
-                quantifier = node
-            } else {
-                fields.push(node)
-            }
-        }
-
-        return [
-            'SELECT',
-            quantifier?.interpret(ctx),
-            fields.map((node) => node.interpret(ctx)).join(', '),
-        ].filter(Boolean).join(' ')
-    }
-}
-
 class WhereNode implements Node {
     constructor(
         private nodes: ArrayLike<Node>,
@@ -147,6 +121,5 @@ export {
     LimitNode,
     OffsetNode,
     OrderByNode,
-    SelectNode,
     WhereNode,
 }

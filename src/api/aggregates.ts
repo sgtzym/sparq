@@ -7,10 +7,7 @@ import {
 
 import { RawNode } from '~/nodes/primitives.ts'
 
-import {
-    AggregateFunction,
-    AggregateNode,
-} from '~/nodes/aggregates.ts'
+import { AggregateFunction, AggregateNode } from '~/nodes/aggregates.ts'
 
 const aggregateConstructor =
     (fn: AggregateFunction) => (...args: NodeArg[]) => (): Node => {

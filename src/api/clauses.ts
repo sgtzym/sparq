@@ -5,7 +5,6 @@ import {
     toNode,
 } from '~/core/node.ts'
 
-import { RawNode } from '~/nodes/primitives.ts'
 import {
     FromNode,
     GroupByNode,
@@ -15,17 +14,8 @@ import {
     LimitNode,
     OffsetNode,
     OrderByNode,
-    SelectNode,
     WhereNode,
 } from '~/nodes/clauses.ts'
-
-/** SQL SELECT clause */
-const select: NodeConstructor = (...args: NodeArg[]) => (): Node => {
-    const nodes: Node[] = args.map(toNode)
-    if (nodes.length === 0) nodes.push(new RawNode('*'))
-
-    return new SelectNode(nodes)
-}
 
 /** SQL FROM clause */
 const from: NodeConstructor = (...args: NodeArg[]) => (): Node => {
@@ -58,7 +48,7 @@ const limit: NodeConstructor = (...args: NodeArg[]) => (): Node => {
 const offset: NodeConstructor = (arg: NodeArg) => (): Node =>
     new OffsetNode(toNode(arg))
 
-export { from, groupBy, having, limit, offset, orderBy, select, where }
+export { from, groupBy, having, limit, offset, orderBy, where }
 
 // ---
 
