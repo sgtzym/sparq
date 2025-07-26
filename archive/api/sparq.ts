@@ -5,13 +5,13 @@ import { selectQuery, updateQuery } from '~/api/query.ts'
 
 function sparq(table: string) {
     return {
-        find: (...args: NodeArg[]) =>
+        select: (columns: string[], ...args: NodeArg[]) =>
             selectQuery(
-                select(),
+                select(...columns),
                 from(table),
                 ...args,
             ),
-        modify: (...args: NodeArg[]) =>
+        update: (...args: NodeArg[]) =>
             updateQuery(
                 update(table),
                 ...args,

@@ -1,6 +1,11 @@
-import type { SqlValue } from '~/core/sql-types.ts'
+import { type SqlValue } from '../../src/core/sql-constants.ts'
 
-import { type Node, type NodeArg, toNode } from '~/core/node.ts'
+import {
+    type Node,
+    type NodeArg,
+    type NodeContext,
+    toNode,
+} from '~/core/node.ts'
 
 import { Registry } from '~/core/registry.ts'
 
@@ -11,19 +16,16 @@ import {
     JoinNode,
     LimitNode,
     OrderByNode,
+    SetNode,
     WhereNode,
 } from '~/nodes/clauses.ts'
 
-import { SetNode } from '~/nodes/set.ts'
-import { SelectNode, UpdateNode } from '~/nodes/statements.ts'
+import { InsertNode, SelectNode, UpdateNode } from '~/nodes/statements.ts'
 
-enum Delimiter {
-    Space = ' ',
-    Comma = ', '
-}
+type SqlDelimiter = ' ' | ', '
 
 // indicates if clauses can appear multiple times in one statement, separated by the given delimiter
-type ClauseDelimiter = Delimiter | undefined
+type ClauseDelimiter = SqlDelimiter | undefined
 
 type ClauseOrder = Record<string, ClauseDelimiter>
 type QueryResult = [string, SqlValue[]]
@@ -31,7 +33,7 @@ type QueryResult = [string, SqlValue[]]
 /** SQL statement wrapper - interprets parts in given order */
 const queryConstructor =
     (clauseOrder: ClauseOrder) => (...args: NodeArg[]): QueryResult => {
-        const ctx = new Registry<SqlValue>()
+        const ctx: NodeContext = new Registry()
         const parts: Map<string, string> = new Map()
 
         args.map(toNode).forEach((node: Node) => {
@@ -58,7 +60,7 @@ const queryConstructor =
 const selectQuery = queryConstructor({
     [SelectNode.name]: undefined,
     [FromNode.name]: undefined,
-    [JoinNode.name]: Delimiter.Space,
+    [JoinNode.name]: ' ',
     [WhereNode.name]: undefined,
     [HavingNode.name]: undefined,
     [GroupByNode.name]: undefined,
@@ -68,10 +70,14 @@ const selectQuery = queryConstructor({
 
 const updateQuery = queryConstructor({
     [UpdateNode.name]: undefined,
-    [SetNode.name]: Delimiter.Comma,
+    [SetNode.name]: undefined,
     [WhereNode.name]: undefined,
     [OrderByNode.name]: undefined,
     [LimitNode.name]: undefined,
 })
 
-export { selectQuery, updateQuery }
+const insertQuery = queryConstructor({
+    [InsertNode.name]: undefined,
+})
+
+export { insertQuery, selectQuery, updateQuery }

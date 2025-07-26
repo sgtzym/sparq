@@ -1,5 +1,4 @@
 export * from '~/api/aggregates.ts'
-export * from '~/api/alias.ts'
 export * from '~/api/binary.ts'
 export * from '~/api/clauses.ts'
 export * from '~/api/logical.ts'
