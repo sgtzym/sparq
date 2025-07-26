@@ -1,5 +1,5 @@
 import { sql, type SqlValue } from '~/core/sql.ts'
-import { interpretAll, toNode, type Node, type NodeArg } from '~/core/node.ts'
+import { interpretAll, type Node, type NodeArg, toNode } from '~/core/node.ts'
 import { Parameters } from '~/core/parameter-registry.ts'
 import {
     FromNode,

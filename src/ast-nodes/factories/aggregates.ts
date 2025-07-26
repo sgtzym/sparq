@@ -6,13 +6,13 @@ import {
 } from '~/ast-nodes/aggregates.ts'
 
 const aggregateFactory = (fn: AggregateFunction): NodeFactory => (arg?: NodeArg) => (): Node => {
-    return new AggregateNode(fn, toNode(arg))
+    return new AggregateNode(fn, arg ? toNode(arg): undefined)
 }
 
-const avg: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)
-const count: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.COUNT)
-const min: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.MIN)
-const max: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.MAX)
-const sum: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.SUM)
+const avg = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)
+const count = aggregateFactory(AGGREGATE_FUNCTIONS.COUNT)
+const min = aggregateFactory(AGGREGATE_FUNCTIONS.MIN)
+const max = aggregateFactory(AGGREGATE_FUNCTIONS.MAX)
+const sum = aggregateFactory(AGGREGATE_FUNCTIONS.SUM)
 
 export { avg, count, max, min, sum }

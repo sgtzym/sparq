@@ -18,8 +18,8 @@ const logicalFactory =
         return new LogicalNode(operator, args.map(toNode))
     }
 
-const and: NodeFactory = logicalFactory(LOGICAL.AND)
-const or: NodeFactory = logicalFactory(LOGICAL.OR)
+const and = logicalFactory(LOGICAL.AND)
+const or = logicalFactory(LOGICAL.OR)
 
 export { and, or }
 
@@ -35,14 +35,14 @@ const binaryFactory =
         )
     }
 
-const eq: NodeFactory = binaryFactory(COMPARISON.EQ)
-const ne: NodeFactory = binaryFactory(COMPARISON.NE)
-const lt: NodeFactory = binaryFactory(COMPARISON.LT)
-const le: NodeFactory = binaryFactory(COMPARISON.LE)
-const gt: NodeFactory = binaryFactory(COMPARISON.GT)
-const ge: NodeFactory = binaryFactory(COMPARISON.GE)
-const in_: NodeFactory = binaryFactory(COMPARISON.IN)
-const like: NodeFactory = binaryFactory(COMPARISON.LIKE)
+const eq = binaryFactory(COMPARISON.EQ)
+const ne = binaryFactory(COMPARISON.NE)
+const lt = binaryFactory(COMPARISON.LT)
+const le = binaryFactory(COMPARISON.LE)
+const gt = binaryFactory(COMPARISON.GT)
+const ge = binaryFactory(COMPARISON.GE)
+const in_ = binaryFactory(COMPARISON.IN)
+const like = binaryFactory(COMPARISON.LIKE)
 
 export { eq, ge, gt, in_, le, like, lt, ne }
 

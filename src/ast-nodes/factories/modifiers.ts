@@ -14,10 +14,10 @@ import {
 
 const setQuantifierFactory =
     (quantifier: SetQuantifier): NodeFactory => (arg?: NodeArg) => (): Node =>
-        new SetQuantifierNode(quantifier, toNode(arg))
+        new SetQuantifierNode(quantifier, arg ? toNode(arg) : undefined)
 
-const _distinct: NodeFactory = setQuantifierFactory(SET_QUANTIFIERS.DISTINCT)
-const _all: NodeFactory = setQuantifierFactory(SET_QUANTIFIERS.ALL)
+const _distinct = setQuantifierFactory(SET_QUANTIFIERS.DISTINCT)
+const _all = setQuantifierFactory(SET_QUANTIFIERS.ALL)
 
 function distinct(): () => Node
 function distinct(field: NodeArg): () => Node
@@ -35,17 +35,20 @@ export { all, distinct }
 
 // Sorting directions
 
-const sortingDirectionFactory = (dir: SortingDirection) => (arg: NodeArg) => (): Node =>
-    new SortingDirectionNode(toNode(arg), dir)
+const sortingDirectionFactory = (dir: SortingDirection) => (arg: NodeArg) => (): Node => {
+    if (!arg) throw new Error(`${SortingDirectionNode.name}: expression required`)
+    return new SortingDirectionNode(toNode(arg), dir)
+}
 
-const asc: NodeFactory = sortingDirectionFactory(SORTING_DIRECTIONS.ASC)
-const desc: NodeFactory = sortingDirectionFactory(SORTING_DIRECTIONS.DESC)
+const asc = sortingDirectionFactory(SORTING_DIRECTIONS.ASC)
+const desc = sortingDirectionFactory(SORTING_DIRECTIONS.DESC)
 
 export { asc, desc }
 
 // Alias
 
-const alias: NodeFactory = (expression: NodeArg, as: NodeArg) => (): Node => {
+const alias = (expression: NodeArg, as: NodeArg) => (): Node => {
+    if (!expression || !as) throw new Error(`${AliasNode.name}: expression required`)
     return new AliasNode(toNode(expression), toNode(as))
 }
 
