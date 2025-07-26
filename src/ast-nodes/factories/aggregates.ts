@@ -1,5 +1,3 @@
-import { SQL_SYMBOLS } from '~/core/sql-constants.ts'
-import { RawNode } from '~/ast-nodes/primitives.ts'
 import { type Node, type NodeArg, type NodeFactory, toNode } from '~/core/node.ts'
 import {
     AGGREGATE_FUNCTIONS,
@@ -8,12 +6,7 @@ import {
 } from '~/ast-nodes/aggregates.ts'
 
 const aggregateFactory = (fn: AggregateFunction): NodeFactory => (arg?: NodeArg) => (): Node => {
-    const node = arg
-        ? toNode(arg)
-        : fn === AGGREGATE_FUNCTIONS.COUNT
-        ? new RawNode(SQL_SYMBOLS.ALL)
-        : new RawNode('1')
-    return new AggregateNode(fn, node)
+    return new AggregateNode(fn, toNode(arg))
 }
 
 const avg: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)

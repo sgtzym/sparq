@@ -1,4 +1,4 @@
-import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
+import { SQL_KEYWORDS as SQL, SQL_SYMBOLS } from '~/core/sql-constants.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
 import type { Node } from '~/core/node.ts'
 
@@ -15,10 +15,12 @@ export type AggregateFunction = typeof AGGREGATE_FUNCTIONS[keyof typeof AGGREGAT
 export class AggregateNode implements Node {
     constructor(
         private readonly fn: AggregateFunction,
-        private readonly expression: Node,
+        private readonly expression?: Node,
     ) {}
 
     interpret(params: Parameters): string {
-        return `${this.fn}(${this.expression.interpret(params)})`
+        return this.expression
+            ? `${this.fn}(${this.expression.interpret(params)})`
+            : `${this.fn}(${SQL_SYMBOLS.ALL})`
     }
 }
