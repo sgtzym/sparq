@@ -8,7 +8,7 @@ export class SelectNode implements Node {
     constructor(private readonly fields?: ArrayLike<Node>) {}
 
     interpret(params: Parameters): string {
-        return this.fields
+        return (this.fields && Array.isArray(this.fields) && this.fields.length)
             ? `${SQL.SELECT} ${sql.comma(...interpretAll(this.fields, params))}`
             : `${SQL.SELECT} ${SQL_SYMBOLS.ALL}`
     }
