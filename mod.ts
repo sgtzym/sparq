@@ -4,3 +4,5 @@ export * from '~/ast-nodes/factories/modifiers.ts'
 export * from '~/ast-nodes/factories/operators.ts'
 export * from '~/ast-nodes/factories/primitives.ts'
 export * from '~/ast-nodes/factories/statements.ts'
+
+export { sparq } from '~/api/sparq.ts'
