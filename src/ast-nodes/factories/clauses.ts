@@ -62,6 +62,6 @@ export const offset = (count: number = 0) => (): Node => {
     return new OffsetNode(count)
 }
 
-export const set = (column: NodeArg, value: NodeArg) => (): Node => {
-    return new SetNode(toNode(column), toNode(value))
+export const set = (field: NodeArg, value: NodeArg) => (): Node => {
+    return new SetNode(toNode(field), toNode(value))
 }

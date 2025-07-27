@@ -120,11 +120,11 @@ export class OrderByNode implements Node {
 /** */
 export class SetNode implements Node {
     constructor(
-        private readonly column: Node,
+        private readonly field: Node,
         private readonly value: Node,
     ) {}
 
     interpret(params: Parameters): string {
-        return `${this.column.interpret(params)} ${SQL_SYMBOLS.EQ} ${this.value.interpret(params)}`
+        return `${this.field.interpret(params)} ${SQL_SYMBOLS.EQ} ${this.value.interpret(params)}`
     }
 }

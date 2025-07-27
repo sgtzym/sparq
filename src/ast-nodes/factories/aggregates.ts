@@ -6,7 +6,7 @@ import {
 } from '~/ast-nodes/aggregates.ts'
 
 const aggregateFactory = (fn: AggregateFunction): NodeFactory => (arg?: NodeArg) => (): Node => {
-    return new AggregateNode(fn, arg ? toNode(arg): undefined)
+    return new AggregateNode(fn, arg ? toNode(arg) : undefined)
 }
 
 const avg = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)
