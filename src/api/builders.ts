@@ -137,7 +137,7 @@ export class UpdateBuilder {
         SetNode.name,
         WhereNode.name,
         OrderByNode.name,
-        LimitNode.name
+        LimitNode.name,
     ]
 
     private readonly stmt: (() => Node)[] = []
@@ -146,8 +146,10 @@ export class UpdateBuilder {
         this.stmt.push(update(table))
     }
 
-    set(field: NodeArg, value: NodeArg): this {
-        this.stmt.push(set(field, value))
+    set(assignments: Array<[NodeArg, NodeArg]>): this
+    set(assignments: Record<string, any>): this
+    set(assignments: any): this {
+        this.stmt.push(set(assignments))
         return this
     }
 

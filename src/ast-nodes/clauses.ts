@@ -120,11 +120,16 @@ export class OrderByNode implements Node {
 /** */
 export class SetNode implements Node {
     constructor(
-        private readonly field: Node,
-        private readonly value: Node,
+        private readonly assignments: Array<[Node, Node]>,
     ) {}
 
     interpret(params: Parameters): string {
-        return `${this.field.interpret(params)} ${SQL_SYMBOLS.EQ} ${this.value.interpret(params)}`
+        const assignments = sql.comma(
+            ...this.assignments.map(([field, value]) =>
+                `${field.interpret(params)} ${SQL_SYMBOLS.EQ} ${value.interpret(params)}`
+            ),
+        )
+
+        return `${SQL.SET} ${assignments}`
     }
 }

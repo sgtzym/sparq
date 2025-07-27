@@ -1,4 +1,4 @@
-import { type Node, type NodeArg, toNode } from '~/core/node.ts'
+import { type Node, type NodeArg, NodeValue, toNode } from '~/core/node.ts'
 import {
     FromNode,
     GroupByNode,
@@ -62,6 +62,15 @@ export const offset = (count: number = 0) => (): Node => {
     return new OffsetNode(count)
 }
 
-export const set = (field: NodeArg, value: NodeArg) => (): Node => {
-    return new SetNode(toNode(field), toNode(value))
+export function set(assignments: Array<[NodeArg, NodeArg]>): () => Node
+export function set(assignments: Record<string, NodeArg>): () => Node
+export function set(assignments: any): () => Node {
+    return () =>
+        new SetNode(
+            Array.isArray(assignments)
+                ? assignments.map(([field, val]) => [toNode(field), toNode(val)])
+                : Object.entries(assignments).map((
+                    [field, val],
+                ) => [toNode(field), toNode(val as NodeValue)]),
+        )
 }
