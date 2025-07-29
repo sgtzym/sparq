@@ -1,4 +1,4 @@
-import { type Node, type NodeArg, NodeValue, toNode } from '~/core/node.ts'
+import { type Node, type NodeArg, toNode } from '~/core/node.ts'
 import {
     FromNode,
     GroupByNode,

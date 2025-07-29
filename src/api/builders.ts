@@ -1,5 +1,5 @@
 import type { SqlValue } from '~/core/sql.ts'
-import { interpretAll, type Node, type NodeArg, NodeValue, toNode } from '~/core/node.ts'
+import { interpretAll, type Node, type NodeArg, toNode } from '~/core/node.ts'
 import { Parameters } from '~/core/parameter-registry.ts'
 import {
     FromNode,
@@ -160,6 +160,7 @@ export class UpdateBuilder {
         WhereNode.name,
         OrderByNode.name,
         LimitNode.name,
+        OffsetNode.name,
     ]
 
     private readonly stmt: (() => Node)[] = []
@@ -199,6 +200,7 @@ export class DeleteBuilder {
         WhereNode.name,
         OrderByNode.name,
         LimitNode.name,
+        OffsetNode.name,
     ]
 
     private readonly stmt: (() => Node)[] = []
