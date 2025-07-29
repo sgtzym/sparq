@@ -24,8 +24,9 @@ import {
  * _select('column_1', 'column_2')
  * _select(alias(count(), 'rows'))      // SELECT COUNT(*) AS rows
  */
-const _select = (columns?: NodeArg[]) => (): Node =>
-    new SelectNode(columns?.length ? columns.map(toNode) : undefined)
+const _select: (columns?: NodeArg[]) => () => Node =
+    (columns?: NodeArg[]) => (): Node =>
+        new SelectNode(columns?.length ? columns.map(toNode) : undefined)
 
 /**
  * UPDATE statement
@@ -39,7 +40,9 @@ const _select = (columns?: NodeArg[]) => (): Node =>
  * @example
  * _update('table_1')
  */
-const _update = (table: NodeArg) => (): Node => new UpdateNode(toNode(table))
+const _update: (table: NodeArg) => () => Node =
+    (table: NodeArg) => (): Node =>
+        new UpdateNode(toNode(table))
 
 /**
  * INSERT INTO statement
@@ -54,8 +57,9 @@ const _update = (table: NodeArg) => (): Node => new UpdateNode(toNode(table))
  * @example
  * _insert('table_1', ['column_1', 'column_2'])
  */
-const _insert = (table: NodeArg, fields: NodeArg[]) => (): Node =>
-    new InsertNode(toNode(table), fields.map(toNode))
+const _insert: (table: NodeArg, fields: NodeArg[]) => () => Node =
+    (table: NodeArg, fields: NodeArg[]) => (): Node =>
+        new InsertNode(toNode(table), fields.map(toNode))
 
 /**
  * DELETE statement
@@ -68,6 +72,8 @@ const _insert = (table: NodeArg, fields: NodeArg[]) => (): Node =>
  * @example
  * _delete()
  */
-const _delete = () => (): Node => new DeleteNode()
+const _delete: () => () => Node =
+    () => (): Node =>
+        new DeleteNode()
 
 export { _delete, _insert, _select, _update }

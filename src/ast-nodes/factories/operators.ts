@@ -28,7 +28,7 @@ import {
  * @param {LogicalOperator} operator - AND or OR operator
  * @returns {NodeFactory} Factory function for logical nodes
  */
-const logicalFactory =
+const logicalFactory: (operator: LogicalOperator) => NodeFactory =
     (operator: LogicalOperator): NodeFactory => (...args: NodeArg[]) => (): Node => {
         return new LogicalNode(operator, args.map(toNode))
     }
@@ -41,7 +41,7 @@ const logicalFactory =
  * @example
  * and(eq('status', 'active'), gt('age', 18))
  */
-const and = logicalFactory(LOGICAL.AND)
+const and: NodeFactory = logicalFactory(LOGICAL.AND)
 
 /**
  * OR operator
@@ -51,7 +51,7 @@ const and = logicalFactory(LOGICAL.AND)
  * @example
  * or(eq('role', 'admin'), eq('role', 'moderator'))
  */
-const or = logicalFactory(LOGICAL.OR)
+const or: NodeFactory = logicalFactory(LOGICAL.OR)
 
 // Binary operators ->
 
@@ -61,7 +61,7 @@ const or = logicalFactory(LOGICAL.OR)
  * @param {ComparisonOperator} operator - Comparison operator
  * @returns {NodeFactory} Factory function for binary nodes
  */
-const binaryFactory =
+const binaryFactory: (operator: ComparisonOperator) => NodeFactory =
     (operator: ComparisonOperator): NodeFactory => (...args: NodeArg[]) => (): Node => {
         const [left, right] = args
         return new BinaryNode(
@@ -77,7 +77,7 @@ const binaryFactory =
  * @example
  * eq('status', 'active')
  */
-const eq = binaryFactory(COMPARISON.EQ)
+const eq: NodeFactory = binaryFactory(COMPARISON.EQ)
 
 /**
  * Inequality comparison (!=)
@@ -85,7 +85,7 @@ const eq = binaryFactory(COMPARISON.EQ)
  * @example
  * ne('status', 'deleted')
  */
-const ne = binaryFactory(COMPARISON.NE)
+const ne: NodeFactory = binaryFactory(COMPARISON.NE)
 
 /**
  * Less than comparison (<)
@@ -93,7 +93,7 @@ const ne = binaryFactory(COMPARISON.NE)
  * @example
  * lt('age', 21)
  */
-const lt = binaryFactory(COMPARISON.LT)
+const lt: NodeFactory = binaryFactory(COMPARISON.LT)
 
 /**
  * Less than or equal comparison (<=)
@@ -101,7 +101,7 @@ const lt = binaryFactory(COMPARISON.LT)
  * @example
  * le('price', 100)
  */
-const le = binaryFactory(COMPARISON.LE)
+const le: NodeFactory = binaryFactory(COMPARISON.LE)
 
 /**
  * Greater than comparison (>)
@@ -109,7 +109,7 @@ const le = binaryFactory(COMPARISON.LE)
  * @example
  * gt('score', 80)
  */
-const gt = binaryFactory(COMPARISON.GT)
+const gt: NodeFactory = binaryFactory(COMPARISON.GT)
 
 /**
  * Greater than or equal comparison (>=)
@@ -117,7 +117,7 @@ const gt = binaryFactory(COMPARISON.GT)
  * @example
  * ge('rating', 4.5)
  */
-const ge = binaryFactory(COMPARISON.GE)
+const ge: NodeFactory = binaryFactory(COMPARISON.GE)
 
 /**
  * IN comparison for value lists
@@ -125,7 +125,7 @@ const ge = binaryFactory(COMPARISON.GE)
  * @example
  * in_('status', ['active', 'pending'])
  */
-const in_ = binaryFactory(COMPARISON.IN)
+const in_: NodeFactory = binaryFactory(COMPARISON.IN)
 
 /**
  * LIKE comparison for pattern matching
@@ -133,7 +133,7 @@ const in_ = binaryFactory(COMPARISON.IN)
  * @example
  * like('email', '%@example.com')
  */
-const like = binaryFactory(COMPARISON.LIKE)
+const like: NodeFactory = binaryFactory(COMPARISON.LIKE)
 
 // Unary operators ->
 
@@ -143,9 +143,10 @@ const like = binaryFactory(COMPARISON.LIKE)
  * @param {UnaryOperator} operator - Unary operator
  * @returns {NodeFactory} Factory function for unary nodes
  */
-const unaryFactory = (operator: UnaryOperator): NodeFactory => (arg: NodeArg) => (): Node => {
-    return new UnaryNode(operator, toNode(arg))
-}
+const unaryFactory: (operator: UnaryOperator) => NodeFactory =
+    (operator: UnaryOperator): NodeFactory => (arg: NodeArg) => (): Node => {
+        return new UnaryNode(operator, toNode(arg))
+    }
 
 /**
  * NOT operator
@@ -153,7 +154,7 @@ const unaryFactory = (operator: UnaryOperator): NodeFactory => (arg: NodeArg) =>
  * @example
  * not(eq('active', true))
  */
-const not = unaryFactory(UNARY.NOT)
+const not: NodeFactory = unaryFactory(UNARY.NOT)
 
 /**
  * EXISTS operator for Subquery checks
@@ -161,7 +162,7 @@ const not = unaryFactory(UNARY.NOT)
  * @example
  * exists(subquery)
  */
-const exists = unaryFactory(UNARY.EXISTS)
+const exists: NodeFactory = unaryFactory(UNARY.EXISTS)
 
 /**
  * IS NULL operator for null checks
@@ -169,7 +170,7 @@ const exists = unaryFactory(UNARY.EXISTS)
  * @example
  * isNull('deleted_at')
  */
-const isNull = unaryFactory(UNARY.IS_NULL)
+const isNull: NodeFactory = unaryFactory(UNARY.IS_NULL)
 
 /**
  * IS NOT NULL operator for null checks
@@ -177,7 +178,7 @@ const isNull = unaryFactory(UNARY.IS_NULL)
  * @example
  * isNotNull('email')
  */
-const isNotNull = unaryFactory(UNARY.IS_NOT_NULL)
+const isNotNull: NodeFactory = unaryFactory(UNARY.IS_NOT_NULL)
 
 export { 
     and,

@@ -1,5 +1,5 @@
 import { sql } from '~/core/sql.ts'
-import type { Node, NodeValue } from '~/core/node.ts'
+import type { Node, NodeFactory, NodeValue } from '~/core/node.ts'
 import { IdentifierNode, LiteralNode, RawNode } from '~/ast-nodes/primitives.ts'
 
 /** SQL primitive node factories 🏭 */
@@ -15,7 +15,7 @@ import { IdentifierNode, LiteralNode, RawNode } from '~/ast-nodes/primitives.ts'
  * @example
  * raw('CURRENT_TIMESTAMP')
  */
-const raw = (sql: string) => (): Node => {
+const raw: NodeFactory = (sql: string) => (): Node => {
     return new RawNode(sql)
 }
 
@@ -32,7 +32,7 @@ const raw = (sql: string) => (): Node => {
  * id('users')
  * id('users.email')
  */
-const id = (name: string) => (): Node => {
+const id: NodeFactory = (name: string) => (): Node => {
     if (!sql.isIdentifier(name)) {
         throw new Error(`${name} is not an identifier`)
     }
@@ -53,7 +53,7 @@ const id = (name: string) => (): Node => {
  * val(42)
  * val(null)
  */
-const val = (value: NodeValue) => (): Node => {
+const val: NodeFactory = (value: NodeValue) => (): Node => {
     if (!sql.isSqlValue(value)) {
         throw new Error(`${value} is not a SQL value`)
     }
