@@ -13,5 +13,9 @@
         "semiColons": false,
         "proseWrap": "preserve",
         "lineWidth": 100
+    },
+    "compilerOptions": {
+        "strict": false,
+        "exactOptionalPropertyTypes": false
     }
 }

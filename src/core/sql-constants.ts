@@ -162,6 +162,8 @@ export const SQL_KEYWORDS = {
     SUM: 'SUM',
 } as const
 
+export type SqlKeyword = typeof SQL_KEYWORDS[keyof typeof SQL_KEYWORDS]
+
 export const SQL_SYMBOLS = {
     ALL: '*',
     EQ: '=',
@@ -176,3 +178,5 @@ export const SQL_SYMBOLS = {
     DOT: '.',
     SEMI: ';',
 } as const
+
+export type SqlSymbol = typeof SQL_SYMBOLS[keyof typeof SQL_SYMBOLS]
