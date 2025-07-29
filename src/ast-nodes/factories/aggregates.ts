@@ -1,4 +1,11 @@
-import { type Node, type NodeArg, type NodeFactory, toNode } from '~/core/node.ts'
+// deno-fmt-ignore-file
+import {
+    type Node,
+    type NodeArg,
+    type NodeFactory,
+    toNode
+} from '~/core/node.ts'
+
 import {
     AGGREGATE_FUNCTIONS,
     type AggregateFunction,

@@ -3,6 +3,7 @@
 import {
     type Node,
     type NodeArg,
+    type NodeFactory,
     toNode
 } from '~/core/node.ts'
 
@@ -37,7 +38,7 @@ import {
  * from('users')
  * from('users', 'posts')
  */
-export const from = (...tables: NodeArg[]) => (): Node => {
+export const from: NodeFactory = (...tables: NodeArg[]) => (): Node => {
     return new FromNode(tables.map(toNode))
 }
 
@@ -52,7 +53,7 @@ export const from = (...tables: NodeArg[]) => (): Node => {
  * @example
  * where(eq('status', 'active'), gt('age', 18))
  */
-export const where = (...conditions: NodeArg[]) => (): Node => {
+export const where: NodeFactory = (...conditions: NodeArg[]) => (): Node => {
     return new WhereNode(conditions.map(toNode))
 }
 
@@ -65,7 +66,7 @@ export const where = (...conditions: NodeArg[]) => (): Node => {
  * @example
  * groupBy('department', 'role')
  */
-export const groupBy = (...fields: NodeArg[]) => (): Node => {
+export const groupBy: NodeFactory = (...fields: NodeArg[]) => (): Node => {
     return new GroupByNode(fields.map(toNode))
 }
 
@@ -78,7 +79,7 @@ export const groupBy = (...fields: NodeArg[]) => (): Node => {
  * @example
  * having(gt(count('id'), 5))
  */
-export const having = (...conditions: NodeArg[]) => (): Node => {
+export const having: NodeFactory = (...conditions: NodeArg[]) => (): Node => {
     return new HavingNode(conditions.map(toNode))
 }
 
@@ -92,7 +93,7 @@ export const having = (...conditions: NodeArg[]) => (): Node => {
  * orderBy('created_at')
  * orderBy(desc('created_at'), asc('name'))
  */
-export const orderBy = (...fields: NodeArg[]) => (): Node => {
+export const orderBy: NodeFactory = (...fields: NodeArg[]) => (): Node => {
     return new OrderByNode(fields.map(toNode))
 }
 
@@ -118,7 +119,7 @@ const joinFactory = (type: JoinType) => (table: NodeArg, condition?: NodeArg) =>
  * @example
  * innerJoin('posts', eq('users.id', 'posts.user_id'))
  */
-export const innerJoin = joinFactory(JOIN_TYPES.INNER)
+export const innerJoin: NodeFactory = joinFactory(JOIN_TYPES.INNER)
 
 /**
  * LEFT JOIN clause
@@ -126,7 +127,7 @@ export const innerJoin = joinFactory(JOIN_TYPES.INNER)
  * @example
  * leftJoin('posts', eq('users.id', 'posts.user_id'))
  */
-export const leftJoin = joinFactory(JOIN_TYPES.LEFT)
+export const leftJoin: NodeFactory = joinFactory(JOIN_TYPES.LEFT)
 
 /**
  * LEFT OUTER JOIN clause
@@ -134,7 +135,7 @@ export const leftJoin = joinFactory(JOIN_TYPES.LEFT)
  * @example
  * leftOuterJoin('posts', eq('users.id', 'posts.user_id'))
  */
-export const leftOuterJoin = joinFactory(JOIN_TYPES.LEFT_OUTER)
+export const leftOuterJoin: NodeFactory = joinFactory(JOIN_TYPES.LEFT_OUTER)
 
 /**
  * CROSS JOIN clause
@@ -143,7 +144,7 @@ export const leftOuterJoin = joinFactory(JOIN_TYPES.LEFT_OUTER)
  * @example
  * crossJoin('categories')
  */
-export const crossJoin = (table: NodeArg) => (): Node => {
+export const crossJoin: NodeFactory = (table: NodeArg) => (): Node => {
     return new JoinNode(JOIN_TYPES.CROSS, toNode(table))
 }
 
@@ -158,7 +159,7 @@ export const crossJoin = (table: NodeArg) => (): Node => {
  * @example
  * limit(10)
  */
-export const limit = (count: number = 0) => (): Node => {
+export const limit: NodeFactory = (count: number = 0) => (): Node => {
     return new LimitNode(count)
 }
 
@@ -171,7 +172,7 @@ export const limit = (count: number = 0) => (): Node => {
  * @example
  * offset(20)
  */
-export const offset = (count: number = 0) => (): Node => {
+export const offset: NodeFactory = (count: number = 0) => (): Node => {
     return new OffsetNode(count)
 }
 
@@ -184,9 +185,10 @@ export const offset = (count: number = 0) => (): Node => {
  * @param {Array<[NodeArg, NodeArg]>} assignments - Column-value pairs
  * @returns Factory function that creates a SetNode
  */
-export const _set = (assignments: Array<[NodeArg, NodeArg]>) => (): Node => {
-    return new SetNode(assignments.map(([k, v]) => [toNode(k), toNode(v)]))
-}
+export const _set: (assignments: Array<[NodeArg, NodeArg]>) => () => Node =
+    (assignments: Array<[NodeArg, NodeArg]>) => (): Node => {
+        return new SetNode(assignments.map(([k, v]) => [toNode(k), toNode(v)]))
+    }
 
 /**
  * VALUES clause for INSERT statements
@@ -197,6 +199,7 @@ export const _set = (assignments: Array<[NodeArg, NodeArg]>) => (): Node => {
  * @param {Array<NodeArg[]>} values - Rows of values to insert
  * @returns Factory function that creates a ValuesNode
  */
-export const _values = (...values: Array<NodeArg[]>) => (): Node => {
-    return new ValuesNode(values.map((v) => v.map(toNode)))
-}
+export const _values: (...values: Array<NodeArg[]>) => () => Node =
+    (...values: Array<NodeArg[]>) => (): Node => {
+        return new ValuesNode(values.map((v) => v.map(toNode)))
+    }
