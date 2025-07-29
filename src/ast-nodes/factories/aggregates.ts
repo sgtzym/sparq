@@ -12,9 +12,10 @@ import {
  * @param fn - Aggregate function
  * @returns Factory function for aggregate function nodes
  */
-const aggregateFactory = (fn: AggregateFunction): NodeFactory => (arg?: NodeArg) => (): Node => {
-    return new AggregateNode(fn, arg ? toNode(arg) : undefined)
-}
+const aggregateFactory: (fn: AggregateFunction) => NodeFactory =
+    (fn: AggregateFunction): NodeFactory => (arg?: NodeArg) => (): Node => {
+        return new AggregateNode(fn, arg ? toNode(arg) : undefined)
+    }
 
 /**
  * AVG aggregate function
@@ -23,7 +24,7 @@ const aggregateFactory = (fn: AggregateFunction): NodeFactory => (arg?: NodeArg)
  * avg()
  * avg(distinct('column_1'))
  */
-const avg = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)
+const avg: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)
 
 /**
  * COUNT aggregate function
@@ -32,7 +33,7 @@ const avg = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)
  * count()
  * count(distinct('column_1'))
  */
-const count = aggregateFactory(AGGREGATE_FUNCTIONS.COUNT)
+const count: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.COUNT)
 
 /**
  * MIN aggregate function
@@ -40,7 +41,7 @@ const count = aggregateFactory(AGGREGATE_FUNCTIONS.COUNT)
  * min()
  * min(distinct('column_1'))
  */
-const min = aggregateFactory(AGGREGATE_FUNCTIONS.MIN)
+const min: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.MIN)
 
 /**
  * MAX aggregate function
@@ -48,7 +49,7 @@ const min = aggregateFactory(AGGREGATE_FUNCTIONS.MIN)
  * max()
  * max(distinct('column_1'))
  */
-const max = aggregateFactory(AGGREGATE_FUNCTIONS.MAX)
+const max: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.MAX)
 
 /**
  * SUM aggregate function
@@ -56,6 +57,6 @@ const max = aggregateFactory(AGGREGATE_FUNCTIONS.MAX)
  * sum()
  * sum(distinct('column_1'))
  */
-const sum = aggregateFactory(AGGREGATE_FUNCTIONS.SUM)
+const sum: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.SUM)
 
 export { avg, count, max, min, sum }
