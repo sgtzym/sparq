@@ -4,22 +4,22 @@ import { sql } from '~/core/sql.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
 
-/** */
+/** AST nodes representing SQL statements 🧬 */
+
 export class SelectNode implements Node {
     constructor(
-        private readonly fields?: ArrayLike<Node>,
+        private readonly columns?: ArrayLike<Node>,
     ) {}
 
     interpret(params: Parameters): string {
-        const sqlFields: string = this.fields && (Array.isArray(this.fields) && this.fields.length)
-            ? sql.comma(...interpretAll(this.fields, params))
+        const columns: string = this.columns && (Array.isArray(this.columns) && this.columns.length)
+            ? sql.comma(...interpretAll(this.columns, params))
             : SQL_SYMBOLS.ALL
 
-        return `${SQL.SELECT} ${sqlFields}`
+        return `${SQL.SELECT} ${columns}`
     }
 }
 
-/** */
 export class UpdateNode implements Node {
     constructor(
         private readonly table: Node,
@@ -30,21 +30,19 @@ export class UpdateNode implements Node {
     }
 }
 
-/** */
 export class InsertNode implements Node {
     constructor(
         private readonly table: Node,
-        private readonly fields: ArrayLike<Node>,
+        private readonly columns: ArrayLike<Node>,
     ) {}
 
     interpret(params: Parameters): string {
         return `${SQL.INSERT} ${SQL.INTO} ${this.table.interpret(params)} ${
-            sql.parens(sql.comma(...interpretAll(this.fields, params)))
+            sql.parens(sql.comma(...interpretAll(this.columns, params)))
         }`
     }
 }
 
-/** */
 export class DeleteNode implements Node {
     interpret(_params: Parameters): string {
         return `${SQL.DELETE}`

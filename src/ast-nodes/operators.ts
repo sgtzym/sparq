@@ -4,6 +4,10 @@ import { sql } from '~/core/sql.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
 import type { Node } from '~/core/node.ts'
 
+/** AST nodes representing SQL operators/comparisons 🧬 */
+
+// Logical operators ->
+
 export type LogicalOperator = typeof LOGICAL_OPERATORS[keyof typeof LOGICAL_OPERATORS]
 
 export const LOGICAL_OPERATORS = {
@@ -11,7 +15,6 @@ export const LOGICAL_OPERATORS = {
     OR: SQL.OR,
 } as const
 
-/** */
 export class LogicalNode implements Node {
     constructor(
         private readonly op: LogicalOperator,
@@ -26,6 +29,8 @@ export class LogicalNode implements Node {
 
 export type ComparisonOperator = typeof COMPARISON_OPERATORS[keyof typeof COMPARISON_OPERATORS]
 
+// Binary comparison operators ->
+
 export const COMPARISON_OPERATORS = {
     EQ: SYMBOL.EQ,
     NE: SYMBOL.NE,
@@ -37,7 +42,6 @@ export const COMPARISON_OPERATORS = {
     LIKE: SQL.LIKE,
 } as const
 
-/** */
 export class BinaryNode implements Node {
     constructor(
         private readonly left: Node,
@@ -50,11 +54,14 @@ export class BinaryNode implements Node {
     }
 }
 
+// Unary operators ->
+
 export type UnaryOperator = {
     readonly text: string
     readonly position: 'prefix' | 'suffix'
 }
 
+// Supported unary operators incl. keyword positioning.
 export const UNARY_OPERATORS = {
     NOT: { text: SQL.NOT, position: 'prefix' },
     EXISTS: { text: SQL.EXISTS, position: 'prefix' },
@@ -62,7 +69,6 @@ export const UNARY_OPERATORS = {
     IS_NOT_NULL: { text: `${SQL.IS} ${SQL.NOT} ${SQL.NULL}`, position: 'suffix' },
 } as const
 
-/** */
 export class UnaryNode implements Node {
     constructor(
         private readonly op: UnaryOperator,

@@ -1,6 +1,7 @@
 import type { SqlValue } from '~/core/sql.ts'
-import { interpretAll, type Node, type NodeArg, toNode } from '~/core/node.ts'
 import { Parameters } from '~/core/parameter-registry.ts'
+import { interpretAll, type Node, type NodeArg, toNode } from '~/core/node.ts'
+import { SetQuantifierNode } from '~/ast-nodes/modifiers.ts'
 import {
     FromNode,
     GroupByNode,
@@ -14,8 +15,6 @@ import {
     WhereNode,
 } from '~/ast-nodes/clauses.ts'
 import { DeleteNode, InsertNode, SelectNode, UpdateNode } from '~/ast-nodes/statements.ts'
-import { SetQuantifierNode } from '~/ast-nodes/modifiers.ts'
-import { _delete, _insert, _select, _update } from '~/ast-nodes/factories/statements.ts'
 import {
     _set,
     _values,
@@ -31,12 +30,26 @@ import {
     orderBy,
     where,
 } from '~/ast-nodes/factories/clauses.ts'
+import { _delete, _insert, _select, _update } from '~/ast-nodes/factories/statements.ts'
 
+/**
+ * Compiled SQL query with parameter values.
+ */
 export type Query = [string, readonly SqlValue[]]
 
-/** */
+/**
+ * Renders AST nodes to SQL in the specified clause order.
+ * Groups nodes by type to ensure correct SQL syntax.
+ *
+ * @param {Node[]} nodes - AST nodes to render
+ * @param {Parameters} params - Parameter registry for value binding
+ * @param {string[]} order - Node type names in SQL clause order
+ * @returns {string} Generated SQL string
+ */
 function renderAST(nodes: Node[], params: Parameters, order: string[]): string {
     const nodeMap = new Map<string, Node[]>()
+
+    // TODO(#sgtzym): Allow and join multiple clauses of the same type
 
     for (const node of nodes) {
         const type = node.constructor.name
@@ -53,7 +66,12 @@ function renderAST(nodes: Node[], params: Parameters, order: string[]): string {
     return parts.join(' ')
 }
 
-/** */
+/**
+ * Query builders
+ *
+ * Provide fluent APIs for supported SQL operations.
+ */
+
 export class SelectBuilder {
     private clauseOrder = [
         SelectNode.name,
@@ -68,10 +86,11 @@ export class SelectBuilder {
         OffsetNode.name,
     ]
 
-    private readonly stmt: (() => Node)[] = [] // collect as factory, process to node at the end (prevents ugly "()()")
+    // Collect as factory, parse to node at the end (prevents ugly "()()")
+    private readonly stmt: (() => Node)[] = []
 
-    constructor(table: NodeArg, fields?: NodeArg[]) {
-        this.stmt.push(_select(fields))
+    constructor(table: NodeArg, columns?: NodeArg[]) {
+        this.stmt.push(_select(columns))
         this.stmt.push(from(table))
     }
 
@@ -94,23 +113,23 @@ export class SelectBuilder {
         return this
     }
 
-    where(...args: NodeArg[]): this {
-        this.stmt.push(where(...args))
+    where(...conditions: NodeArg[]): this {
+        this.stmt.push(where(...conditions))
         return this
     }
 
-    groupBy(...fields: NodeArg[]): this {
-        this.stmt.push(groupBy(...fields))
+    groupBy(...columns: NodeArg[]): this {
+        this.stmt.push(groupBy(...columns))
         return this
     }
 
-    having(...args: NodeArg[]): this {
-        this.stmt.push(having(...args))
+    having(...conditions: NodeArg[]): this {
+        this.stmt.push(having(...conditions))
         return this
     }
 
-    orderBy(...fields: NodeArg[]): this {
-        this.stmt.push(orderBy(...fields))
+    orderBy(...columns: NodeArg[]): this {
+        this.stmt.push(orderBy(...columns))
         return this
     }
 
@@ -131,7 +150,6 @@ export class SelectBuilder {
     }
 }
 
-/** */
 export class InsertBuilder {
     private clauseOrder = [
         InsertNode.name,
@@ -140,8 +158,8 @@ export class InsertBuilder {
 
     private readonly stmt: (() => Node)[] = []
 
-    constructor(table: NodeArg, fields: NodeArg[], values: Array<NodeArg[]>) {
-        this.stmt.push(_insert(table, fields))
+    constructor(table: NodeArg, columns: NodeArg[], values: Array<NodeArg[]>) {
+        this.stmt.push(_insert(table, columns))
         this.stmt.push(_values(...values))
     }
 
@@ -152,7 +170,6 @@ export class InsertBuilder {
     }
 }
 
-/** */
 export class UpdateBuilder {
     private clauseOrder = [
         UpdateNode.name,
@@ -170,13 +187,13 @@ export class UpdateBuilder {
         this.stmt.push(_set(assignments))
     }
 
-    where(...args: NodeArg[]): this {
-        this.stmt.push(where(...args))
+    where(...conditions: NodeArg[]): this {
+        this.stmt.push(where(...conditions))
         return this
     }
 
-    orderBy(...fields: NodeArg[]): this {
-        this.stmt.push(orderBy(...fields))
+    orderBy(...columns: NodeArg[]): this {
+        this.stmt.push(orderBy(...columns))
         return this
     }
 
@@ -192,7 +209,6 @@ export class UpdateBuilder {
     }
 }
 
-/** */
 export class DeleteBuilder {
     private clauseOrder = [
         DeleteNode.name,
@@ -205,18 +221,18 @@ export class DeleteBuilder {
 
     private readonly stmt: (() => Node)[] = []
 
-    constructor(table: NodeArg) {
+    constructor(tableName: NodeArg) {
         this.stmt.push(_delete())
-        this.stmt.push(from(table))
+        this.stmt.push(from(tableName))
     }
 
-    where(...args: NodeArg[]): this {
-        this.stmt.push(where(...args))
+    where(...conditions: NodeArg[]): this {
+        this.stmt.push(where(...conditions))
         return this
     }
 
-    orderBy(...fields: NodeArg[]): this {
-        this.stmt.push(orderBy(...fields))
+    orderBy(...columns: NodeArg[]): this {
+        this.stmt.push(orderBy(...columns))
         return this
     }
 

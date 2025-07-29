@@ -1,57 +1,75 @@
 import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
 
-/** Supported value types */
+/**
+ * Union type of all SQL-compatible primitive values.
+ * Represents values that can be safely parameterized.
+ */
 export type SqlValue = null | number | bigint | string | Uint8Array
+
 export type SqlIdentifier = string
 
 const SQL_IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
 
-function isIdentifier(token: unknown): token is SqlIdentifier {
-    return typeof token === 'string' && SQL_IDENTIFIER_PATTERN.test(token)
+/**
+ * Checks if a value is a valid SQL identifier.
+ *
+ * @param {unknown} value - Value to check
+ * @returns {boolean} True if valid identifier
+ */
+function isIdentifier(value: unknown): value is SqlIdentifier {
+    return typeof value === 'string' && SQL_IDENTIFIER_PATTERN.test(value)
 }
 
-function needsQuoting(token: string): boolean {
+/**
+ * Checks if a value needs quoting.
+ *
+ * @param {unknown} value - Value to check
+ * @returns {boolean} True if needs quoting
+ */
+function needsQuoting(value: string): boolean {
     return (
-        !SQL_IDENTIFIER_PATTERN.test(token) ||
-        token.toUpperCase() in SQL
+        !SQL_IDENTIFIER_PATTERN.test(value) ||
+        value.toUpperCase() in SQL
     )
 }
 
 /**
- * Checks if a given value is a valid SQLite type
- * @param token The value to check for SQLite compatibility
- * @returns True if the value is a valid SQLite value type
+ * Checks if a value is a valid SQL data type.
+ *
+ * @param {unknown} value - Value to check
+ * @returns {boolean} True if valid data type
  */
 function isSqlValue(
-    token: unknown,
-): token is SqlValue {
+    value: unknown,
+): value is SqlValue {
     return (
-        token === null ||
-        typeof token === 'number' ||
-        typeof token === 'bigint' ||
-        typeof token === 'string' ||
-        token instanceof Uint8Array
+        value === null ||
+        typeof value === 'number' ||
+        typeof value === 'bigint' ||
+        typeof value === 'string' ||
+        value instanceof Uint8Array
     )
 }
 
 /**
- * Casts values to supported types 🧼
- * @param token any input value
- * @returns input value as a supported type
+ * Parses a value to a valid SQL data type.
+ *
+ * @param {unknown} value - Value to parse
+ * @returns {SqlValue} The parsed value as SQL data type
  */
-function toSqlValue(token: unknown): SqlValue {
+function toSqlValue(value: unknown): SqlValue {
     switch (true) {
-        case isSqlValue(token):
-            return token
-        case token === undefined:
+        case isSqlValue(value):
+            return value
+        case value === undefined:
             return null
-        case typeof token === 'boolean':
-            return token ? 1 : 0
-        case token instanceof Date:
-            return token.toISOString()
-        case Array.isArray(token) || typeof token === 'object':
+        case typeof value === 'boolean':
+            return value ? 1 : 0
+        case value instanceof Date:
+            return value.toISOString()
+        case Array.isArray(value) || typeof value === 'object':
             try {
-                return JSON.stringify(token)
+                return JSON.stringify(value)
             } catch (error) {
                 throw new TypeError(
                     `Unable to serialize value: ${error}`,
@@ -59,18 +77,20 @@ function toSqlValue(token: unknown): SqlValue {
             }
         default:
             throw new TypeError(
-                `Unsupported literal type: ${token}`,
+                `Unsupported literal type: ${value}`,
             )
     }
 }
 
-// Small SQL utils/safe-guards API
+/**
+ * SQL utility functions for type checking and string building.
+ * Provides safe SQL fragment construction helpers.
+ */
 export const sql = {
-    isIdentifier: (token: unknown) => isIdentifier(token),
-    needsQuoting: (token: string) => needsQuoting(token),
-
-    isSqlValue: (token: unknown) => isSqlValue(token),
-    toSqlValue: (token: unknown) => toSqlValue(token),
+    isIdentifier: (value: unknown): boolean => isIdentifier(value),
+    needsQuoting: (value: string): boolean => needsQuoting(value),
+    isSqlValue: (value: unknown): boolean => isSqlValue(value),
+    toSqlValue: (value: unknown): SqlValue => toSqlValue(value),
 
     // join helpers
     and: (...parts: string[]) => parts.join(` ${SQL.AND} `),

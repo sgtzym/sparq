@@ -4,16 +4,8 @@ import { sql } from '~/core/sql.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
 
-export const JOIN_TYPES = {
-    INNER: SQL.INNER,
-    LEFT: SQL.LEFT,
-    LEFT_OUTER: `${SQL.LEFT} ${SQL.OUTER}`,
-    CROSS: SQL.CROSS,
-} as const
+/** AST nodes representing SQL clauses 🧬 */
 
-export type JoinType = typeof JOIN_TYPES[keyof typeof JOIN_TYPES]
-
-/** */
 export class FromNode implements Node {
     constructor(
         private readonly expression: ArrayLike<Node>,
@@ -26,7 +18,6 @@ export class FromNode implements Node {
     }
 }
 
-/** */
 export class IntoNode implements Node {
     constructor(
         private readonly expression: Node,
@@ -37,7 +28,6 @@ export class IntoNode implements Node {
     }
 }
 
-/** */
 export class WhereNode implements Node {
     constructor(
         private readonly expression: ArrayLike<Node>,
@@ -50,7 +40,6 @@ export class WhereNode implements Node {
     }
 }
 
-/** */
 export class GroupByNode implements Node {
     constructor(
         private readonly expression: ArrayLike<Node>,
@@ -63,7 +52,6 @@ export class GroupByNode implements Node {
     }
 }
 
-/** */
 export class HavingNode implements Node {
     constructor(
         private readonly expression: ArrayLike<Node>,
@@ -76,7 +64,15 @@ export class HavingNode implements Node {
     }
 }
 
-/** */
+export const JOIN_TYPES = {
+    INNER: SQL.INNER,
+    LEFT: SQL.LEFT,
+    LEFT_OUTER: `${SQL.LEFT} ${SQL.OUTER}`,
+    CROSS: SQL.CROSS,
+} as const
+
+export type JoinType = typeof JOIN_TYPES[keyof typeof JOIN_TYPES]
+
 export class JoinNode implements Node {
     constructor(
         private readonly joinType: JoinType,
@@ -93,7 +89,6 @@ export class JoinNode implements Node {
     }
 }
 
-/** */
 export class LimitNode implements Node {
     constructor(
         private readonly count: number,
@@ -104,7 +99,6 @@ export class LimitNode implements Node {
     }
 }
 
-/** */
 export class OffsetNode implements Node {
     constructor(
         private readonly count: number,
@@ -115,7 +109,6 @@ export class OffsetNode implements Node {
     }
 }
 
-/** */
 export class OrderByNode implements Node {
     constructor(
         private readonly expression: ArrayLike<Node>,
@@ -128,7 +121,6 @@ export class OrderByNode implements Node {
     }
 }
 
-/** */
 export class SetNode implements Node {
     constructor(
         private readonly assignments: Array<[Node, Node]>,
@@ -143,7 +135,6 @@ export class SetNode implements Node {
     }
 }
 
-/** */
 export class ValuesNode implements Node {
     constructor(
         private readonly values: ArrayLike<Node[]>,

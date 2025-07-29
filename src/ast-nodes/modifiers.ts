@@ -2,20 +2,8 @@ import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
 import type { Node } from '~/core/node.ts'
 
-export const SET_QUANTIFIERS = {
-    DISTINCT: SQL.DISTINCT,
-    ALL: SQL.ALL,
-} as const
+/** AST nodes representing SQL modifiers 🧬 */
 
-export const SORTING_DIRECTIONS = {
-    ASC: SQL.ASC,
-    DESC: SQL.DESC,
-} as const
-
-export type SetQuantifier = typeof SET_QUANTIFIERS[keyof typeof SET_QUANTIFIERS]
-export type SortingDirection = typeof SORTING_DIRECTIONS[keyof typeof SORTING_DIRECTIONS]
-
-/** */
 export class AliasNode implements Node {
     constructor(
         private readonly expression: Node,
@@ -27,7 +15,13 @@ export class AliasNode implements Node {
     }
 }
 
-/** */
+export const SET_QUANTIFIERS = {
+    DISTINCT: SQL.DISTINCT,
+    ALL: SQL.ALL,
+} as const
+
+export type SetQuantifier = typeof SET_QUANTIFIERS[keyof typeof SET_QUANTIFIERS]
+
 export class SetQuantifierNode implements Node {
     constructor(
         private readonly quantifier: SetQuantifier,
@@ -41,7 +35,13 @@ export class SetQuantifierNode implements Node {
     }
 }
 
-/** */
+export const SORTING_DIRECTIONS = {
+    ASC: SQL.ASC,
+    DESC: SQL.DESC,
+} as const
+
+export type SortingDirection = typeof SORTING_DIRECTIONS[keyof typeof SORTING_DIRECTIONS]
+
 export class SortingDirectionNode implements Node {
     constructor(
         private readonly expression: Node,

@@ -7,9 +7,19 @@ interface ParameterRegistryOptions {
 }
 
 /**
- * Manages SQL query parameters with deduplication and formatting
+ * Manages SQL query parameters with deduplication and formatting.
+ * Supports both named and positional parameter styles.
+ *
+ * @example
+ * ```typescript
+ * const params = new Parameters()
+ * params.add('John')     // Returns ':p1'
+ * params.add('John')     // Returns ':p1' (deduplicated)
+ * params.add('Jane')     // Returns ':p2'
+ * params.toArray()       // ['John', 'Jane']
+ * ```
  */
-class ParameterRegistry {
+export class Parameters {
     #byValue = new Map<SqlValue, string>() // value -> name
     #byName = new Map<string, SqlValue>() // name -> value
     #index = 0
@@ -42,6 +52,14 @@ class ParameterRegistry {
         return this.#byName.has(name)
     }
 
+    /**
+     * Registers a parameter value and returns its placeholder.
+     * Deduplicates identical values by default.
+     *
+     * @param {SqlValue} value - Value to parameterize
+     * @param {string} name - Optional custom parameter name
+     * @returns {string} Parameter placeholder (e.g., ':p1')
+     */
     add(value: SqlValue, name?: string): string {
         const { deduplication, prefix } = this.#options
 
@@ -76,5 +94,3 @@ class ParameterRegistry {
         return this.#index
     }
 }
-
-export { ParameterRegistry as Parameters }
