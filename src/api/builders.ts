@@ -1,5 +1,5 @@
 import type { SqlValue } from '~/core/sql.ts'
-import { interpretAll, type Node, type NodeArg, toNode } from '~/core/node.ts'
+import { interpretAll, type Node, type NodeArg, NodeValue, toNode } from '~/core/node.ts'
 import { Parameters } from '~/core/parameter-registry.ts'
 import {
     FromNode,
@@ -10,22 +10,27 @@ import {
     OffsetNode,
     OrderByNode,
     SetNode,
+    ValuesNode,
     WhereNode,
 } from '~/ast-nodes/clauses.ts'
-import { SelectNode, UpdateNode } from '~/ast-nodes/statements.ts'
+import { DeleteNode, InsertNode, SelectNode, UpdateNode } from '~/ast-nodes/statements.ts'
 import { SetQuantifierNode } from '~/ast-nodes/modifiers.ts'
-import { select, update } from '~/ast-nodes/factories/statements.ts'
+import { _delete, _insert, _select, _update } from '~/ast-nodes/factories/statements.ts'
 import {
+    _set,
+    _values,
+    crossJoin,
     from,
     groupBy,
     having,
+    innerJoin,
+    leftJoin,
+    leftOuterJoin,
     limit,
     offset,
     orderBy,
-    set,
     where,
 } from '~/ast-nodes/factories/clauses.ts'
-import { crossJoin, innerJoin, leftJoin, leftOuterJoin } from '@sgtzym/sparq'
 
 export type Query = [string, readonly SqlValue[]]
 
@@ -65,13 +70,9 @@ export class SelectBuilder {
 
     private readonly stmt: (() => Node)[] = [] // collect as factory, process to node at the end (prevents ugly "()()")
 
-    constructor(fields: NodeArg[]) {
-        this.stmt.push(select(...fields))
-    }
-
-    from(table: NodeArg): this {
+    constructor(table: NodeArg, fields?: NodeArg[]) {
+        this.stmt.push(_select(fields))
         this.stmt.push(from(table))
-        return this
     }
 
     join(dir: 'inner' | 'left' | 'leftOuter' | 'cross', table: NodeArg, condition?: NodeArg): this {
@@ -131,6 +132,27 @@ export class SelectBuilder {
 }
 
 /** */
+export class InsertBuilder {
+    private clauseOrder = [
+        InsertNode.name,
+        ValuesNode.name,
+    ]
+
+    private readonly stmt: (() => Node)[] = []
+
+    constructor(table: NodeArg, fields: NodeArg[], values: Array<NodeArg[]>) {
+        this.stmt.push(_insert(table, fields))
+        this.stmt.push(_values(...values))
+    }
+
+    build(): Query {
+        const params = new Parameters()
+        const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
+        return [sql, params.toArray()]
+    }
+}
+
+/** */
 export class UpdateBuilder {
     private clauseOrder = [
         UpdateNode.name,
@@ -142,15 +164,48 @@ export class UpdateBuilder {
 
     private readonly stmt: (() => Node)[] = []
 
-    constructor(table: NodeArg) {
-        this.stmt.push(update(table))
+    constructor(table: NodeArg, assignments: Array<[NodeArg, NodeArg]>) {
+        this.stmt.push(_update(table))
+        this.stmt.push(_set(assignments))
     }
 
-    set(assignments: Array<[NodeArg, NodeArg]>): this
-    set(assignments: Record<string, any>): this
-    set(assignments: any): this {
-        this.stmt.push(set(assignments))
+    where(...args: NodeArg[]): this {
+        this.stmt.push(where(...args))
         return this
+    }
+
+    orderBy(...fields: NodeArg[]): this {
+        this.stmt.push(orderBy(...fields))
+        return this
+    }
+
+    limit(count: number): this {
+        this.stmt.push(limit(count))
+        return this
+    }
+
+    build(): Query {
+        const params = new Parameters()
+        const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
+        return [sql, params.toArray()]
+    }
+}
+
+/** */
+export class DeleteBuilder {
+    private clauseOrder = [
+        DeleteNode.name,
+        FromNode.name,
+        WhereNode.name,
+        OrderByNode.name,
+        LimitNode.name,
+    ]
+
+    private readonly stmt: (() => Node)[] = []
+
+    constructor(table: NodeArg) {
+        this.stmt.push(_delete())
+        this.stmt.push(from(table))
     }
 
     where(...args: NodeArg[]): this {

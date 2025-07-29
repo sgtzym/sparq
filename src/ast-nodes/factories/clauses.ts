@@ -10,6 +10,7 @@ import {
     OffsetNode,
     OrderByNode,
     SetNode,
+    ValuesNode,
     WhereNode,
 } from '~/ast-nodes/clauses.ts'
 
@@ -62,15 +63,10 @@ export const offset = (count: number = 0) => (): Node => {
     return new OffsetNode(count)
 }
 
-export function set(assignments: Array<[NodeArg, NodeArg]>): () => Node
-export function set(assignments: Record<string, NodeArg>): () => Node
-export function set(assignments: any): () => Node {
-    return () =>
-        new SetNode(
-            Array.isArray(assignments)
-                ? assignments.map(([field, val]) => [toNode(field), toNode(val)])
-                : Object.entries(assignments).map((
-                    [field, val],
-                ) => [toNode(field), toNode(val as NodeValue)]),
-        )
+export const _set = (assignments: Array<[NodeArg, NodeArg]>) => (): Node => {
+    return new SetNode(assignments.map(([k, v]) => [toNode(k), toNode(v)]))
+}
+
+export const _values = (...values: Array<NodeArg[]>) => (): Node => {
+    return new ValuesNode(values.map((v) => v.map(toNode)))
 }

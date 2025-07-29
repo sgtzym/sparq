@@ -2,7 +2,7 @@ import { type ArrayLike, castArray } from '~/core/utils.ts'
 import { SQL_KEYWORDS as SQL, SQL_SYMBOLS } from '~/core/sql-constants.ts'
 import { sql } from '~/core/sql.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
-import type { Node } from '~/core/node.ts'
+import { interpretAll, type Node } from '~/core/node.ts'
 
 export const JOIN_TYPES = {
     INNER: SQL.INNER,
@@ -23,6 +23,17 @@ export class FromNode implements Node {
         const parts = castArray(this.expression).map((e) => e.interpret(params))
 
         return `${SQL.FROM} ${sql.comma(...parts)}`
+    }
+}
+
+/** */
+export class IntoNode implements Node {
+    constructor(
+        private readonly expression: Node,
+    ) {}
+
+    interpret(params: Parameters): string {
+        return `${SQL.INTO} ${this.expression.interpret(params)}`
     }
 }
 
@@ -124,12 +135,25 @@ export class SetNode implements Node {
     ) {}
 
     interpret(params: Parameters): string {
-        const assignments = sql.comma(
-            ...this.assignments.map(([field, value]) =>
-                `${field.interpret(params)} ${SQL_SYMBOLS.EQ} ${value.interpret(params)}`
-            ),
+        const assignments = this.assignments.map(([field, value]) =>
+            `${field.interpret(params)} ${SQL_SYMBOLS.EQ} ${value.interpret(params)}`
         )
 
-        return `${SQL.SET} ${assignments}`
+        return `${SQL.SET} ${sql.comma(...assignments)}`
+    }
+}
+
+/** */
+export class ValuesNode implements Node {
+    constructor(
+        private readonly values: ArrayLike<Node[]>,
+    ) {}
+
+    interpret(params: Parameters): string {
+        const values: string[] = castArray(this.values).map((v) =>
+            sql.parens(sql.comma(...interpretAll(v, params)))
+        )
+
+        return `${SQL.VALUES} ${sql.comma(...values)}${SQL_SYMBOLS.SEMI}`
     }
 }
