@@ -24,7 +24,7 @@ import {
 
 /** SQL clause node factories 🏭 */
 
-// Basic clauses ->
+// -> Basic clauses
 
 /**
  * FROM clause
@@ -97,7 +97,7 @@ export const orderBy: NodeFactory = (...fields: NodeArg[]) => (): Node => {
     return new OrderByNode(fields.map(toNode))
 }
 
-// Joins ->
+// -> Joins
 
 /**
  * Creates a join clause node factory.
@@ -148,7 +148,7 @@ export const crossJoin: NodeFactory = (table: NodeArg) => (): Node => {
     return new JoinNode(JOIN_TYPES.CROSS, toNode(table))
 }
 
-// Misc. ->
+// -> Misc.
 
 /**
  * LIMIT clause for result restriction.

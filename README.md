@@ -1,12 +1,13 @@
 # SPARQ ✨
 
-Type-safe SQLite query builder — built on [Deno](https://deno.com/) 🦕
+Type-safe, AST based SQLite query builder for [Deno](https://deno.com/) 🦕
 
-## Overview
+## Features
 
-SPARQ provides a declarative API for building SQL queries with full type safety. Built specifically for Deno with SQLite support.
-
-**Status**: Under heavy construction! 🧑‍🏭
+- Type Safety - Full TypeScript support with compile-time validation
+- SQL Injection Protection - Automatic parameter binding
+- Chainable API - Fluent method chaining for readable queries
+- SQLite Optimized - Built specifically for SQLite compatibility
 
 ## Installation
 
@@ -16,46 +17,75 @@ deno add @sgtzym/sparq
 
 ## Quick start
 
-```ts
-import { sparq, eq, gt } from '@sgtzym/sparq'
+### Select rows
 
-// Select with conditions
+```ts
 const [sql, params] = sparq('users')
-  .select('id', 'name', 'email')
+  .select(['id', 'name', 'email'])
   .where(eq('status', 'active'), gt('age', 18))
   .build()
 
-// Insert data
-const insertQuery = sparq('users')
-  .insert({ name: 'John', email: 'john@example.com' })
+// -> SELECT id, name, email FROM users WHERE status = :p1 AND age > :p2
+```
+### Insert rows
+
+```ts
+const [sql, params] = sparq('users')
+  .insert(
+    { name: 'John', email: 'john@sparq.com' },
+    { name: 'Jane', email: 'jane@sparq.com' }
+  )
   .build()
 
-// Update records
-const updateQuery = sparq('users')
+// -> INSERT INTO users (name, email) VALUES (:p1, :p2), (:p3, :p4);
+```
+
+### Update rows
+
+```ts
+const [sql, params] = sparq('users')
   .update({ status: 'inactive' })
   .where(eq('id', 123))
   .build()
+
+// -> UPDATE users SET status = :p1 WHERE id = :p2
+```
+### Delete rows
+
+```ts
+const [sql, params] = sparq('users')
+  .delete()
+  .where(eq('status', 'deleted'))
+  .build()
+
+// -> DELETE FROM users WHERE status = :p1
 ```
 
-## Key features
-
-- **Type safety**: Full TypeScript support with compile-time validation
-- **SQL injection protection**: Automatic parameterization of values
-- **Declarative syntax**: Chainable methods for readable query construction
-- **SQLite optimized**: Built specifically for SQLite compatibility
-
-## API reference
+## API
 
 ### Query builders
-- `sparq(table).select()` - SELECT queries
-- `sparq(table).insert()` - INSERT operations
-- `sparq(table).update()` - UPDATE operations  
-- `sparq(table).delete()` - DELETE operations
+- `select()` - SELECT queries with optional column specification and `distinct()`, `all()` set quantifiers
+- `insert()` - INSERT with automatic column detection
+- `update()` - UPDATE with field assignments
+- `delete()` - DELETE operations
 
 ### Operators
 - `eq()`, `ne()`, `gt()`, `lt()`, `ge()`, `le()` - Comparison operators
 - `and()`, `or()`, `not()` - Logical operators
 - `like()`, `in_()` - Pattern matching and list operations
+- `exists()`, `isNull()`, `isNotNull()` - Existence checks
 
 ### Aggregates
-- `count()`, `sum()`, `avg()`, `min()`, `max()` - Aggregate functions
+- `count()`, `sum()`, `avg()`, `min()`, `max()` - Aggregate functions with `distinct()`, `all()` set quantifiers
+
+### Clauses
+
+- `where()` - Filter conditions (top-level combined with AND)
+- `groupBy()`, having() - Grouping and aggregate filtering
+- `orderBy()` - Sorting with `asc()`, `desc()` modifiers
+- `limit()`, `offset()` - Result pagination
+- `innerJoin()`, `leftJoin()`, `crossJoin()` - Table joins
+
+### Utilities
+- `id()`, `val()`, `raw()` - Quoted names, literals and raw SQL strings (use with caution!)
+- `alias()` - Column/table aliasing

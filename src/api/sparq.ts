@@ -14,16 +14,14 @@ import {
 class Sparq {
     constructor(private readonly table: string) {}
 
-    select(): SelectBuilder
-    select(...fields: NodeArg[]): SelectBuilder
-    select(fields?: any): SelectBuilder {
-        return new SelectBuilder(this.table, fields)
+    select(...columns: NodeArg[]): SelectBuilder {
+        return new SelectBuilder(this.table, columns)
     }
 
     // Auto-detects required columns from given data (rows).
     insert(...rows: Record<string, NodeArg>[]): InsertBuilder {
         const parsedFields = Object.keys(rows[0])
-        const parsedValues = Object.entries(rows).map((r) => Object.values(r) as NodeArg[])
+        const parsedValues = rows.map((row) => Object.values(row) as NodeArg[])
 
         return new InsertBuilder(this.table, parsedFields, parsedValues)
     }

@@ -1,10 +1,4 @@
-// deno-fmt-ignore-file
-import {
-    type Node,
-    type NodeArg,
-    type NodeFactory,
-    toNode
-} from '~/core/node.ts'
+import { type Node, type NodeArg, type NodeFactory, toNode } from '~/core/node.ts'
 
 import {
     AliasNode,
@@ -18,19 +12,18 @@ import {
 
 /** SQL modifier node factories 🏭 */
 
-// Set quantifiers ->
+// -> Set quantifiers
 
 /**
  * Creates a set quantifier node factory.
  * @param {SetQuantifier} quantifier - Set quantifier
  * @returns Factory function for set quantifier nodes
  */
-const setQuantifierFactory: (quantifier: SetQuantifier) => NodeFactory =
+const setQuantifier: (quantifier: SetQuantifier) => NodeFactory =
     (quantifier: SetQuantifier): NodeFactory => (arg?: NodeArg) => (): Node =>
         new SetQuantifierNode(quantifier, arg ? toNode(arg) : undefined)
 
-const _distinct: NodeFactory = setQuantifierFactory(SET_QUANTIFIERS.DISTINCT)
-const _all: NodeFactory = setQuantifierFactory(SET_QUANTIFIERS.ALL)
+const _distinct: NodeFactory = setQuantifier(SET_QUANTIFIERS.DISTINCT)
 
 /**
  * DISTINCT set quantifier modifier
@@ -40,6 +33,7 @@ function distinct(field: NodeArg): () => Node
 function distinct(field?: NodeArg) {
     return _distinct(field)
 }
+const _all: NodeFactory = setQuantifier(SET_QUANTIFIERS.ALL)
 
 /**
  * ALL set quantifier modifier
@@ -52,9 +46,9 @@ function all(field?: NodeArg) {
 
 export { all, distinct }
 
-// Sorting directions ->
+// -> Sorting directions
 
-const sortingDirectionFactory: (dir: SortingDirection) => (arg: NodeArg) => () => Node = 
+const sortingDirection: (dir: SortingDirection) => (arg: NodeArg) => () => Node =
     (dir: SortingDirection) => (arg: NodeArg) => (): Node => {
         if (!arg) throw new Error(`${SortingDirectionNode.name}: expression required`)
         return new SortingDirectionNode(toNode(arg), dir)
@@ -63,16 +57,16 @@ const sortingDirectionFactory: (dir: SortingDirection) => (arg: NodeArg) => () =
 /**
  * ASC sorting direction modifier
  */
-const asc: NodeFactory = sortingDirectionFactory(SORTING_DIRECTIONS.ASC)
+const asc: NodeFactory = sortingDirection(SORTING_DIRECTIONS.ASC)
 
 /**
  * DESC sorting direction modifier
  */
-const desc: NodeFactory = sortingDirectionFactory(SORTING_DIRECTIONS.DESC)
+const desc: NodeFactory = sortingDirection(SORTING_DIRECTIONS.DESC)
 
 export { asc, desc }
 
-// Alias (renaming) ->
+// -> Alias (column/table aliasing)
 
 /**
  * AS modifier
