@@ -12,6 +12,7 @@ export const SQL_KEYWORDS = {
     ALWAYS: 'ALWAYS',
     ANALYZE: 'ANALYZE',
     AND: 'AND',
+    ANY: 'ANY',
     AS: 'AS',
     ASC: 'ASC',
     ATTACH: 'ATTACH',

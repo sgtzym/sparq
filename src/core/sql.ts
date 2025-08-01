@@ -97,5 +97,5 @@ export const sql = {
     or: (...parts: string[]) => parts.join(` ${SQL.OR} `),
     dot: (...parts: string[]) => parts.join('.'),
     comma: (...parts: string[]) => parts.join(', '),
-    parens: (...parts: string[]) => `(${parts.join(' ')})`,
+    group: (...parts: string[]) => `(${parts.join(' ')})`,
 } as const

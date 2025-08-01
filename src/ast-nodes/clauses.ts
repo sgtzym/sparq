@@ -142,7 +142,7 @@ export class ValuesNode implements Node {
 
     interpret(params: Parameters): string {
         const values: string[] = castArray(this.values).map((v) =>
-            sql.parens(sql.comma(...interpretAll(v, params)))
+            sql.group(sql.comma(...interpretAll(v, params)))
         )
 
         return `${SQL.VALUES} ${sql.comma(...values)}${SQL_SYMBOLS.SEMI}`

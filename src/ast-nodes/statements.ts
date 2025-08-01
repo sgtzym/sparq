@@ -38,7 +38,7 @@ export class InsertNode implements Node {
 
     interpret(params: Parameters): string {
         return `${SQL.INSERT} ${SQL.INTO} ${this.table.interpret(params)} ${
-            sql.parens(sql.comma(...interpretAll(this.columns, params)))
+            sql.group(sql.comma(...interpretAll(this.columns, params)))
         }`
     }
 }
