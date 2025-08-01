@@ -1,6 +1,6 @@
 # SPARQ ✨
 
-Type-safe, AST based SQLite query builder for [Deno](https://deno.com/) 🦕
+A declarative, AST-based and type-safe SQLite query builder for [Deno](https://deno.com/) 🦕
 
 ## Features
 
