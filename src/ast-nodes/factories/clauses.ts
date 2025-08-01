@@ -60,14 +60,14 @@ export const where: NodeFactory = (...conditions: NodeArg[]) => (): Node => {
 /**
  * GROUP BY clause for aggregation
  *
- * @param {NodeArg[]} fields - Columns to group by
+ * @param {NodeArg[]} columns - Columns to group by
  * @returns Factory function that creates a GroupByNode
  *
  * @example
  * groupBy('department', 'role')
  */
-export const groupBy: NodeFactory = (...fields: NodeArg[]) => (): Node => {
-    return new GroupByNode(fields.map(toNode))
+export const groupBy: NodeFactory = (...columns: NodeArg[]) => (): Node => {
+    return new GroupByNode(columns.map(toNode))
 }
 
 /**
@@ -86,15 +86,15 @@ export const having: NodeFactory = (...conditions: NodeArg[]) => (): Node => {
 /**
  * ORDER BY clause for sorting
  *
- * @param {NodeArg[]} fields - Columns to sort by, optionally with direction
+ * @param {NodeArg[]} columns - Columns to sort by, optionally with direction
  * @returns Factory function that creates an OrderByNode
  *
  * @example
  * orderBy('created_at')
  * orderBy(desc('created_at'), asc('name'))
  */
-export const orderBy: NodeFactory = (...fields: NodeArg[]) => (): Node => {
-    return new OrderByNode(fields.map(toNode))
+export const orderBy: NodeFactory = (...columns: NodeArg[]) => (): Node => {
+    return new OrderByNode(columns.map(toNode))
 }
 
 // -> Joins

@@ -51,8 +51,8 @@ export function toNode(arg: NodeArg): Node {
     if (typeof arg === 'function') return arg()
 
     /**
-     * TODO(#sgtzym): This needs a proper table/field checking mechanism (incl. auto-completion)
-     * Check here if a str value is part of a scheme (either a table or a field name) and set Identifier/Literal Node accordingly
+     * TODO(#sgtzym): This needs a proper table/column checking mechanism (incl. auto-completion)
+     * Check here if a str value is part of a scheme (either a table or a column name) and set Identifier/Literal Node accordingly
      */
     return sql.isIdentifier(arg)
         ? new IdentifierNode(arg as string)

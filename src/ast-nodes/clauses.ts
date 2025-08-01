@@ -127,8 +127,8 @@ export class SetNode implements Node {
     ) {}
 
     interpret(params: Parameters): string {
-        const assignments = this.assignments.map(([field, value]) =>
-            `${field.interpret(params)} ${SQL_SYMBOLS.EQ} ${value.interpret(params)}`
+        const assignments = this.assignments.map(([column, value]) =>
+            `${column.interpret(params)} ${SQL_SYMBOLS.EQ} ${value.interpret(params)}`
         )
 
         return `${SQL.SET} ${sql.comma(...assignments)}`

@@ -51,15 +51,15 @@ const _update: (table: NodeArg) => () => Node =
  *
  * @private
  * @param {NodeArg} table - Table name for insertion
- * @param {Array<NodeArg>} fields - Column names for the insert operation
+ * @param {Array<NodeArg>} columns - Column names for the insert operation
  * @returns A factory function that creates an InsertNode
  * 
  * @example
  * _insert('table_1', ['column_1', 'column_2'])
  */
-const _insert: (table: NodeArg, fields: NodeArg[]) => () => Node =
-    (table: NodeArg, fields: NodeArg[]) => (): Node =>
-        new InsertNode(toNode(table), fields.map(toNode))
+const _insert: (table: NodeArg, columns: NodeArg[]) => () => Node =
+    (table: NodeArg, columns: NodeArg[]) => (): Node =>
+        new InsertNode(toNode(table), columns.map(toNode))
 
 /**
  * DELETE statement

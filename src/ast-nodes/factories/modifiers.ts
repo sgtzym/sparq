@@ -29,9 +29,9 @@ const _distinct: NodeFactory = setQuantifier(SET_QUANTIFIERS.DISTINCT)
  * DISTINCT set quantifier modifier
  */
 function distinct(): () => Node
-function distinct(field: NodeArg): () => Node
-function distinct(field?: NodeArg) {
-    return _distinct(field)
+function distinct(column: NodeArg): () => Node
+function distinct(column?: NodeArg) {
+    return _distinct(column)
 }
 const _all: NodeFactory = setQuantifier(SET_QUANTIFIERS.ALL)
 
@@ -39,9 +39,9 @@ const _all: NodeFactory = setQuantifier(SET_QUANTIFIERS.ALL)
  * ALL set quantifier modifier
  */
 function all(): () => Node
-function all(field: NodeArg): () => Node
-function all(field?: NodeArg) {
-    return _all(field)
+function all(column: NodeArg): () => Node
+function all(column?: NodeArg) {
+    return _all(column)
 }
 
 export { all, distinct }

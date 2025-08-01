@@ -86,7 +86,12 @@ export class SelectBuilder {
         OffsetNode.name,
     ]
 
-    // Collect as factory, parse to node at the end (prevents ugly "()()")
+    /**
+     * Collects clause factories to build AST in correct SQL order.
+     * Factories are resolved to nodes during build() to prevent
+     * premature evaluation and enable method chaining.
+     * Also prevents ugly "()()" syntax.
+     */
     private readonly stmt: (() => Node)[] = []
 
     constructor(table: NodeArg, columns?: NodeArg[]) {

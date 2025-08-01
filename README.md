@@ -66,7 +66,7 @@ const [sql, params] = sparq('users')
 ### Query builders
 - `select()` - SELECT queries with optional column specification and `distinct()`, `all()` set quantifiers
 - `insert()` - INSERT with automatic column detection
-- `update()` - UPDATE with field assignments
+- `update()` - UPDATE with column assignments
 - `delete()` - DELETE operations
 
 ### Operators
