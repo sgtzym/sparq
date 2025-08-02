@@ -1,5 +1,5 @@
 import { sql } from '~/core/sql.ts'
-import { type NodeExpr, type Node, toNode } from '~/core/node.ts'
+import { type Node, type NodeExpr, toNode } from '~/core/node.ts'
 import { IdentifierNode, LiteralNode } from '~/ast-nodes/primitives.ts'
 import {
     FromNode,
@@ -39,8 +39,13 @@ export const limit = (count: number = 1) => new LimitNode(count)
 export const offset = (count: number = 0) => new OffsetNode(count)
 
 // Joins
-const join = (type: JoinType) => (table: NodeExpr, condition?: NodeExpr): Node =>
-    new JoinNode(type, toNode(table), condition ? toNode(condition) : undefined)
+const join =
+    (type: JoinType) => (table: NodeExpr, condition?: NodeExpr): Node =>
+        new JoinNode(
+            type,
+            toNode(table),
+            condition ? toNode(condition) : undefined,
+        )
 
 export const innerJoin = join(JOIN_TYPES.INNER)
 export const leftJoin = join(JOIN_TYPES.LEFT)

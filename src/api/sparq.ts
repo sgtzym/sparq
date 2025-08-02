@@ -39,7 +39,9 @@ class Sparq {
         function _update(
             data: Partial<Record<keyof T, unknown>>,
         ): UpdateBuilder {
-            const assignments = Object.entries(data).map((a) => a as [string, NodeExpr])
+            const assignments = Object.entries(data).map((a) =>
+                a as [string, NodeExpr]
+            )
             return new UpdateBuilder(table, assignments)
         }
 

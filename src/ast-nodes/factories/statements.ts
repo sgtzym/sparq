@@ -1,4 +1,4 @@
-import { type NodeExpr, type Node, toNode } from '~/core/node.ts'
+import { type Node, type NodeExpr, toNode } from '~/core/node.ts'
 import {
     DeleteNode,
     InsertNode,

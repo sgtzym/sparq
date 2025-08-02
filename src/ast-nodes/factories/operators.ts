@@ -1,5 +1,5 @@
 import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
-import { type NodeExpr, type Node, toNode } from '~/core/node.ts'
+import { type Node, type NodeExpr, toNode } from '~/core/node.ts'
 import {
     COMPARISON_OPERATORS,
     ComparisonNode,
@@ -24,7 +24,11 @@ export const le = comparison(COMPARISON_OPERATORS.LE)
 export const like = comparison(LOGICAL_OPERATORS.LIKE)
 export const in_ = comparison(LOGICAL_OPERATORS.IN)
 
-export const between = (test: NodeExpr, lower: NodeExpr, upper: NodeExpr): Node =>
+export const between = (
+    test: NodeExpr,
+    lower: NodeExpr,
+    upper: NodeExpr,
+): Node =>
     new ComparisonNode(
         toNode(test),
         LOGICAL_OPERATORS.BETWEEN,
@@ -44,8 +48,8 @@ export const or = conjunction(LOGICAL_OPERATORS.OR, true)
 
 // Modifier operators (NOT, EXISTS, ...)
 const modifier =
-    (op: Operator, position: 'prefix' | 'suffix') => (operand: NodeExpr): Node =>
-        new ModifierNode(op, toNode(operand), position)
+    (op: Operator, position: 'prefix' | 'suffix') =>
+    (operand: NodeExpr): Node => new ModifierNode(op, toNode(operand), position)
 
 export const not = modifier(LOGICAL_OPERATORS.NOT, 'prefix')
 export const exists = modifier(LOGICAL_OPERATORS.EXISTS, 'prefix')

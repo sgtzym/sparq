@@ -1,6 +1,6 @@
 import type { SqlValue } from '~/core/sql.ts'
 import { ParameterRegistry } from '~/core/parameter-registry.ts'
-import { type Expr, interpretAll, type Node, toNode } from '~/core/node.ts'
+import { interpretAll, type Node, type NodeExpr } from '~/core/node.ts'
 import { SetQuantifierNode } from '~/ast-nodes/modifiers.ts'
 import {
     FromNode,
@@ -97,15 +97,15 @@ export class SelectBuilder {
 
     private readonly stmt: Node[] = []
 
-    constructor(table: string, columns?: Expr[]) {
+    constructor(table: string, columns?: NodeExpr[]) {
         this.stmt.push(_select(columns))
         this.stmt.push(from(table))
     }
 
     join(
         dir: 'inner' | 'left' | 'leftOuter' | 'cross',
-        table: Expr,
-        condition?: Expr,
+        table: NodeExpr,
+        condition?: NodeExpr,
     ): this {
         switch (dir) {
             case 'inner':
@@ -125,7 +125,7 @@ export class SelectBuilder {
         return this
     }
 
-    where(...conditions: Expr[]): this {
+    where(...conditions: NodeExpr[]): this {
         this.stmt.push(where(...conditions))
         return this
     }
@@ -135,7 +135,7 @@ export class SelectBuilder {
         return this
     }
 
-    having(...conditions: Expr[]): this {
+    having(...conditions: NodeExpr[]): this {
         this.stmt.push(having(...conditions))
         return this
     }
@@ -170,7 +170,11 @@ export class InsertBuilder {
 
     private readonly stmt: Node[] = []
 
-    constructor(table: Expr, columns: Expr[], values: Array<Expr[]>) {
+    constructor(
+        table: NodeExpr,
+        columns: NodeExpr[],
+        values: Array<NodeExpr[]>,
+    ) {
         this.stmt.push(_insert(table, columns))
         this.stmt.push(_values(...values))
     }
@@ -194,12 +198,12 @@ export class UpdateBuilder {
 
     private readonly stmt: Node[] = []
 
-    constructor(table: Expr, assignments: Array<[string, Expr]>) {
+    constructor(table: NodeExpr, assignments: Array<[string, NodeExpr]>) {
         this.stmt.push(_update(table))
         this.stmt.push(_set(assignments))
     }
 
-    where(...conditions: Expr[]): this {
+    where(...conditions: NodeExpr[]): this {
         this.stmt.push(where(...conditions))
         return this
     }
@@ -238,7 +242,7 @@ export class DeleteBuilder {
         this.stmt.push(from(table))
     }
 
-    where(...conditions: Expr[]): this {
+    where(...conditions: NodeExpr[]): this {
         this.stmt.push(where(...conditions))
         return this
     }
