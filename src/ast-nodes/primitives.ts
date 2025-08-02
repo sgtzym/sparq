@@ -2,7 +2,7 @@ import { sql } from '~/core/sql.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import type { Node, Param } from '~/core/node.ts'
 
-/** AST nodes representing SQL primitives 🧬 */
+/** 🧬 AST nodes: Primitives */
 
 export class RawNode implements Node {
     constructor(private readonly sql: string) {}

@@ -2,7 +2,7 @@ import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import type { Node } from '~/core/node.ts'
 
-/** AST nodes representing SQL modifiers 🧬 */
+/** 🧬 AST nodes: Modifiers */
 
 export class AliasNode implements Node {
     constructor(

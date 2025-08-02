@@ -4,7 +4,7 @@ import { sql } from '~/core/sql.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
 
-/** AST nodes representing SQL clauses 🧬 */
+/** 🧬 AST nodes: Clauses */
 
 export class FromNode implements Node {
     constructor(

@@ -2,7 +2,7 @@ import { SQL_KEYWORDS as SQL, SQL_SYMBOLS } from '~/core/sql-constants.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import type { Node } from '~/core/node.ts'
 
-/** AST nodes representing SQL aggregate functions 🧬 */
+/** 🧬 AST nodes: Aggregate functions */
 
 export const AGGREGATE_FUNCTIONS = {
     AVG: SQL.AVG,

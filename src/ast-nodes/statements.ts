@@ -4,7 +4,7 @@ import { sql } from '~/core/sql.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
 
-/** AST nodes representing SQL statements 🧬 */
+/** 🧬 AST nodes: Statements */
 
 export class SelectNode implements Node {
     constructor(

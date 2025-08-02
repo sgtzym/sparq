@@ -7,7 +7,7 @@ import { sql } from '~/core/sql.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
 
-/** AST nodes representing logical/comparison expressions 🧬 */
+/** 🧬 AST nodes: Operators */
 
 export const LOGICAL_OPERATORS = {
     ALL: SQL.ALL,
