@@ -8,6 +8,7 @@ import {
     type SortingDirection,
     SortingDirectionNode,
 } from '~/ast-nodes/modifiers.ts'
+import { IdentifierNode } from '../primitives.ts'
 
 /** 🏭 Node factories: Modifiers */
 
@@ -28,9 +29,9 @@ export const asc = sortDir(SORTING_DIRECTIONS.ASC)
 export const desc = sortDir(SORTING_DIRECTIONS.DESC)
 
 // Alias
-export const alias = (expr: NodeExpr, as: NodeExpr): Node => {
+export const alias = (expr: NodeExpr, as: string): Node => {
     if (!expr || !as) {
         throw new Error('Alias requires both expr and name')
     }
-    return new AliasNode(toNode(expr), toNode(as))
+    return new AliasNode(toNode(expr), new IdentifierNode(as))
 }
