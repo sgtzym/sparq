@@ -1,46 +1,13 @@
 import type { SqlValue } from '~/core/sql.ts'
 import { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node, type NodeExpr } from '~/core/node.ts'
-import { SetQuantifierNode } from '~/ast-nodes/modifiers.ts'
-import {
-    FromNode,
-    GroupByNode,
-    HavingNode,
-    JoinNode,
-    LimitNode,
-    OffsetNode,
-    OrderByNode,
-    SetNode,
-    ValuesNode,
-    WhereNode,
-} from '~/ast-nodes/clauses.ts'
-import {
-    DeleteNode,
-    InsertNode,
-    SelectNode,
-    UpdateNode,
-} from '~/ast-nodes/statements.ts'
-import {
-    _set,
-    _values,
-    crossJoin,
-    from,
-    groupBy,
-    having,
-    innerJoin,
-    leftJoin,
-    leftOuterJoin,
-    limit,
-    offset,
-    orderBy,
-    where,
-} from '~/ast-nodes/factories/clauses.ts'
-import {
-    _delete,
-    _insert,
-    _select,
-    _update,
-} from '~/ast-nodes/factories/statements.ts'
+
+import * as modifiers from '~/ast-nodes/modifiers.ts'
+import * as clauses from '~/ast-nodes/clauses.ts'
+import * as statements from '~/ast-nodes/statements.ts'
+
+import * as $clauses from '~/ast-nodes/factories/clauses.ts'
+import * as $statements from '~/ast-nodes/factories/statements.ts'
 
 /**
  * Compiled SQL query with parameter values.
@@ -83,23 +50,23 @@ function renderAST(
 
 export class SelectBuilder {
     private clauseOrder = [
-        SelectNode.name,
-        SetQuantifierNode.name,
-        FromNode.name,
-        JoinNode.name,
-        WhereNode.name,
-        GroupByNode.name,
-        HavingNode.name,
-        OrderByNode.name,
-        LimitNode.name,
-        OffsetNode.name,
+        statements.SelectNode.name,
+        modifiers.SetQuantifierNode.name,
+        clauses.FromNode.name,
+        clauses.JoinNode.name,
+        clauses.WhereNode.name,
+        clauses.GroupByNode.name,
+        clauses.HavingNode.name,
+        clauses.OrderByNode.name,
+        clauses.LimitNode.name,
+        clauses.OffsetNode.name,
     ]
 
     private readonly stmt: Node[] = []
 
     constructor(table: string, columns?: NodeExpr[]) {
-        this.stmt.push(_select(columns))
-        this.stmt.push(from(table))
+        this.stmt.push($statements._select(columns))
+        this.stmt.push($clauses.from(table))
     }
 
     join(
@@ -109,16 +76,16 @@ export class SelectBuilder {
     ): this {
         switch (dir) {
             case 'inner':
-                this.stmt.push(innerJoin(table, condition))
+                this.stmt.push($clauses.innerJoin(table, condition))
                 break
             case 'left':
-                this.stmt.push(leftJoin(table, condition))
+                this.stmt.push($clauses.leftJoin(table, condition))
                 break
             case 'leftOuter':
-                this.stmt.push(leftOuterJoin(table, condition))
+                this.stmt.push($clauses.leftOuterJoin(table, condition))
                 break
             case 'cross':
-                this.stmt.push(crossJoin(table))
+                this.stmt.push($clauses.crossJoin(table))
                 break
         }
 
@@ -126,32 +93,32 @@ export class SelectBuilder {
     }
 
     where(...conditions: NodeExpr[]): this {
-        this.stmt.push(where(...conditions))
+        this.stmt.push($clauses.where(...conditions))
         return this
     }
 
     groupBy(...columns: string[]): this {
-        this.stmt.push(groupBy(...columns))
+        this.stmt.push($clauses.groupBy(...columns))
         return this
     }
 
     having(...conditions: NodeExpr[]): this {
-        this.stmt.push(having(...conditions))
+        this.stmt.push($clauses.having(...conditions))
         return this
     }
 
     orderBy(...columns: string[]): this {
-        this.stmt.push(orderBy(...columns))
+        this.stmt.push($clauses.orderBy(...columns))
         return this
     }
 
-    limit(count: number): this {
-        this.stmt.push(limit(count))
+    limit(count: number = 1): this {
+        this.stmt.push($clauses.limit(count))
         return this
     }
 
-    offset(count: number): this {
-        this.stmt.push(offset(count))
+    offset(count: number = 1): this {
+        this.stmt.push($clauses.offset(count))
         return this
     }
 
@@ -164,8 +131,8 @@ export class SelectBuilder {
 
 export class InsertBuilder {
     private clauseOrder = [
-        InsertNode.name,
-        ValuesNode.name,
+        statements.InsertNode.name,
+        clauses.ValuesNode.name,
     ]
 
     private readonly stmt: Node[] = []
@@ -175,8 +142,8 @@ export class InsertBuilder {
         columns: NodeExpr[],
         values: Array<NodeExpr[]>,
     ) {
-        this.stmt.push(_insert(table, columns))
-        this.stmt.push(_values(...values))
+        this.stmt.push($statements._insert(table, columns))
+        this.stmt.push($clauses._values(...values))
     }
 
     build(): Query {
@@ -188,33 +155,33 @@ export class InsertBuilder {
 
 export class UpdateBuilder {
     private clauseOrder = [
-        UpdateNode.name,
-        SetNode.name,
-        WhereNode.name,
-        OrderByNode.name,
-        LimitNode.name,
-        OffsetNode.name,
+        statements.UpdateNode.name,
+        clauses.SetNode.name,
+        clauses.WhereNode.name,
+        clauses.OrderByNode.name,
+        clauses.LimitNode.name,
+        clauses.OffsetNode.name,
     ]
 
     private readonly stmt: Node[] = []
 
     constructor(table: NodeExpr, assignments: Array<[string, NodeExpr]>) {
-        this.stmt.push(_update(table))
-        this.stmt.push(_set(assignments))
+        this.stmt.push($statements._update(table))
+        this.stmt.push($clauses._set(assignments))
     }
 
     where(...conditions: NodeExpr[]): this {
-        this.stmt.push(where(...conditions))
+        this.stmt.push($clauses.where(...conditions))
         return this
     }
 
     orderBy(...columns: string[]): this {
-        this.stmt.push(orderBy(...columns))
+        this.stmt.push($clauses.orderBy(...columns))
         return this
     }
 
-    limit(count: number): this {
-        this.stmt.push(limit(count))
+    limit(count: number = 1): this {
+        this.stmt.push($clauses.limit(count))
         return this
     }
 
@@ -227,33 +194,33 @@ export class UpdateBuilder {
 
 export class DeleteBuilder {
     private clauseOrder = [
-        DeleteNode.name,
-        FromNode.name,
-        WhereNode.name,
-        OrderByNode.name,
-        LimitNode.name,
-        OffsetNode.name,
+        statements.DeleteNode.name,
+        clauses.FromNode.name,
+        clauses.WhereNode.name,
+        clauses.OrderByNode.name,
+        clauses.LimitNode.name,
+        clauses.OffsetNode.name,
     ]
 
     private readonly stmt: Node[] = []
 
     constructor(table: string) {
-        this.stmt.push(_delete())
-        this.stmt.push(from(table))
+        this.stmt.push($statements._delete())
+        this.stmt.push($clauses.from(table))
     }
 
     where(...conditions: NodeExpr[]): this {
-        this.stmt.push(where(...conditions))
+        this.stmt.push($clauses.where(...conditions))
         return this
     }
 
     orderBy(...columns: string[]): this {
-        this.stmt.push(orderBy(...columns))
+        this.stmt.push($clauses.orderBy(...columns))
         return this
     }
 
-    limit(count: number): this {
-        this.stmt.push(limit(count))
+    limit(count: number = 1): this {
+        this.stmt.push($clauses.limit(count))
         return this
     }
 

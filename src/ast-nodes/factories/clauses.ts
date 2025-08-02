@@ -34,9 +34,9 @@ export const having = (...conditions: NodeExpr[]) =>
 export const orderBy = (...columns: string[]) =>
     new OrderByNode(columns.map((col) => new IdentifierNode(col)))
 
-export const limit = (count: number = 1) => new LimitNode(count)
+export const limit = (count: number) => new LimitNode(count)
 
-export const offset = (count: number = 0) => new OffsetNode(count)
+export const offset = (count: number) => new OffsetNode(count)
 
 // Joins
 const join =
