@@ -1,7 +1,7 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
 import { SQL_KEYWORDS as SQL, SQL_SYMBOLS as SYMBOL } from '~/core/sql-constants.ts'
 import { sql } from '~/core/sql.ts'
-import type { Parameters } from '~/core/parameter-registry.ts'
+import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
 
 /** AST nodes representing logical/comparison expressions 🧬 */
@@ -38,7 +38,7 @@ export class ComparisonNode implements Node {
         private readonly right: Node,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         return `${this.left.interpret(params)} ${this.operator} ${this.right.interpret(params)}`
     }
 }
@@ -50,7 +50,7 @@ export class ConjunctionNode implements Node {
         private readonly grouped: boolean = false,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const output: string = interpretAll(castArray(this.conditions), params).join(
             ` ${this.operator} `,
         )
@@ -66,7 +66,7 @@ export class ModifierNode implements Node {
         private readonly position: 'prefix' | 'suffix',
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         return this.position === 'prefix'
             ? `${this.modifier} ${this.operand.interpret(params)}`
             : `${this.operand.interpret(params)} ${this.modifier}`

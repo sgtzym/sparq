@@ -1,5 +1,5 @@
 import { SQL_KEYWORDS as SQL, SQL_SYMBOLS } from '~/core/sql-constants.ts'
-import type { Parameters } from '~/core/parameter-registry.ts'
+import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import type { Node } from '~/core/node.ts'
 
 /** AST nodes representing SQL aggregate functions 🧬 */
@@ -20,7 +20,7 @@ export class AggregateNode implements Node {
         private readonly expression?: Node,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         return this.expression
             ? `${this.fn}(${this.expression.interpret(params)})`
             : `${this.fn}(${SQL_SYMBOLS.ALL})`

@@ -1,7 +1,7 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
 import { SQL_KEYWORDS as SQL, SQL_SYMBOLS } from '~/core/sql-constants.ts'
 import { sql } from '~/core/sql.ts'
-import type { Parameters } from '~/core/parameter-registry.ts'
+import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
 
 /** AST nodes representing SQL clauses 🧬 */
@@ -11,7 +11,7 @@ export class FromNode implements Node {
         private readonly expression: ArrayLike<Node>,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const parts = castArray(this.expression).map((e) => e.interpret(params))
 
         return `${SQL.FROM} ${sql.comma(...parts)}`
@@ -23,7 +23,7 @@ export class IntoNode implements Node {
         private readonly expression: Node,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         return `${SQL.INTO} ${this.expression.interpret(params)}`
     }
 }
@@ -33,7 +33,7 @@ export class WhereNode implements Node {
         private readonly expression: ArrayLike<Node>,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const parts = castArray(this.expression).map((e) => e.interpret(params))
 
         return `${SQL.WHERE} ${sql.and(...parts)}`
@@ -45,7 +45,7 @@ export class GroupByNode implements Node {
         private readonly expression: ArrayLike<Node>,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const parts = castArray(this.expression).map((e) => e.interpret(params))
 
         return `${SQL.GROUP} ${SQL.BY} ${sql.comma(...parts)}`
@@ -57,7 +57,7 @@ export class HavingNode implements Node {
         private readonly expression: ArrayLike<Node>,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const parts = castArray(this.expression).map((e) => e.interpret(params))
 
         return `${SQL.HAVING} ${sql.and(...parts)}`
@@ -80,7 +80,7 @@ export class JoinNode implements Node {
         private readonly condition?: Node,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const parts: (string | undefined)[] = []
         parts.push(this.table.interpret(params))
         parts.push(this.condition?.interpret(params))
@@ -94,7 +94,7 @@ export class LimitNode implements Node {
         private readonly count: number,
     ) {}
 
-    interpret(_params: Parameters): string {
+    interpret(_params: ParameterRegistry): string {
         return `${SQL.LIMIT} ${this.count}`
     }
 }
@@ -104,7 +104,7 @@ export class OffsetNode implements Node {
         private readonly count: number,
     ) {}
 
-    interpret(_params: Parameters): string {
+    interpret(_params: ParameterRegistry): string {
         return `${SQL.OFFSET} ${this.count}`
     }
 }
@@ -114,7 +114,7 @@ export class OrderByNode implements Node {
         private readonly expression: ArrayLike<Node>,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const parts = castArray(this.expression).map((e) => e.interpret(params))
 
         return `${SQL.ORDER} ${SQL.BY} ${sql.comma(...parts)}`
@@ -126,7 +126,7 @@ export class SetNode implements Node {
         private readonly assignments: Array<[Node, Node]>,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const assignments = this.assignments.map(([column, value]) =>
             `${column.interpret(params)} ${SQL_SYMBOLS.EQ} ${value.interpret(params)}`
         )
@@ -140,7 +140,7 @@ export class ValuesNode implements Node {
         private readonly values: ArrayLike<Node[]>,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         const values: string[] = castArray(this.values).map((v) =>
             sql.group(sql.comma(...interpretAll(v, params)))
         )

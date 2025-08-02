@@ -1,5 +1,5 @@
 import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
-import type { Parameters } from '~/core/parameter-registry.ts'
+import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import type { Node } from '~/core/node.ts'
 
 /** AST nodes representing SQL modifiers 🧬 */
@@ -10,7 +10,7 @@ export class AliasNode implements Node {
         private readonly alias: Node,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         return `${this.expression.interpret(params)} ${SQL.AS} ${this.alias.interpret(params)}`
     }
 }
@@ -28,7 +28,7 @@ export class SetQuantifierNode implements Node {
         private readonly expression?: Node,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         return this.expression
             ? `${this.quantifier} ${this.expression?.interpret(params)}`
             : this.quantifier
@@ -48,7 +48,7 @@ export class SortingDirectionNode implements Node {
         private readonly dir: SortingDirection,
     ) {}
 
-    interpret(params: Parameters): string {
+    interpret(params: ParameterRegistry): string {
         return `${this.expression.interpret(params)} ${this.dir}`
     }
 }

@@ -1,6 +1,6 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
 import { sql, type SqlValue } from '~/core/sql.ts'
-import type { Parameters } from '~/core/parameter-registry.ts'
+import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { IdentifierNode, LiteralNode } from '~/ast-nodes/primitives.ts'
 
 /**
@@ -23,10 +23,10 @@ export interface Node {
     /**
      * Converts the node to its SQL representation.
      *
-     * @param {Parameters} params - Parameter registry for value binding
+     * @param {ParameterRegistry} params - Parameter registry for value binding
      * @returns {string} SQL string fragment
      */
-    interpret(params: Parameters): string
+    interpret(params: ParameterRegistry): string
 }
 
 /**
@@ -50,10 +50,6 @@ export type NodeFactory = (...args: NodeArg[]) => () => Node
 export function toNode(arg: NodeArg): Node {
     if (typeof arg === 'function') return arg()
 
-    /**
-     * TODO(#sgtzym): This needs a proper table/column checking mechanism (incl. auto-completion)
-     * Check here if a str value is part of a scheme (either a table or a column name) and set Identifier/Literal Node accordingly
-     */
     return sql.isIdentifier(arg)
         ? new IdentifierNode(arg as string)
         : new LiteralNode(arg as SqlValue)
@@ -63,9 +59,9 @@ export function toNode(arg: NodeArg): Node {
  * Interprets multiple nodes to SQL.
  *
  * @param {ArrayLike<Node>} nodes - Nodes to interpret
- * @param {Parameters} params - Parameter registry for value binding
+ * @param {ParameterRegistry} params - Parameter registry for value binding
  * @returns {string[]} Array of SQL string fragments
  */
-export function interpretAll(nodes: ArrayLike<Node>, params: Parameters): string[] {
+export function interpretAll(nodes: ArrayLike<Node>, params: ParameterRegistry): string[] {
     return castArray(nodes).map((n) => n.interpret(params))
 }

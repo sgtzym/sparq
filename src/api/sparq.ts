@@ -1,55 +1,46 @@
-// deno-fmt-ignore-file
 import type { NodeArg } from '~/core/node.ts'
-
-import {
-    DeleteBuilder,
-    InsertBuilder,
-    SelectBuilder,
-    UpdateBuilder
-} from '~/api/builders.ts'
+import schemas, { type Schema } from '~/core/schema-registry.ts'
+import { DeleteBuilder, InsertBuilder, SelectBuilder, UpdateBuilder } from './query-builders.ts'
 
 /**
  * Basic query builder 🧑‍🏭
  */
 class Sparq {
-    constructor(private readonly table: string) {}
-
-    select(...columns: NodeArg[]): SelectBuilder {
-        return new SelectBuilder(this.table, columns)
+    define<T extends Schema>(name: string, schema: T) {
+        schemas.add(name, schema)
+        return this.#api(name, schema)
     }
 
-    // Auto-detects required columns from given data (rows).
-    insert(...rows: Record<string, NodeArg>[]): InsertBuilder {
-        const parsedFields = Object.keys(rows[0])
-        const parsedValues = rows.map((row) => Object.values(row) as NodeArg[])
+    #api<T extends Schema>(name: string, _schema: T) {
+        function select(...columns: (keyof T)[]): SelectBuilder
+        function select(...expressions: NodeArg[]): SelectBuilder
+        function select(...args: (keyof T | NodeArg)[]): SelectBuilder {
+            return new SelectBuilder(name, args as NodeArg[])
+        }
 
-        return new InsertBuilder(this.table, parsedFields, parsedValues)
-    }
+        return {
+            select,
 
-    update(assignments: Record<string, NodeArg>): UpdateBuilder {
-        const parsedAssignments = Object.entries(assignments).map((a) => a as [NodeArg, NodeArg])
+            insert(...rows: Partial<Record<keyof T, unknown>>[]): InsertBuilder {
+                const parsedFields = Object.keys(rows[0] || {})
+                const parsedValues = rows.map((row) => Object.values(row))
+                return new InsertBuilder(name, parsedFields, parsedValues as NodeArg[][])
+            },
 
-        return new UpdateBuilder(this.table, parsedAssignments)
-    }
+            update(data: Partial<Record<keyof T, unknown>>): UpdateBuilder {
+                const assignments = Object.entries(data).map((a) => a as [any, any])
+                return new UpdateBuilder(name, assignments)
+            },
 
-    delete(): DeleteBuilder {
-        return new DeleteBuilder(this.table)
+            delete(): DeleteBuilder {
+                return new DeleteBuilder(name)
+            },
+        }
     }
 }
 
 /**
  * Public query entry point.
  * Provides a fluent API for SQL operations.
- *
- * @param {string} table - Table name
- * @returns {Sparq} Table-scoped query builder
- *
- * @example
- * ```typescript
- * const [sql, params] = sparq('users')
- *   .select('id', 'name', 'age')
- *   .where(eq('status', 'active'))
- *   .build()
- * ```
  */
-export const sparq = (table: string): Sparq => new Sparq(table)
+export const sparq: Sparq = new Sparq()

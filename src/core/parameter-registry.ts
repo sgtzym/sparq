@@ -19,7 +19,7 @@ interface ParameterRegistryOptions {
  * params.toArray()       // ['John', 'Jane']
  * ```
  */
-export class Parameters {
+export class ParameterRegistry {
     #byValue = new Map<SqlValue, string>() // value -> name
     #byName = new Map<string, SqlValue>() // name -> value
     #index = 0

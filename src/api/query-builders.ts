@@ -1,5 +1,5 @@
 import type { SqlValue } from '~/core/sql.ts'
-import { Parameters } from '~/core/parameter-registry.ts'
+import { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node, type NodeArg, toNode } from '~/core/node.ts'
 import { SetQuantifierNode } from '~/ast-nodes/modifiers.ts'
 import {
@@ -42,11 +42,11 @@ export type Query = [string, readonly SqlValue[]]
  * Groups nodes by type to ensure correct SQL syntax.
  *
  * @param {Node[]} nodes - AST nodes to render
- * @param {Parameters} params - Parameter registry for value binding
+ * @param {ParameterRegistry} params - Parameter registry for value binding
  * @param {string[]} order - Node type names in SQL clause order
  * @returns {string} Generated SQL string
  */
-function renderAST(nodes: Node[], params: Parameters, order: string[]): string {
+function renderAST(nodes: Node[], params: ParameterRegistry, order: string[]): string {
     const nodeMap = new Map<string, Node[]>()
 
     // TODO(#sgtzym): Allow and join multiple clauses of the same type
@@ -149,7 +149,7 @@ export class SelectBuilder {
     }
 
     build(): Query {
-        const params = new Parameters()
+        const params = new ParameterRegistry()
         const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
         return [sql, params.toArray()]
     }
@@ -169,7 +169,7 @@ export class InsertBuilder {
     }
 
     build(): Query {
-        const params = new Parameters()
+        const params = new ParameterRegistry()
         const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
         return [sql, params.toArray()]
     }
@@ -208,7 +208,7 @@ export class UpdateBuilder {
     }
 
     build(): Query {
-        const params = new Parameters()
+        const params = new ParameterRegistry()
         const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
         return [sql, params.toArray()]
     }
@@ -247,7 +247,7 @@ export class DeleteBuilder {
     }
 
     build(): Query {
-        const params = new Parameters()
+        const params = new ParameterRegistry()
         const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
         return [sql, params.toArray()]
     }

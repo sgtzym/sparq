@@ -1,4 +1,5 @@
 import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
+import schemas from '~/core/schema-registry.ts'
 
 /**
  * Union type of all SQL-compatible primitive values.
@@ -17,7 +18,18 @@ const SQL_IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
  * @returns {boolean} True if valid identifier
  */
 function isIdentifier(value: unknown): value is SqlIdentifier {
-    return typeof value === 'string' && SQL_IDENTIFIER_PATTERN.test(value)
+    if (typeof value !== 'string') return false
+
+    if (value.includes('.')) {
+        const [table, column] = value.split('.')
+        return SQL_IDENTIFIER_PATTERN.test(table) &&
+            SQL_IDENTIFIER_PATTERN.test(column) &&
+            schemas.hasTable(table) &&
+            schemas.hasColumn(column, table)
+    }
+
+    return SQL_IDENTIFIER_PATTERN.test(value) &&
+        (schemas.hasTable(value) || schemas.hasColumn(value))
 }
 
 /**
