@@ -9,6 +9,7 @@ import {
     type SortingDirection,
     SortingDirectionNode,
 } from '~/ast-nodes/modifiers.ts'
+import { IdentifierNode } from '../primitives.ts'
 
 /** SQL modifier node factories 🏭 */
 
@@ -75,9 +76,9 @@ export { asc, desc }
  * @param as - As name
  * @returns
  */
-const alias: NodeFactory = (expression: NodeArg, as: NodeArg) => (): Node => {
+const alias: NodeFactory = (expression: NodeArg, as: string) => (): Node => {
     if (!expression || !as) throw new Error(`${AliasNode.name}: expression required`)
-    return new AliasNode(toNode(expression), toNode(as))
+    return new AliasNode(toNode(expression), new IdentifierNode(as))
 }
 
 export { alias }

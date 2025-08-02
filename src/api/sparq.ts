@@ -12,26 +12,26 @@ class Sparq {
         return this.#api(name, schema)
     }
 
-    #api<T extends Schema>(name: string, _schema: T) {
+    #api<T extends Schema>(table: string, _schema: T) {
         function _select(...columns: (keyof T)[]): SelectBuilder
         function _select(...expressions: NodeArg[]): SelectBuilder
         function _select(...args: (keyof T | NodeArg)[]): SelectBuilder {
-            return new SelectBuilder(name, args as NodeArg[])
+            return new SelectBuilder(table, args as NodeArg[])
         }
 
         function _insert(...rows: Partial<Record<keyof T, unknown>>[]): InsertBuilder {
             const parsedFields = Object.keys(rows[0] || {})
             const parsedValues = rows.map((row) => Object.values(row))
-            return new InsertBuilder(name, parsedFields, parsedValues as NodeArg[][])
+            return new InsertBuilder(table, parsedFields, parsedValues as NodeArg[][])
         }
 
         function _update(data: Partial<Record<keyof T, unknown>>): UpdateBuilder {
             const assignments = Object.entries(data).map((a) => a as [any, any])
-            return new UpdateBuilder(name, assignments)
+            return new UpdateBuilder(table, assignments)
         }
 
         function _delete(): DeleteBuilder {
-            return new DeleteBuilder(name)
+            return new DeleteBuilder(table)
         }
 
         return {

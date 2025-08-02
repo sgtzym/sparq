@@ -1,5 +1,5 @@
 import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
-import { type Node, type NodeArg, type NodeFactory, toNode } from '~/core/node.ts'
+import { type Node, type NodeArg, NodeFactory, toNode } from '~/core/node.ts'
 import {
     COMPARISON_OPERATORS,
     ComparisonNode,

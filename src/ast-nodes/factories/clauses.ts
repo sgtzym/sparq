@@ -1,11 +1,4 @@
-// deno-fmt-ignore-file
-
-import {
-    type Node,
-    type NodeArg,
-    type NodeFactory,
-    toNode
-} from '~/core/node.ts'
+import { type Node, type NodeArg, type NodeFactory, toNode } from '~/core/node.ts'
 
 import {
     FromNode,
@@ -22,29 +15,33 @@ import {
     WhereNode,
 } from '~/ast-nodes/clauses.ts'
 
+import { IdentifierNode, LiteralNode } from '../primitives.ts'
+
+import type { SqlValue } from '../../core/sql.ts'
+
 /** SQL clause node factories 🏭 */
 
 // -> Basic clauses
 
 /**
  * FROM clause
- * 
+ *
  * Supports one or multiple tables.
  *
- * @param {NodeArg[]} tables - Table names or subqueries
+ * @param {string[]} tables - Table names or subqueries
  * @returns Factory function for FromNode creation
  *
  * @example
  * from('users')
  * from('users', 'posts')
  */
-export const from: NodeFactory = (...tables: NodeArg[]) => (): Node => {
-    return new FromNode(tables.map(toNode))
+export const from: NodeFactory = (...tables: string[]) => (): Node => {
+    return new FromNode(tables.map((table) => new IdentifierNode(table)))
 }
 
 /**
  * WHERE clause
- * 
+ *
  * Conditions are combined by AND.
  *
  * @param {NodeArg[]} conditions - Filter conditions
@@ -60,14 +57,14 @@ export const where: NodeFactory = (...conditions: NodeArg[]) => (): Node => {
 /**
  * GROUP BY clause for aggregation
  *
- * @param {NodeArg[]} columns - Columns to group by
+ * @param {string[]} columns - Columns to group by
  * @returns Factory function that creates a GroupByNode
  *
  * @example
  * groupBy('department', 'role')
  */
-export const groupBy: NodeFactory = (...columns: NodeArg[]) => (): Node => {
-    return new GroupByNode(columns.map(toNode))
+export const groupBy: NodeFactory = (...columns: string[]) => (): Node => {
+    return new GroupByNode(columns.map((col) => new IdentifierNode(col)))
 }
 
 /**
@@ -86,15 +83,15 @@ export const having: NodeFactory = (...conditions: NodeArg[]) => (): Node => {
 /**
  * ORDER BY clause for sorting
  *
- * @param {NodeArg[]} columns - Columns to sort by, optionally with direction
+ * @param {string[]} columns - Columns to sort by, optionally with direction
  * @returns Factory function that creates an OrderByNode
  *
  * @example
  * orderBy('created_at')
  * orderBy(desc('created_at'), asc('name'))
  */
-export const orderBy: NodeFactory = (...columns: NodeArg[]) => (): Node => {
-    return new OrderByNode(columns.map(toNode))
+export const orderBy: NodeFactory = (...columns: string[]) => (): Node => {
+    return new OrderByNode(columns.map((col) => new IdentifierNode(col)))
 }
 
 // -> Joins
@@ -105,10 +102,10 @@ export const orderBy: NodeFactory = (...columns: NodeArg[]) => (): Node => {
  * @param {JoinType} type - Type of join
  * @returns Function that creates join nodes
  */
-const joinFactory = (type: JoinType) => (table: NodeArg, condition?: NodeArg) => (): Node => {
+const joinFactory = (type: JoinType) => (table: string, condition?: NodeArg) => (): Node => {
     return new JoinNode(
         type,
-        toNode(table),
+        new IdentifierNode(table),
         condition ? toNode(condition) : undefined,
     )
 }
@@ -144,8 +141,8 @@ export const leftOuterJoin: NodeFactory = joinFactory(JOIN_TYPES.LEFT_OUTER)
  * @example
  * crossJoin('categories')
  */
-export const crossJoin: NodeFactory = (table: NodeArg) => (): Node => {
-    return new JoinNode(JOIN_TYPES.CROSS, toNode(table))
+export const crossJoin: NodeFactory = (table: string) => (): Node => {
+    return new JoinNode(JOIN_TYPES.CROSS, new IdentifierNode(table))
 }
 
 // -> Misc.
@@ -178,28 +175,28 @@ export const offset: NodeFactory = (count: number = 0) => (): Node => {
 
 /**
  * SET clause for UPDATE statements
- * 
+ *
  * Used internally by UpdateBuilder.
  *
  * @private
- * @param {Array<[NodeArg, NodeArg]>} assignments - Column-value pairs
+ * @param {Array<[string, NodeArg]>} assignments - Column-value pairs
  * @returns Factory function that creates a SetNode
  */
-export const _set: (assignments: Array<[NodeArg, NodeArg]>) => () => Node =
-    (assignments: Array<[NodeArg, NodeArg]>) => (): Node => {
-        return new SetNode(assignments.map(([k, v]) => [toNode(k), toNode(v)]))
+export const _set: (assignments: Array<[string, NodeArg]>) => () => Node =
+    (assignments: Array<[string, NodeArg]>) => (): Node => {
+        return new SetNode(assignments.map(([k, v]) => [new IdentifierNode(k), toNode(v)]))
     }
 
 /**
  * VALUES clause for INSERT statements
- * 
+ *
  * Used internally by InsertBuilder.
  *
  * @private
  * @param {Array<NodeArg[]>} values - Rows of values to insert
  * @returns Factory function that creates a ValuesNode
  */
-export const _values: (...values: Array<NodeArg[]>) => () => Node =
-    (...values: Array<NodeArg[]>) => (): Node => {
-        return new ValuesNode(values.map((v) => v.map(toNode)))
+export const _values: (...rows: Array<NodeArg[]>) => () => Node =
+    (...rows: Array<NodeArg[]>) => (): Node => {
+        return new ValuesNode(rows.map((row) => row.map((val) => new LiteralNode(val as SqlValue))))
     }

@@ -187,7 +187,7 @@ export class UpdateBuilder {
 
     private readonly stmt: (() => Node)[] = []
 
-    constructor(table: NodeArg, assignments: Array<[NodeArg, NodeArg]>) {
+    constructor(table: NodeArg, assignments: Array<[string, NodeArg]>) {
         this.stmt.push(_update(table))
         this.stmt.push(_set(assignments))
     }
@@ -226,9 +226,9 @@ export class DeleteBuilder {
 
     private readonly stmt: (() => Node)[] = []
 
-    constructor(tableName: NodeArg) {
+    constructor(table: NodeArg) {
         this.stmt.push(_delete())
-        this.stmt.push(from(tableName))
+        this.stmt.push(from(table))
     }
 
     where(...conditions: NodeArg[]): this {

@@ -1,7 +1,7 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
 import { sql, type SqlValue } from '~/core/sql.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
-import { IdentifierNode, LiteralNode } from '~/ast-nodes/primitives.ts'
+import { IdentifierNode, LiteralNode, RawNode } from '~/ast-nodes/primitives.ts'
 
 /**
  * Extended SQL value types.
@@ -36,16 +36,7 @@ export interface Node {
 export type NodeFactory = (...args: NodeArg[]) => () => Node
 
 /**
- * Converts any valid argument to an AST node.
- * Automatically determines if the value is an identifier or literal.
- *
- * @param {NodeArg} arg - Value to convert
- * @returns {Node} Corresponding AST node
- *
- * @example
- * toNode('users')      // IdentifierNode
- * toNode(42)           // LiteralNode
- * toNode(select())     // SelectNode (from factory)
+ * Converts any valid argument to an AST node with automatic type detection.
  */
 export function toNode(arg: NodeArg): Node {
     if (typeof arg === 'function') return arg()

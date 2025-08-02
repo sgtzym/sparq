@@ -36,15 +36,15 @@ class SchemaRegistry {
         return SchemaRegistry.#schemas.get(name)
     }
 
-    hasTable(tableName: string): boolean {
-        return SchemaRegistry.#schemas.has(tableName)
+    hasTable(table: string): boolean {
+        return SchemaRegistry.#schemas.has(table)
     }
 
     hasColumn(columnName: string): boolean
-    hasColumn(columnName: string, tableName: string): boolean
-    hasColumn(columnName: string, tableName?: string): boolean {
-        if (tableName) {
-            const schema = SchemaRegistry.#schemas.get(tableName)
+    hasColumn(columnName: string, table: string): boolean
+    hasColumn(columnName: string, table?: string): boolean {
+        if (table) {
+            const schema = SchemaRegistry.#schemas.get(table)
             return schema ? columnName in schema : false
         }
 
