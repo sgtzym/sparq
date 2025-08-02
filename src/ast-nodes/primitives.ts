@@ -1,6 +1,6 @@
 import { sql } from '~/core/sql.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
-import type { Node, NodeValue } from '~/core/node.ts'
+import type { Node, Param } from '~/core/node.ts'
 
 /** AST nodes representing SQL primitives 🧬 */
 
@@ -13,7 +13,7 @@ export class RawNode implements Node {
 }
 
 export class LiteralNode implements Node {
-    constructor(private readonly value: NodeValue) {}
+    constructor(private readonly value: Param) {}
 
     interpret(params: ParameterRegistry): string {
         return params.add(sql.toSqlValue(this.value))

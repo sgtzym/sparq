@@ -8,11 +8,11 @@ import { interpretAll, type Node } from '~/core/node.ts'
 
 export class FromNode implements Node {
     constructor(
-        private readonly expression: ArrayLike<Node>,
+        private readonly expr: ArrayLike<Node>,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        const parts = castArray(this.expression).map((e) => e.interpret(params))
+        const parts = castArray(this.expr).map((e) => e.interpret(params))
 
         return `${SQL.FROM} ${sql.comma(...parts)}`
     }
@@ -20,21 +20,21 @@ export class FromNode implements Node {
 
 export class IntoNode implements Node {
     constructor(
-        private readonly expression: Node,
+        private readonly expr: Node,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        return `${SQL.INTO} ${this.expression.interpret(params)}`
+        return `${SQL.INTO} ${this.expr.interpret(params)}`
     }
 }
 
 export class WhereNode implements Node {
     constructor(
-        private readonly expression: ArrayLike<Node>,
+        private readonly expr: ArrayLike<Node>,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        const parts = castArray(this.expression).map((e) => e.interpret(params))
+        const parts = castArray(this.expr).map((e) => e.interpret(params))
 
         return `${SQL.WHERE} ${sql.and(...parts)}`
     }
@@ -42,11 +42,11 @@ export class WhereNode implements Node {
 
 export class GroupByNode implements Node {
     constructor(
-        private readonly expression: ArrayLike<Node>,
+        private readonly expr: ArrayLike<Node>,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        const parts = castArray(this.expression).map((e) => e.interpret(params))
+        const parts = castArray(this.expr).map((e) => e.interpret(params))
 
         return `${SQL.GROUP} ${SQL.BY} ${sql.comma(...parts)}`
     }
@@ -54,11 +54,11 @@ export class GroupByNode implements Node {
 
 export class HavingNode implements Node {
     constructor(
-        private readonly expression: ArrayLike<Node>,
+        private readonly expr: ArrayLike<Node>,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        const parts = castArray(this.expression).map((e) => e.interpret(params))
+        const parts = castArray(this.expr).map((e) => e.interpret(params))
 
         return `${SQL.HAVING} ${sql.and(...parts)}`
     }
@@ -85,7 +85,9 @@ export class JoinNode implements Node {
         parts.push(this.table.interpret(params))
         parts.push(this.condition?.interpret(params))
 
-        return `${this.joinType} ${SQL.JOIN} ${parts.filter(Boolean).join(` ${SQL.ON} `)}`
+        return `${this.joinType} ${SQL.JOIN} ${
+            parts.filter(Boolean).join(` ${SQL.ON} `)
+        }`
     }
 }
 
@@ -111,11 +113,11 @@ export class OffsetNode implements Node {
 
 export class OrderByNode implements Node {
     constructor(
-        private readonly expression: ArrayLike<Node>,
+        private readonly expr: ArrayLike<Node>,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        const parts = castArray(this.expression).map((e) => e.interpret(params))
+        const parts = castArray(this.expr).map((e) => e.interpret(params))
 
         return `${SQL.ORDER} ${SQL.BY} ${sql.comma(...parts)}`
     }
@@ -128,7 +130,9 @@ export class SetNode implements Node {
 
     interpret(params: ParameterRegistry): string {
         const assignments = this.assignments.map(([column, value]) =>
-            `${column.interpret(params)} ${SQL_SYMBOLS.EQ} ${value.interpret(params)}`
+            `${column.interpret(params)} ${SQL_SYMBOLS.EQ} ${
+                value.interpret(params)
+            }`
         )
 
         return `${SQL.SET} ${sql.comma(...assignments)}`

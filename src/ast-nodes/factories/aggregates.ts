@@ -1,69 +1,17 @@
-// deno-fmt-ignore-file
-import {
-    type Node,
-    type NodeArg,
-    type NodeFactory,
-    toNode
-} from '~/core/node.ts'
-
+import { type NodeExpr, type Node, toNode } from '~/core/node.ts'
 import {
     AGGREGATE_FUNCTIONS,
     type AggregateFunction,
     AggregateNode,
 } from '~/ast-nodes/aggregates.ts'
 
-/** SQL aggregate function node factories 🏭 */
+/** 🏭 Node factories: Aggregate functions */
 
-/**
- * Creates an aggregate function node factory.
- * @param fn - Aggregate function
- * @returns Factory function for aggregate function nodes
- */
-const aggregateFactory: (fn: AggregateFunction) => NodeFactory =
-    (fn: AggregateFunction): NodeFactory => (arg?: NodeArg) => (): Node => {
-        return new AggregateNode(fn, arg ? toNode(arg) : undefined)
-    }
+const aggregate = (fn: AggregateFunction) => (expr?: NodeExpr): Node =>
+    new AggregateNode(fn, expr ? toNode(expr) : undefined)
 
-/**
- * AVG aggregate function
- *
- * @example
- * avg()
- * avg(distinct('column_1'))
- */
-const avg: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.AVG)
-
-/**
- * COUNT aggregate function
- *
- * @example
- * count()
- * count(distinct('column_1'))
- */
-const count: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.COUNT)
-
-/**
- * MIN aggregate function
- * @example
- * min()
- * min(distinct('column_1'))
- */
-const min: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.MIN)
-
-/**
- * MAX aggregate function
- * @example
- * max()
- * max(distinct('column_1'))
- */
-const max: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.MAX)
-
-/**
- * SUM aggregate function
- * @example
- * sum()
- * sum(distinct('column_1'))
- */
-const sum: NodeFactory = aggregateFactory(AGGREGATE_FUNCTIONS.SUM)
-
-export { avg, count, max, min, sum }
+export const avg = aggregate(AGGREGATE_FUNCTIONS.AVG)
+export const count = aggregate(AGGREGATE_FUNCTIONS.COUNT)
+export const max = aggregate(AGGREGATE_FUNCTIONS.MAX)
+export const min = aggregate(AGGREGATE_FUNCTIONS.MIN)
+export const sum = aggregate(AGGREGATE_FUNCTIONS.SUM)

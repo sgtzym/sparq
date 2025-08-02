@@ -1,5 +1,8 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
-import { SQL_KEYWORDS as SQL, SQL_SYMBOLS as SYMBOL } from '~/core/sql-constants.ts'
+import {
+    SQL_KEYWORDS as SQL,
+    SQL_SYMBOLS as SYMBOL,
+} from '~/core/sql-constants.ts'
 import { sql } from '~/core/sql.ts'
 import type { ParameterRegistry } from '~/core/parameter-registry.ts'
 import { interpretAll, type Node } from '~/core/node.ts'
@@ -27,8 +30,10 @@ export const COMPARISON_OPERATORS = {
     GE: SYMBOL.GE,
 } as const
 
-export type LogicalOperator = typeof LOGICAL_OPERATORS[keyof typeof LOGICAL_OPERATORS]
-export type ComparisonOperator = typeof COMPARISON_OPERATORS[keyof typeof COMPARISON_OPERATORS]
+export type LogicalOperator =
+    typeof LOGICAL_OPERATORS[keyof typeof LOGICAL_OPERATORS]
+export type ComparisonOperator =
+    typeof COMPARISON_OPERATORS[keyof typeof COMPARISON_OPERATORS]
 export type Operator = LogicalOperator | ComparisonOperator | string
 
 export class ComparisonNode implements Node {
@@ -39,7 +44,9 @@ export class ComparisonNode implements Node {
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        return `${this.left.interpret(params)} ${this.operator} ${this.right.interpret(params)}`
+        return `${this.left.interpret(params)} ${this.operator} ${
+            this.right.interpret(params)
+        }`
     }
 }
 
@@ -51,9 +58,10 @@ export class ConjunctionNode implements Node {
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        const output: string = interpretAll(castArray(this.conditions), params).join(
-            ` ${this.operator} `,
-        )
+        const output: string = interpretAll(castArray(this.conditions), params)
+            .join(
+                ` ${this.operator} `,
+            )
 
         return this.grouped ? sql.group(output) : output
     }

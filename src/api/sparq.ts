@@ -1,6 +1,11 @@
-import type { NodeArg } from '~/core/node.ts'
+import type { NodeExpr } from '~/core/node.ts'
 import schemas, { type Schema } from '~/core/schema-registry.ts'
-import { DeleteBuilder, InsertBuilder, SelectBuilder, UpdateBuilder } from './query-builders.ts'
+import {
+    DeleteBuilder,
+    InsertBuilder,
+    SelectBuilder,
+    UpdateBuilder,
+} from './query-builders.ts'
 
 /**
  * Public query entry point.
@@ -13,20 +18,28 @@ class Sparq {
     }
 
     #api<T extends Schema>(table: string, _schema: T) {
-        function _select(...columns: (keyof T)[]): SelectBuilder
-        function _select(...expressions: NodeArg[]): SelectBuilder
-        function _select(...args: (keyof T | NodeArg)[]): SelectBuilder {
-            return new SelectBuilder(table, args as NodeArg[])
+        function _select(...args: (keyof T)[]): SelectBuilder
+        function _select(...args: NodeExpr[]): SelectBuilder
+        function _select(...args: (keyof T | NodeExpr)[]): SelectBuilder {
+            return new SelectBuilder(table, args as NodeExpr[])
         }
 
-        function _insert(...rows: Partial<Record<keyof T, unknown>>[]): InsertBuilder {
+        function _insert(
+            ...rows: Partial<Record<keyof T, unknown>>[]
+        ): InsertBuilder {
             const parsedFields = Object.keys(rows[0] || {})
             const parsedValues = rows.map((row) => Object.values(row))
-            return new InsertBuilder(table, parsedFields, parsedValues as NodeArg[][])
+            return new InsertBuilder(
+                table,
+                parsedFields,
+                parsedValues as NodeExpr[][],
+            )
         }
 
-        function _update(data: Partial<Record<keyof T, unknown>>): UpdateBuilder {
-            const assignments = Object.entries(data).map((a) => a as [any, any])
+        function _update(
+            data: Partial<Record<keyof T, unknown>>,
+        ): UpdateBuilder {
+            const assignments = Object.entries(data).map((a) => a as [string, NodeExpr])
             return new UpdateBuilder(table, assignments)
         }
 

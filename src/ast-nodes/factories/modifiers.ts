@@ -1,5 +1,4 @@
-import { type Node, type NodeArg, type NodeFactory, toNode } from '~/core/node.ts'
-
+import { type NodeExpr, type Node, toNode } from '~/core/node.ts'
 import {
     AliasNode,
     SET_QUANTIFIERS,
@@ -9,76 +8,27 @@ import {
     type SortingDirection,
     SortingDirectionNode,
 } from '~/ast-nodes/modifiers.ts'
-import { IdentifierNode } from '../primitives.ts'
 
-/** SQL modifier node factories 🏭 */
+// Set quantifiers
+const quantifier = (q: SetQuantifier) => (expr?: NodeExpr): Node =>
+    new SetQuantifierNode(q, expr ? toNode(expr) : undefined)
 
-// -> Set quantifiers
+export const distinct = quantifier(SET_QUANTIFIERS.DISTINCT)
+export const all = quantifier(SET_QUANTIFIERS.ALL)
 
-/**
- * Creates a set quantifier node factory.
- * @param {SetQuantifier} quantifier - Set quantifier
- * @returns Factory function for set quantifier nodes
- */
-const setQuantifier: (quantifier: SetQuantifier) => NodeFactory =
-    (quantifier: SetQuantifier): NodeFactory => (arg?: NodeArg) => (): Node =>
-        new SetQuantifierNode(quantifier, arg ? toNode(arg) : undefined)
-
-const _distinct: NodeFactory = setQuantifier(SET_QUANTIFIERS.DISTINCT)
-
-/**
- * DISTINCT set quantifier modifier
- */
-function distinct(): () => Node
-function distinct(column: NodeArg): () => Node
-function distinct(column?: NodeArg) {
-    return _distinct(column)
-}
-const _all: NodeFactory = setQuantifier(SET_QUANTIFIERS.ALL)
-
-/**
- * ALL set quantifier modifier
- */
-function all(): () => Node
-function all(column: NodeArg): () => Node
-function all(column?: NodeArg) {
-    return _all(column)
+// Sorting directions
+const sortDir = (dir: SortingDirection) => (expr: NodeExpr): Node => {
+    if (!expr) throw new Error('Sorting direction requires an expr')
+    return new SortingDirectionNode(toNode(expr), dir)
 }
 
-export { all, distinct }
+export const asc = sortDir(SORTING_DIRECTIONS.ASC)
+export const desc = sortDir(SORTING_DIRECTIONS.DESC)
 
-// -> Sorting directions
-
-const sortingDirection: (dir: SortingDirection) => (arg: NodeArg) => () => Node =
-    (dir: SortingDirection) => (arg: NodeArg) => (): Node => {
-        if (!arg) throw new Error(`${SortingDirectionNode.name}: expression required`)
-        return new SortingDirectionNode(toNode(arg), dir)
+// Alias
+export const alias = (expr: NodeExpr, as: NodeExpr): Node => {
+    if (!expr || !as) {
+        throw new Error('Alias requires both expr and name')
     }
-
-/**
- * ASC sorting direction modifier
- */
-const asc: NodeFactory = sortingDirection(SORTING_DIRECTIONS.ASC)
-
-/**
- * DESC sorting direction modifier
- */
-const desc: NodeFactory = sortingDirection(SORTING_DIRECTIONS.DESC)
-
-export { asc, desc }
-
-// -> Alias (column/table aliasing)
-
-/**
- * AS modifier
- *
- * @param expression - Lefthand expr (e.g., name or aggregate)
- * @param as - As name
- * @returns
- */
-const alias: NodeFactory = (expression: NodeArg, as: string) => (): Node => {
-    if (!expression || !as) throw new Error(`${AliasNode.name}: expression required`)
-    return new AliasNode(toNode(expression), new IdentifierNode(as))
+    return new AliasNode(toNode(expr), toNode(as))
 }
-
-export { alias }

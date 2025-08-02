@@ -1,6 +1,6 @@
 import type { SqlValue } from '~/core/sql.ts'
 import { ParameterRegistry } from '~/core/parameter-registry.ts'
-import { interpretAll, type Node, type NodeArg, toNode } from '~/core/node.ts'
+import { type Expr, interpretAll, type Node, toNode } from '~/core/node.ts'
 import { SetQuantifierNode } from '~/ast-nodes/modifiers.ts'
 import {
     FromNode,
@@ -14,7 +14,12 @@ import {
     ValuesNode,
     WhereNode,
 } from '~/ast-nodes/clauses.ts'
-import { DeleteNode, InsertNode, SelectNode, UpdateNode } from '~/ast-nodes/statements.ts'
+import {
+    DeleteNode,
+    InsertNode,
+    SelectNode,
+    UpdateNode,
+} from '~/ast-nodes/statements.ts'
 import {
     _set,
     _values,
@@ -30,7 +35,12 @@ import {
     orderBy,
     where,
 } from '~/ast-nodes/factories/clauses.ts'
-import { _delete, _insert, _select, _update } from '~/ast-nodes/factories/statements.ts'
+import {
+    _delete,
+    _insert,
+    _select,
+    _update,
+} from '~/ast-nodes/factories/statements.ts'
 
 /**
  * Compiled SQL query with parameter values.
@@ -46,14 +56,17 @@ export type Query = [string, readonly SqlValue[]]
  * @param {string[]} order - Node type names in SQL clause order
  * @returns {string} Generated SQL string
  */
-function renderAST(nodes: Node[], params: ParameterRegistry, order: string[]): string {
+function renderAST(
+    nodes: Node[],
+    params: ParameterRegistry,
+    order: string[],
+): string {
     const nodeMap = new Map<string, Node[]>()
-
-    // TODO(#sgtzym): Allow and join multiple clauses of the same type
 
     for (const node of nodes) {
         const type = node.constructor.name
         if (!nodeMap.has(type)) nodeMap.set(type, [])
+        // TODO(#sgtzym): Allow and join multiple clauses of the same type
         nodeMap.get(type)!.push(node)
     }
 
@@ -66,11 +79,7 @@ function renderAST(nodes: Node[], params: ParameterRegistry, order: string[]): s
     return parts.join(' ')
 }
 
-/**
- * Query builders
- *
- * Provide fluent APIs for supported SQL operations.
- */
+/** Query builders 🧑‍🏭 - Provide fluent APIs for supported SQL operations */
 
 export class SelectBuilder {
     private clauseOrder = [
@@ -86,20 +95,18 @@ export class SelectBuilder {
         OffsetNode.name,
     ]
 
-    /**
-     * Collects clause factories to build AST in correct SQL order.
-     * Factories are resolved to nodes during build() to prevent
-     * premature evaluation and enable method chaining.
-     * Also prevents ugly "()()" syntax.
-     */
-    private readonly stmt: (() => Node)[] = []
+    private readonly stmt: Node[] = []
 
-    constructor(table: NodeArg, columns?: NodeArg[]) {
+    constructor(table: string, columns?: Expr[]) {
         this.stmt.push(_select(columns))
         this.stmt.push(from(table))
     }
 
-    join(dir: 'inner' | 'left' | 'leftOuter' | 'cross', table: NodeArg, condition?: NodeArg): this {
+    join(
+        dir: 'inner' | 'left' | 'leftOuter' | 'cross',
+        table: Expr,
+        condition?: Expr,
+    ): this {
         switch (dir) {
             case 'inner':
                 this.stmt.push(innerJoin(table, condition))
@@ -118,22 +125,22 @@ export class SelectBuilder {
         return this
     }
 
-    where(...conditions: NodeArg[]): this {
+    where(...conditions: Expr[]): this {
         this.stmt.push(where(...conditions))
         return this
     }
 
-    groupBy(...columns: NodeArg[]): this {
+    groupBy(...columns: string[]): this {
         this.stmt.push(groupBy(...columns))
         return this
     }
 
-    having(...conditions: NodeArg[]): this {
+    having(...conditions: Expr[]): this {
         this.stmt.push(having(...conditions))
         return this
     }
 
-    orderBy(...columns: NodeArg[]): this {
+    orderBy(...columns: string[]): this {
         this.stmt.push(orderBy(...columns))
         return this
     }
@@ -150,7 +157,7 @@ export class SelectBuilder {
 
     build(): Query {
         const params = new ParameterRegistry()
-        const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
+        const sql = renderAST(this.stmt, params, this.clauseOrder)
         return [sql, params.toArray()]
     }
 }
@@ -161,16 +168,16 @@ export class InsertBuilder {
         ValuesNode.name,
     ]
 
-    private readonly stmt: (() => Node)[] = []
+    private readonly stmt: Node[] = []
 
-    constructor(table: NodeArg, columns: NodeArg[], values: Array<NodeArg[]>) {
+    constructor(table: Expr, columns: Expr[], values: Array<Expr[]>) {
         this.stmt.push(_insert(table, columns))
         this.stmt.push(_values(...values))
     }
 
     build(): Query {
         const params = new ParameterRegistry()
-        const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
+        const sql = renderAST(this.stmt, params, this.clauseOrder)
         return [sql, params.toArray()]
     }
 }
@@ -185,19 +192,19 @@ export class UpdateBuilder {
         OffsetNode.name,
     ]
 
-    private readonly stmt: (() => Node)[] = []
+    private readonly stmt: Node[] = []
 
-    constructor(table: NodeArg, assignments: Array<[string, NodeArg]>) {
+    constructor(table: Expr, assignments: Array<[string, Expr]>) {
         this.stmt.push(_update(table))
         this.stmt.push(_set(assignments))
     }
 
-    where(...conditions: NodeArg[]): this {
+    where(...conditions: Expr[]): this {
         this.stmt.push(where(...conditions))
         return this
     }
 
-    orderBy(...columns: NodeArg[]): this {
+    orderBy(...columns: string[]): this {
         this.stmt.push(orderBy(...columns))
         return this
     }
@@ -209,7 +216,7 @@ export class UpdateBuilder {
 
     build(): Query {
         const params = new ParameterRegistry()
-        const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
+        const sql = renderAST(this.stmt, params, this.clauseOrder)
         return [sql, params.toArray()]
     }
 }
@@ -224,19 +231,19 @@ export class DeleteBuilder {
         OffsetNode.name,
     ]
 
-    private readonly stmt: (() => Node)[] = []
+    private readonly stmt: Node[] = []
 
-    constructor(table: NodeArg) {
+    constructor(table: string) {
         this.stmt.push(_delete())
         this.stmt.push(from(table))
     }
 
-    where(...conditions: NodeArg[]): this {
+    where(...conditions: Expr[]): this {
         this.stmt.push(where(...conditions))
         return this
     }
 
-    orderBy(...columns: NodeArg[]): this {
+    orderBy(...columns: string[]): this {
         this.stmt.push(orderBy(...columns))
         return this
     }
@@ -248,7 +255,7 @@ export class DeleteBuilder {
 
     build(): Query {
         const params = new ParameterRegistry()
-        const sql = renderAST(this.stmt.map(toNode), params, this.clauseOrder)
+        const sql = renderAST(this.stmt, params, this.clauseOrder)
         return [sql, params.toArray()]
     }
 }

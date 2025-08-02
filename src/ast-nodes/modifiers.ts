@@ -6,12 +6,14 @@ import type { Node } from '~/core/node.ts'
 
 export class AliasNode implements Node {
     constructor(
-        private readonly expression: Node,
+        private readonly expr: Node,
         private readonly alias: Node,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        return `${this.expression.interpret(params)} ${SQL.AS} ${this.alias.interpret(params)}`
+        return `${this.expr.interpret(params)} ${SQL.AS} ${
+            this.alias.interpret(params)
+        }`
     }
 }
 
@@ -25,12 +27,12 @@ export type SetQuantifier = typeof SET_QUANTIFIERS[keyof typeof SET_QUANTIFIERS]
 export class SetQuantifierNode implements Node {
     constructor(
         private readonly quantifier: SetQuantifier,
-        private readonly expression?: Node,
+        private readonly expr?: Node,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        return this.expression
-            ? `${this.quantifier} ${this.expression?.interpret(params)}`
+        return this.expr
+            ? `${this.quantifier} ${this.expr?.interpret(params)}`
             : this.quantifier
     }
 }
@@ -40,15 +42,16 @@ export const SORTING_DIRECTIONS = {
     DESC: SQL.DESC,
 } as const
 
-export type SortingDirection = typeof SORTING_DIRECTIONS[keyof typeof SORTING_DIRECTIONS]
+export type SortingDirection =
+    typeof SORTING_DIRECTIONS[keyof typeof SORTING_DIRECTIONS]
 
 export class SortingDirectionNode implements Node {
     constructor(
-        private readonly expression: Node,
+        private readonly expr: Node,
         private readonly dir: SortingDirection,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        return `${this.expression.interpret(params)} ${this.dir}`
+        return `${this.expr.interpret(params)} ${this.dir}`
     }
 }

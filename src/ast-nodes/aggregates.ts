@@ -12,17 +12,18 @@ export const AGGREGATE_FUNCTIONS = {
     SUM: SQL.SUM,
 } as const
 
-export type AggregateFunction = typeof AGGREGATE_FUNCTIONS[keyof typeof AGGREGATE_FUNCTIONS]
+export type AggregateFunction =
+    typeof AGGREGATE_FUNCTIONS[keyof typeof AGGREGATE_FUNCTIONS]
 
 export class AggregateNode implements Node {
     constructor(
         private readonly fn: AggregateFunction,
-        private readonly expression?: Node,
+        private readonly expr?: Node,
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        return this.expression
-            ? `${this.fn}(${this.expression.interpret(params)})`
+        return this.expr
+            ? `${this.fn}(${this.expr.interpret(params)})`
             : `${this.fn}(${SQL_SYMBOLS.ALL})`
     }
 }

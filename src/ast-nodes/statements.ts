@@ -12,9 +12,10 @@ export class SelectNode implements Node {
     ) {}
 
     interpret(params: ParameterRegistry): string {
-        const columns: string = this.columns && (Array.isArray(this.columns) && this.columns.length)
-            ? sql.comma(...interpretAll(this.columns, params))
-            : SQL_SYMBOLS.ALL
+        const columns: string =
+            this.columns && (Array.isArray(this.columns) && this.columns.length)
+                ? sql.comma(...interpretAll(this.columns, params))
+                : SQL_SYMBOLS.ALL
 
         return `${SQL.SELECT} ${columns}`
     }
