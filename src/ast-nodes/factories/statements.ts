@@ -1,4 +1,4 @@
-import { type Arg, type Node, toNode } from '~/core/node.ts'
+import { type NodeExpr, type Node, toNode } from '~/core/node.ts'
 import {
     DeleteNode,
     InsertNode,
@@ -6,14 +6,14 @@ import {
     UpdateNode,
 } from '~/ast-nodes/statements.ts'
 
-/** 🏭 Node factories: Operators */
+/** 🏭 Node factories: Statements */
 
-export const _select = (columns?: Arg[]): Node =>
+export const _select = (columns?: NodeExpr[]): Node =>
     new SelectNode(columns?.length ? columns.map(toNode) : undefined)
 
-export const _update = (table: Arg): Node => new UpdateNode(toNode(table))
+export const _update = (table: NodeExpr): Node => new UpdateNode(toNode(table))
 
-export const _insert = (table: Arg, columns: Arg[]): Node =>
+export const _insert = (table: NodeExpr, columns: NodeExpr[]): Node =>
     new InsertNode(toNode(table), columns.map(toNode))
 
 export const _delete = (): Node => new DeleteNode()

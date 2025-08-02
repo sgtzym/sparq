@@ -9,6 +9,8 @@ import {
     SortingDirectionNode,
 } from '~/ast-nodes/modifiers.ts'
 
+/** 🏭 Node factories: Modifiers */
+
 // Set quantifiers
 const quantifier = (q: SetQuantifier) => (expr?: NodeExpr): Node =>
     new SetQuantifierNode(q, expr ? toNode(expr) : undefined)

@@ -34,7 +34,7 @@ export const between = (test: NodeExpr, lower: NodeExpr, upper: NodeExpr): Node 
         ]),
     )
 
-// Conjunction operators (AND, OR)Arg
+// Conjunction operators (AND, OR)
 const conjunction =
     (op: Operator, grouped = false) => (...conditions: NodeExpr[]): Node =>
         new ConjunctionNode(op, conditions.map(toNode), grouped)
