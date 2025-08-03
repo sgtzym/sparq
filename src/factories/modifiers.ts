@@ -1,4 +1,5 @@
 import { type Node, type NodeExpr, toNode } from '~/core/node.ts'
+import { IdentifierNode } from '~/ast-nodes/primitives.ts'
 import {
     AliasNode,
     SET_QUANTIFIERS,
@@ -8,7 +9,6 @@ import {
     type SortingDirection,
     SortingDirectionNode,
 } from '~/ast-nodes/modifiers.ts'
-import { IdentifierNode } from '../primitives.ts'
 
 /** 🏭 Node factories: Modifiers */
 

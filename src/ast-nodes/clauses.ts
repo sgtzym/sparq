@@ -6,6 +6,10 @@ import { interpretAll, type Node } from '~/core/node.ts'
 
 /** 🧬 AST nodes: Clauses */
 
+/**
+ * 🧬...
+ * @param {ArrayLike<Node>} expr
+ */
 export class FromNode implements Node {
     constructor(
         private readonly expr: ArrayLike<Node>,
@@ -18,6 +22,10 @@ export class FromNode implements Node {
     }
 }
 
+/**
+ * 🧬...
+ * @param {Node} expr
+ */
 export class IntoNode implements Node {
     constructor(
         private readonly expr: Node,
@@ -28,6 +36,10 @@ export class IntoNode implements Node {
     }
 }
 
+/**
+ * 🧬...
+ * @param {ArrayLike<Node>} expr
+ */
 export class WhereNode implements Node {
     constructor(
         private readonly expr: ArrayLike<Node>,
@@ -40,6 +52,10 @@ export class WhereNode implements Node {
     }
 }
 
+/**
+ * 🧬...
+ * @param {ArrayLike<Node>} expr
+ */
 export class GroupByNode implements Node {
     constructor(
         private readonly expr: ArrayLike<Node>,
@@ -52,6 +68,10 @@ export class GroupByNode implements Node {
     }
 }
 
+/**
+ * 🧬...
+ * @param {ArrayLike<Node>} expr
+ */
 export class HavingNode implements Node {
     constructor(
         private readonly expr: ArrayLike<Node>,
@@ -73,6 +93,12 @@ export const JOIN_TYPES = {
 
 export type JoinType = typeof JOIN_TYPES[keyof typeof JOIN_TYPES]
 
+/**
+ * 🧬...
+ * @param {JoinType} joinType
+ * @param {Node} table
+ * @param {Node} condition
+ */
 export class JoinNode implements Node {
     constructor(
         private readonly joinType: JoinType,
@@ -91,6 +117,10 @@ export class JoinNode implements Node {
     }
 }
 
+/**
+ * 🧬...
+ * @param {number} count
+ */
 export class LimitNode implements Node {
     constructor(
         private readonly count: number,
@@ -101,6 +131,10 @@ export class LimitNode implements Node {
     }
 }
 
+/**
+ * 🧬...
+ * @param {number} count
+ */
 export class OffsetNode implements Node {
     constructor(
         private readonly count: number,
@@ -111,6 +145,10 @@ export class OffsetNode implements Node {
     }
 }
 
+/**
+ * 🧬...
+ * @param {ArrayLike<Node>} expr
+ */
 export class OrderByNode implements Node {
     constructor(
         private readonly expr: ArrayLike<Node>,
@@ -123,9 +161,15 @@ export class OrderByNode implements Node {
     }
 }
 
+type Assignment = [Node, Node]
+
+/**
+ * 🧬...
+ * @param {Array<Assignment>} assignments
+ */
 export class SetNode implements Node {
     constructor(
-        private readonly assignments: Array<[Node, Node]>,
+        private readonly assignments: Array<Assignment>,
     ) {}
 
     interpret(params: ParameterRegistry): string {
@@ -139,9 +183,15 @@ export class SetNode implements Node {
     }
 }
 
+type Values = Node[]
+
+/**
+ * 🧬...
+ * @param {ArrayLike<Values>} values
+ */
 export class ValuesNode implements Node {
     constructor(
-        private readonly values: ArrayLike<Node[]>,
+        private readonly values: ArrayLike<Values>,
     ) {}
 
     interpret(params: ParameterRegistry): string {

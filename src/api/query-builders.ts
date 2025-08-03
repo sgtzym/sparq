@@ -6,8 +6,8 @@ import * as modifiers from '~/ast-nodes/modifiers.ts'
 import * as clauses from '~/ast-nodes/clauses.ts'
 import * as statements from '~/ast-nodes/statements.ts'
 
-import * as $clauses from '~/ast-nodes/factories/clauses.ts'
-import * as $statements from '~/ast-nodes/factories/statements.ts'
+import * as $clauses from '~/factories/clauses.ts'
+import * as $statements from '~/factories/statements.ts'
 
 /**
  * Compiled SQL query with parameter values.

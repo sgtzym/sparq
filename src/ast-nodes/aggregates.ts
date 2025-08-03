@@ -15,6 +15,11 @@ export const AGGREGATE_FUNCTIONS = {
 export type AggregateFunction =
     typeof AGGREGATE_FUNCTIONS[keyof typeof AGGREGATE_FUNCTIONS]
 
+/**
+ * 🧬 ...
+ * @param {AggregateFunction} fn
+ * @param {Node} expr
+ */
 export class AggregateNode implements Node {
     constructor(
         private readonly fn: AggregateFunction,

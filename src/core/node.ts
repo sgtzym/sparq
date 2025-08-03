@@ -13,7 +13,7 @@ export type Param = SqlValue | boolean | Date | undefined
  * Union type for all valid node arguments.
  * Can be a primitive value or a factory function returning a Node.
  */
-export type NodeExpr = Param | Node
+export type NodeExpr = Param | ArrayLike<Node>
 
 /**
  * Base interface for all AST nodes.
