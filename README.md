@@ -2,90 +2,38 @@
 
 A declarative, AST-based and type-safe SQLite query builder for [Deno](https://deno.com/) 🦕
 
-## Features
-
-- Type Safety - Full TypeScript support with compile-time validation
-- SQL Injection Protection - Automatic parameter binding
-- Chainable API - Fluent method chaining for readable queries
-- SQLite Optimized - Built specifically for SQLite compatibility
-
-## Installation
-
-```bash
-deno add @sgtzym/sparq
-```
-
-## Quick start
-
-### Select rows
-
 ```ts
-const [sql, params] = sparq('users')
-  .select(['id', 'name', 'email'])
-  .where(eq('status', 'active'), gt('age', 18))
-  .build()
 
-// -> SELECT id, name, email FROM users WHERE status = :p1 AND age > :p2
-```
-### Insert rows
+// Abstrakte Idee (outside the box): columns immer per $`column` aufrufen und methoden dran chainen? geht das? mit autocompletion? als kompletter ersatz für json.
 
-```ts
-const [sql, params] = sparq('users')
-  .insert(
-    { name: 'John', email: 'john@sparq.com' },
-    { name: 'Jane', email: 'jane@sparq.com' }
+sparq.user
+  .select(
+    $`id`.all(),
+    $`email`,
+    $`name`.distinct(),
+    count($`name`).as('name_count')
+    $`groupId`.as('group')
   )
-  .build()
+  .where(
+    $`id`.eq('123')
+    or(
+      $`b`.lt(100)
+      $`c`.between(0, 99)
+    )
+  )
+  .limit(10)
+  .offset(10)
 
-// -> INSERT INTO users (name, email) VALUES (:p1, :p2), (:p3, :p4);
+sparq.user
+  .update(
+    $`a`.set('123'),
+    $`b`.set(false),
+    $`c`.set(null)
+  )
+
+sparq.user
+  .insert(
+    $`a`.default()
+    $`b`.set('')
+  )
 ```
-
-### Update rows
-
-```ts
-const [sql, params] = sparq('users')
-  .update({ status: 'inactive' })
-  .where(eq('id', 123))
-  .build()
-
-// -> UPDATE users SET status = :p1 WHERE id = :p2
-```
-### Delete rows
-
-```ts
-const [sql, params] = sparq('users')
-  .delete()
-  .where(eq('status', 'deleted'))
-  .build()
-
-// -> DELETE FROM users WHERE status = :p1
-```
-
-## API
-
-### Query builders
-- `select()` - SELECT queries with optional column specification and `distinct()`, `all()` set quantifiers
-- `insert()` - INSERT with automatic column detection
-- `update()` - UPDATE with column assignments
-- `delete()` - DELETE operations
-
-### Operators
-- `eq()`, `ne()`, `gt()`, `lt()`, `ge()`, `le()` - Comparison operators
-- `and()`, `or()`, `not()` - Logical operators
-- `like()`, `in_()` - Pattern matching and list operations
-- `exists()`, `isNull()`, `isNotNull()` - Existence checks
-
-### Aggregates
-- `count()`, `sum()`, `avg()`, `min()`, `max()` - Aggregate functions with `distinct()`, `all()` set quantifiers
-
-### Clauses
-
-- `where()` - Filter conditions (top-level combined with AND)
-- `groupBy()`, having() - Grouping and aggregate filtering
-- `orderBy()` - Sorting with `asc()`, `desc()` modifiers
-- `limit()`, `offset()` - Result pagination
-- `innerJoin()`, `leftJoin()`, `crossJoin()` - Table joins
-
-### Utilities
-- `id()`, `val()`, `raw()` - Quoted names, literals and raw SQL strings (use with caution!)
-- `alias()` - Column/table aliasing

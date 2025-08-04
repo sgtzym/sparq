@@ -1,5 +1,6 @@
-import { SQL_KEYWORDS as SQL } from '~/core/sql-constants.ts'
-import schemas from '~/core/schema-registry.ts'
+import { SQL_KEYWORDS, type SqlKeyword } from '~/core/sql-constants.ts'
+
+export type SqlString = string
 
 /**
  * Union type of all SQL-compatible primitive values.
@@ -9,57 +10,42 @@ export type SqlValue = null | number | bigint | string | Uint8Array
 
 export type SqlIdentifier = string
 
-const SQL_IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
-
-/**
- * Checks if a value is a valid SQL identifier.
- *
- * @param {unknown} value - Value to check
- * @returns {boolean} True if valid identifier
- */
-function isIdentifier(value: unknown): value is SqlIdentifier {
-    if (typeof value !== 'string') return false
-
-    if (value.includes('.')) {
-        const [table, column] = value.split('.')
-        return SQL_IDENTIFIER_PATTERN.test(table) &&
-            SQL_IDENTIFIER_PATTERN.test(column) &&
-            schemas.hasTable(table) &&
-            schemas.hasColumn(column, table)
-    }
-
-    return SQL_IDENTIFIER_PATTERN.test(value) &&
-        (schemas.hasTable(value) || schemas.hasColumn(value))
-}
+const SQL_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
 
 /**
  * Checks if a value needs quoting.
  *
- * @param {unknown} value - Value to check
+ * @param {unknown} param - Value to check
  * @returns {boolean} True if needs quoting
  */
-function needsQuoting(value: string): boolean {
+export function needsQuoting(param: string): boolean {
+    if (typeof param !== 'string') return false
+
     return (
-        !SQL_IDENTIFIER_PATTERN.test(value) ||
-        value.toUpperCase() in SQL
+        !SQL_NAME_PATTERN.test(param) ||
+        isSqlKeyword(param)
     )
+}
+
+export function isSqlKeyword(param: string): boolean {
+    return param.toUpperCase() in SQL_KEYWORDS
 }
 
 /**
  * Checks if a value is a valid SQL data type.
  *
- * @param {unknown} value - Value to check
+ * @param {unknown} arg - Value to check
  * @returns {boolean} True if valid data type
  */
-function isSqlValue(
-    value: unknown,
-): value is SqlValue {
+export function isSqlValue(
+    arg: unknown,
+): arg is SqlValue {
     return (
-        value === null ||
-        typeof value === 'number' ||
-        typeof value === 'bigint' ||
-        typeof value === 'string' ||
-        value instanceof Uint8Array
+        arg === null ||
+        typeof arg === 'number' ||
+        typeof arg === 'bigint' ||
+        typeof arg === 'string' ||
+        arg instanceof Uint8Array
     )
 }
 
@@ -69,7 +55,7 @@ function isSqlValue(
  * @param {unknown} value - Value to parse
  * @returns {SqlValue} The parsed value as SQL data type
  */
-function toSqlValue(value: unknown): SqlValue {
+export function toSqlValue(value: unknown): SqlValue {
     switch (true) {
         case isSqlValue(value):
             return value
@@ -94,20 +80,7 @@ function toSqlValue(value: unknown): SqlValue {
     }
 }
 
-/**
- * SQL utility functions for type checking and string building.
- * Provides safe SQL fragment construction helpers.
- */
-export const sql = {
-    isIdentifier: (value: unknown): boolean => isIdentifier(value),
-    needsQuoting: (value: string): boolean => needsQuoting(value),
-    isSqlValue: (value: unknown): boolean => isSqlValue(value),
-    toSqlValue: (value: unknown): SqlValue => toSqlValue(value),
-
-    // join helpers
-    and: (...parts: string[]) => parts.join(` ${SQL.AND} `),
-    or: (...parts: string[]) => parts.join(` ${SQL.OR} `),
-    dot: (...parts: string[]) => parts.join('.'),
-    comma: (...parts: string[]) => parts.join(', '),
-    group: (...parts: string[]) => `(${parts.join(' ')})`,
-} as const
+/** ... */
+export function sql(keyword: SqlKeyword): string {
+    return String(keyword)
+}

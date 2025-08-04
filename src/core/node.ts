@@ -1,58 +1,95 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
-import { sql, type SqlValue } from '~/core/sql.ts'
-import type { ParameterRegistry } from '~/core/parameter-registry.ts'
-import { IdentifierNode, LiteralNode } from '~/ast-nodes/primitives.ts'
+import { type SqlString, type SqlValue, toSqlValue } from '~/core/sql.ts'
+import type { Parameters } from '~/core/parameter-registry.ts'
+import { LiteralNode } from '~/ast-nodes.ts'
 
-/**
- * Extended SQL value types.
- * Includes JavaScript types that are automatically converted to SQL-compatible values.
- */
+// ---------------------------------------------
+// ⚙️ Basics
+// ---------------------------------------------
+
 export type Param = SqlValue | boolean | Date | undefined
+export type NodeArg = ArrayLike<Node | Param>
 
-/**
- * Union type for all valid node arguments.
- * Can be a primitive value or a factory function returning a Node.
- */
-export type NodeExpr = Param | ArrayLike<Node>
-
-/**
- * Base interface for all AST nodes.
- * Represents a composable SQL fragment that can be rendered to string.
- */
 export interface Node {
-    /**
-     * Converts the node to its SQL representation.
-     *
-     * @param {ParameterRegistry} params - Parameter registry for value binding
-     * @returns {string} SQL string fragment
-     */
-    interpret(params: ParameterRegistry): string
+    priority?: number
+    render(params: Parameters): SqlString
 }
 
 /** Node type guard */
-function isNode(expr: any): expr is Node {
-    return expr && typeof expr.interpret === 'function'
+function isNode(arg: any): arg is Node {
+    return arg && typeof arg.render === 'function'
 }
 
 /** Converts args like factory functions to Nodes */
-export function toNode(expr: NodeExpr): Node {
-    if (isNode(expr)) return expr
+export function toNode(arg: NodeArg): Node {
+    return (isNode(arg)) ? arg : new LiteralNode(toSqlValue(arg))
+}
 
-    return sql.isIdentifier(expr)
-        ? new IdentifierNode(expr as string)
-        : new LiteralNode(sql.toSqlValue(expr))
+// ---------------------------------------------
+// ⚙️ Sorting and Rendering
+// ---------------------------------------------
+
+/**
+ * @param nodes
+ * @param prio
+ * @returns
+ */
+export function sortAST(nodes: Node[]): readonly Node[] {
+    return [...nodes].sort((a, b) => {
+        const aPriority = a.priority ?? Number.MAX_SAFE_INTEGER
+        const bPriority = b.priority ?? Number.MAX_SAFE_INTEGER
+
+        return aPriority - bPriority
+    })
 }
 
 /**
- * Interprets multiple nodes to SQL.
+ * Renders multiple nodes to SQL strings.
  *
- * @param {ArrayLike<Node>} nodes - Nodes to interpret
- * @param {ParameterRegistry} params - Parameter registry for value binding
+ * @param {ArrayLike<Node>} args - Nodes to interpret
+ * @param {Parameters} params - Parameter registry for value binding
  * @returns {string[]} Array of SQL string fragments
  */
-export function interpretAll(
-    nodes: ArrayLike<Node>,
-    params: ParameterRegistry,
+export function renderAll(
+    args: ArrayLike<Node>,
+    params: Parameters,
 ): string[] {
-    return castArray(nodes).map((n) => n.interpret(params))
+    return castArray(args).map((arg) => arg.render(params))
+}
+
+/**
+ * Renders AST nodes to SQL in the specified clause order.
+ * Groups nodes by type to ensure correct SQL syntax.
+ *
+ * @param {Node[]} nodes - AST nodes to render
+ * @param {Parameters} params - Parameter registry for value binding
+ * @param {string[]} order - Node type names in SQL clause order
+ * @returns {string} Generated SQL string
+ */
+export function renderAST(
+    nodes: Node[],
+    params: Parameters,
+): string {
+    const nodeMap = new Map<string, Node[]>()
+    const types: string[] = []
+
+    for (const node of sortAST(nodes)) {
+        const type: string = node.constructor.name
+        if (!nodeMap.has(type)) {
+            nodeMap.set(type, [])
+            types.push(type)
+        }
+        nodeMap.get(type)!.push(node)
+    }
+
+    console.log(types)
+
+    const parts: string[] = []
+
+    for (const type of types) {
+        const nodes = nodeMap.get(type) || []
+        parts.push(...renderAll(nodes, params))
+    }
+
+    return parts.join(' ')
 }

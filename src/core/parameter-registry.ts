@@ -19,9 +19,9 @@ interface ParameterRegistryOptions {
  * params.toArray()       // ['John', 'Jane']
  * ```
  */
-export class ParameterRegistry {
-    #byValue = new Map<SqlValue, string>() // value -> name
+export class Parameters {
     #byName = new Map<string, SqlValue>() // name -> value
+    #byValue = new Map<SqlValue, string>() // value -> name
     #index = 0
     #positions: string[] = []
     readonly #options: Required<ParameterRegistryOptions>
@@ -48,7 +48,7 @@ export class ParameterRegistry {
         return this.#byValue.has(value)
     }
 
-    #isNameSet(name: string): boolean {
+    #hasName(name: string): boolean {
         return this.#byName.has(name)
     }
 
@@ -71,7 +71,7 @@ export class ParameterRegistry {
         const paramName = name || `${prefix}${++this.#index}`
 
         // 🛡️ Check for name conflicts, return existing
-        if (!this.#isNameSet(paramName)) {
+        if (!this.#hasName(paramName)) {
             this.#byValue.set(value, paramName)
             this.#byName.set(paramName, value)
             this.#positions.push(paramName)
