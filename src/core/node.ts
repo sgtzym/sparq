@@ -1,23 +1,33 @@
 import { type ArrayLike, castArray } from '~/core/utils.ts'
-import { type SqlString, type SqlValue, toSqlValue } from '~/core/sql.ts'
+import { type SqlParam, type SqlString, toSqlParam } from '~/core/sql.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
 import { LiteralNode } from '~/ast-nodes.ts'
-import { Column } from '~/api/column.ts'
 
 // ---------------------------------------------
 // ⚙️ Basics
 // ---------------------------------------------
 
-export type Param = SqlValue | boolean | Date | undefined
+export type Param =
+    | SqlParam
+    | boolean
+    | Date
+    | undefined
 
 export interface Node {
     readonly priority?: number
-    render(params: Parameters): SqlString
+    render(
+        params: Parameters,
+    ): SqlString
 }
 
 /** Node type guard */
-function isNode(arg: any): arg is Node {
-    return arg && typeof arg.render === 'function'
+function isNode(
+    arg: any,
+): arg is Node {
+    return arg &&
+        typeof arg
+                .render ===
+            'function'
 }
 
 // ---------------------------------------------
@@ -29,13 +39,24 @@ function isNode(arg: any): arg is Node {
  * @param prio
  * @returns
  */
-export function sortAST(nodes: Node[]): readonly Node[] {
-    return [...nodes].sort((a, b) => {
-        const aPriority = a.priority ?? Number.MAX_SAFE_INTEGER
-        const bPriority = b.priority ?? Number.MAX_SAFE_INTEGER
+export function sortAST(
+    nodes: Node[],
+): readonly Node[] {
+    return [
+        ...nodes,
+    ].sort(
+        (a, b) => {
+            const aPriority = a.priority ??
+                Number
+                    .MAX_SAFE_INTEGER
+            const bPriority = b.priority ??
+                Number
+                    .MAX_SAFE_INTEGER
 
-        return aPriority - bPriority
-    })
+            return aPriority -
+                bPriority
+        },
+    )
 }
 
 /**
@@ -44,10 +65,18 @@ export function sortAST(nodes: Node[]): readonly Node[] {
  * @returns
  */
 export function renderAll(
-    nodes: ArrayLike<Node>,
+    nodes: ArrayLike<
+        Node
+    >,
     params: Parameters,
 ): string[] {
-    return castArray(nodes).map((n) => n.render(params))
+    return castArray(
+        nodes,
+    ).map((n) =>
+        n.render(
+            params,
+        )
+    )
 }
 
 /**
@@ -56,10 +85,19 @@ export function renderAll(
  * @returns
  */
 export function renderAST(
-    nodes: ArrayLike<Node>,
+    nodes: ArrayLike<
+        Node
+    >,
     params: Parameters,
 ): string {
-    return renderAll([...sortAST(castArray(nodes))], params).join(' ')
+    return renderAll(
+        [...sortAST(
+            castArray(
+                nodes,
+            ),
+        )],
+        params,
+    ).join('\n')
 }
 
 // ---------------------------------------------
@@ -70,18 +108,43 @@ export interface NodeConvertible {
     readonly node: Node
 }
 
-export type NodeArg = ArrayLike<Node | NodeConvertible | Param>
+export type NodeArg =
+    | Node
+    | NodeConvertible
+    | Param
 
 /** Node convertible type guard */
-function isNodeConvertible(arg: any): arg is NodeConvertible {
-    return arg && typeof arg === 'object' &&
-        'node' in arg &&
-        isNode(arg.node)
+function isNodeConvertible(
+    arg: any,
+): arg is NodeConvertible {
+    return arg &&
+        typeof arg ===
+            'object' &&
+        'node' in
+            arg &&
+        isNode(
+            arg.node,
+        )
 }
 
 /** Converts args to Nodes */
-export function toNode(arg: Node | NodeConvertible | Param): Node {
-    if (isNode(arg)) return arg
-    if (isNodeConvertible(arg)) return arg.node
-    return new LiteralNode(toSqlValue(arg))
+export function toNode(
+    arg: NodeArg,
+): Node {
+    if (
+        isNode(arg)
+    ) return arg
+    if (
+        isNodeConvertible(
+            arg,
+        )
+    ) {
+        return arg
+            .node
+    }
+    return new LiteralNode(
+        toSqlParam(
+            arg,
+        ),
+    )
 }

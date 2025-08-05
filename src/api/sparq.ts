@@ -1,30 +1,128 @@
 import type { NodeArg } from '~/core/node.ts'
 import schemas, { type Schema } from '~/core/schema-registry.ts'
 import { Column } from './column.ts'
-import { Select } from '~/api/main.ts'
+import { Delete, Insert, Select, Update } from '~/api/main.ts'
 
-class Sparq<T extends Schema> {
+type ColumnProperties<
+    T extends Schema,
+> = {
+    readonly [
+        K in keyof T
+    ]: Column<T, K>
+}
+
+class SparqApi<
+    T extends Schema,
+> {
     constructor(
         private readonly name: string,
         private readonly schema: T,
     ) {
-        schemas.add(name, schema)
+        schemas.add(
+            name,
+            schema,
+        )
+
+        // Add props at runtime (bin to this)
+        for (
+            const columnName in this
+                .schema
+        ) {
+            ;(this as any)[
+                columnName
+            ] = new Column(
+                columnName,
+                schema,
+            )
+        }
     }
 
-    api() {
-        // Populate col API
-        const $ = {} as { [K in keyof T]: Column }
-
-        for (const columnName in this.schema) {
-            $[columnName] = new Column(columnName)
+    get $(): ColumnProperties<
+        T
+    > {
+        const cols = {} as {
+            [
+                K in keyof T
+            ]: Column<
+                T,
+                K
+            >
         }
 
-        return {
-            $, // Auto-complete for col names
-            select: (...args: Array<NodeArg>) => new Select(this.name, args),
+        for (
+            const columnName in this
+                .schema
+        ) {
+            cols[
+                columnName
+            ] = (this as any)[
+                columnName
+            ]
         }
+
+        return cols
+    }
+
+    select(
+        ...args: Array<
+            NodeArg
+        >
+    ) {
+        return new Select(
+            this.name,
+            args,
+        )
+    }
+
+    insert(
+        ...args: Array<
+            NodeArg
+        >
+    ) {
+        return new Insert(
+            this.name,
+            args,
+        )
+    }
+
+    update(
+        ...args: Array<
+            NodeArg
+        >
+    ) {
+        return new Update(
+            this.name,
+            args,
+        )
+    }
+
+    delete() {
+        return new Delete(
+            this.name,
+        )
     }
 }
 
-export const sparq = <T extends Schema>(name: string, schema: T) =>
-    new Sparq(name, schema).api()
+// Intersection: SparqBase + ColumnProperties
+type Sparq<
+    T extends Schema,
+> =
+    & SparqApi<T>
+    & ColumnProperties<
+        T
+    >
+
+// Factory function with proper typing
+export const sparq = <
+    T extends Schema,
+>(
+    name: string,
+    schema: T,
+): Sparq<T> => {
+    return new SparqApi(
+        name,
+        schema,
+    ) as Sparq<
+        T
+    >
+}

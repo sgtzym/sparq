@@ -1,7 +1,15 @@
-import type { Node, NodeArg, NodeConvertible, Param } from '../core/node.ts'
-import type { ColumnValue, Schema } from '../core/schema-registry.ts'
+import type { Node, NodeArg, NodeConvertible, Param } from '~/core/node.ts'
+import type { Schema } from '~/core/schema-registry.ts'
 
 import * as fac from '~/factories.ts'
+
+type ColDataType<T extends Schema, K extends keyof T> = T[K]['type'] extends 'TEXT' ? string
+    : T[K]['type'] extends 'INTEGER' ? number
+    : T[K]['type'] extends 'REAL' ? number
+    : T[K]['type'] extends 'BLOB' ? Uint8Array
+    : null
+
+type SqlNumber = 'INTEGER' | 'REAL'
 
 export class Column<
     TSchema extends Schema = any,
@@ -31,41 +39,33 @@ export class Column<
         return fn(this.node, value)
     }
 
-    eq(value: ColumnValue<TSchema, K>): Node {
+    eq(value: ColDataType<TSchema, K>): Node {
         return this.#comparison(fac.eq, value)
     }
 
-    ne(value: ColumnValue<TSchema, K>): Node {
+    ne(value: ColDataType<TSchema, K>): Node {
         return this.#comparison(fac.ne, value)
     }
 
-    gt(
-        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
-    ): Node {
+    gt(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.gt, value)
     }
 
-    lt(
-        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
-    ): Node {
+    lt(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.lt, value)
     }
 
-    ge(
-        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
-    ): Node {
+    ge(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.ge, value)
     }
 
-    le(
-        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
-    ): Node {
+    le(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.le, value)
     }
 
     between(
-        min: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
-        max: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
+        min: TSchema[K]['type'] extends SqlNumber ? number : never,
+        max: TSchema[K]['type'] extends SqlNumber ? number : never,
     ): Node {
         return fac.between(this.node, min, max)
     }
@@ -74,7 +74,7 @@ export class Column<
         return this.#comparison(fac.like, pattern)
     }
 
-    in(values: ColumnValue<TSchema, K>[]): Node {
+    in(values: ColDataType<TSchema, K>[]): Node {
         return this.#comparison(fac.in_, fac.valueList(...values))
     }
 
@@ -84,14 +84,6 @@ export class Column<
 
     isNotNull(): Node {
         return fac.isNotNull(this.node)
-    }
-
-    set(value: Param): Node {
-        return fac.assign(this.node, value as Param)
-    }
-
-    as(name: string): Node {
-        return fac.alias(this.node, fac.id(name))
     }
 
     #aggregate(fn: (node: NodeArg) => Node, distinct?: boolean): Node {
@@ -117,5 +109,13 @@ export class Column<
 
     sum(distinct?: boolean): Node {
         return this.#aggregate(fac.sum, distinct)
+    }
+
+    as(name: string): Node {
+        return fac.alias(this.node, fac.id(name))
+    }
+
+    set(value: Param): Node {
+        return fac.assign(this.node, value as Param)
     }
 }

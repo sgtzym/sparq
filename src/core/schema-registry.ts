@@ -1,5 +1,10 @@
 export type Schema = Record<string, {
-    type: 'TEXT' | 'INTEGER' | 'REAL' | 'BLOB' | 'NULL'
+    type:
+        | 'TEXT'
+        | 'INTEGER'
+        | 'REAL'
+        | 'BLOB'
+        | 'NULL'
     nullable?: boolean
     primaryKey?: boolean
     unique?: boolean
@@ -14,49 +19,96 @@ export type Schema = Record<string, {
         | 'CURRENT_TIME'
 }>
 
-export type ColumnValue<T extends Schema, K extends keyof T> =
-    T[K]['type'] extends 'TEXT' ? string
-        : T[K]['type'] extends 'INTEGER' ? number
-        : T[K]['type'] extends 'REAL' ? number
-        : T[K]['type'] extends 'BLOB' ? Uint8Array
-        : null
-
 class SchemaRegistry {
     static #instance: SchemaRegistry
-    static readonly #schemas: Map<string, Schema> = new Map()
+    static readonly #schemas: Map<
+        string,
+        Schema
+    > = new Map()
 
     private constructor() {}
 
     static get instance(): SchemaRegistry {
-        if (!SchemaRegistry.#instance) {
-            SchemaRegistry.#instance = new SchemaRegistry()
+        if (
+            !SchemaRegistry
+                .#instance
+        ) {
+            SchemaRegistry
+                .#instance = new SchemaRegistry()
         }
 
-        return SchemaRegistry.#instance
+        return SchemaRegistry
+            .#instance
     }
 
-    add(name: string, schema: Schema) {
-        SchemaRegistry.#schemas.set(name, schema)
+    add(
+        name: string,
+        schema: Schema,
+    ) {
+        SchemaRegistry
+            .#schemas
+            .set(
+                name,
+                schema,
+            )
     }
 
-    get(name: string): Schema | undefined {
-        return SchemaRegistry.#schemas.get(name)
+    get(
+        name: string,
+    ):
+        | Schema
+        | undefined {
+        return SchemaRegistry
+            .#schemas
+            .get(
+                name,
+            )
     }
 
-    hasTable(table: string): boolean {
-        return SchemaRegistry.#schemas.has(table)
+    hasTable(
+        table: string,
+    ): boolean {
+        return SchemaRegistry
+            .#schemas
+            .has(
+                table,
+            )
     }
 
-    hasColumn(columnName: string): boolean
-    hasColumn(columnName: string, table: string): boolean
-    hasColumn(columnName: string, table?: string): boolean {
+    hasColumn(
+        columnName: string,
+    ): boolean
+    hasColumn(
+        columnName: string,
+        table: string,
+    ): boolean
+    hasColumn(
+        columnName: string,
+        table?: string,
+    ): boolean {
         if (table) {
-            const schema = SchemaRegistry.#schemas.get(table)
-            return schema ? columnName in schema : false
+            const schema = SchemaRegistry
+                .#schemas
+                .get(
+                    table,
+                )
+            return schema
+                ? columnName in
+                    schema
+                : false
         }
 
-        for (const [_tableName, schema] of SchemaRegistry.#schemas) {
-            if (columnName in schema) {
+        for (
+            const [
+                _tableName,
+                schema,
+            ] of SchemaRegistry
+                .#schemas
+        ) {
+            if (
+                columnName in
+                    schema
+            ) {
                 return true
             }
         }
@@ -64,4 +116,5 @@ class SchemaRegistry {
     }
 }
 
-export default SchemaRegistry.instance
+export default SchemaRegistry
+    .instance

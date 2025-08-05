@@ -6,7 +6,12 @@ export type SqlString = string
  * Union type of all SQL-compatible primitive values.
  * Represents values that can be safely parameterized.
  */
-export type SqlValue = null | number | bigint | string | Uint8Array
+export type SqlParam =
+    | null
+    | number
+    | bigint
+    | string
+    | Uint8Array
 
 export type SqlIdentifier = string
 
@@ -18,17 +23,31 @@ const SQL_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
  * @param {unknown} param - Value to check
  * @returns {boolean} True if needs quoting
  */
-export function needsQuoting(param: string): boolean {
-    if (typeof param !== 'string') return false
+export function needsQuoting(
+    param: string,
+): boolean {
+    if (
+        typeof param !==
+            'string'
+    ) return false
 
     return (
-        !SQL_NAME_PATTERN.test(param) ||
-        isSqlKeyword(param)
+        !SQL_NAME_PATTERN
+            .test(
+                param,
+            ) ||
+        isSqlKeyword(
+            param,
+        )
     )
 }
 
-export function isSqlKeyword(param: string): boolean {
-    return param.toUpperCase() in SQL_KEYWORDS
+export function isSqlKeyword(
+    param: string,
+): boolean {
+    return param
+        .toUpperCase() in
+        SQL_KEYWORDS
 }
 
 /**
@@ -37,37 +56,58 @@ export function isSqlKeyword(param: string): boolean {
  * @param {unknown} arg - Value to check
  * @returns {boolean} True if valid data type
  */
-export function isSqlValue(
+export function isSqlParam(
     arg: unknown,
-): arg is SqlValue {
+): arg is SqlParam {
     return (
-        arg === null ||
-        typeof arg === 'number' ||
-        typeof arg === 'bigint' ||
-        typeof arg === 'string' ||
-        arg instanceof Uint8Array
+        arg ===
+            null ||
+        typeof arg ===
+            'number' ||
+        typeof arg ===
+            'bigint' ||
+        typeof arg ===
+            'string' ||
+        arg instanceof
+            Uint8Array
     )
 }
 
 /**
  * Parses a value to a valid SQL data type.
  *
- * @param {unknown} value - Value to parse
- * @returns {SqlValue} The parsed value as SQL data type
+ * @param {unknown} arg - Value to parse
+ * @returns {SqlParam} The parsed value as SQL data type
  */
-export function toSqlValue(value: unknown): SqlValue {
+export function toSqlParam(
+    arg: unknown,
+): SqlParam {
     switch (true) {
-        case isSqlValue(value):
-            return value
-        case value === undefined:
+        case isSqlParam(
+            arg,
+        ):
+            return arg
+        case arg ===
+            undefined:
             return null
-        case typeof value === 'boolean':
-            return value ? 1 : 0
-        case value instanceof Date:
-            return value.toISOString()
-        case Array.isArray(value) || typeof value === 'object':
+        case typeof arg ===
+            'boolean':
+            return arg ? 1 : 0
+        case arg instanceof
+            Date:
+            return arg
+                .toISOString()
+        case Array
+            .isArray(
+                arg,
+            ) ||
+            typeof arg ===
+                'object':
             try {
-                return JSON.stringify(value)
+                return JSON
+                    .stringify(
+                        arg,
+                    )
             } catch (error) {
                 throw new TypeError(
                     `Unable to serialize value: ${error}`,
@@ -75,12 +115,16 @@ export function toSqlValue(value: unknown): SqlValue {
             }
         default:
             throw new TypeError(
-                `Unsupported literal type: ${value}`,
+                `Unsupported literal type: ${arg}`,
             )
     }
 }
 
 /** ... */
-export function sql(keyword: SqlKeyword): string {
-    return String(keyword)
+export function sql(
+    keyword: SqlKeyword,
+): string {
+    return String(
+        keyword,
+    )
 }

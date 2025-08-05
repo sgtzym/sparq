@@ -10,7 +10,8 @@
     "fmt": {
         "indentWidth": 4,
         "singleQuote": true,
-        "semiColons": false
+        "semiColons": false,
+        "lineWidth": 100
     },
     "compilerOptions": {
         "strict": false,
