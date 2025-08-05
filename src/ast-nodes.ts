@@ -192,7 +192,7 @@ export class AggregateNode implements Node {
 // ---------------------------------------------
 
 export class FromNode implements Node {
-    priority: number = 10
+    readonly priority: number = 10
 
     constructor(
         private readonly tables: ArrayLike<Node>,
@@ -207,7 +207,7 @@ export class FromNode implements Node {
 }
 
 export class JoinNode implements Node {
-    priority: number = 20
+    readonly priority: number = 20
 
     constructor(
         private readonly joinType: Node,
@@ -227,7 +227,7 @@ export class JoinNode implements Node {
 }
 
 export class WhereNode implements Node {
-    priority: number = 30
+    readonly priority: number = 30
 
     constructor(
         private readonly conditions: ArrayLike<Node>,
@@ -242,7 +242,7 @@ export class WhereNode implements Node {
 }
 
 export class GroupByNode implements Node {
-    priority: number = 40
+    readonly priority: number = 40
 
     constructor(
         private readonly expr: ArrayLike<Node>,
@@ -256,7 +256,7 @@ export class GroupByNode implements Node {
 }
 
 export class HavingNode implements Node {
-    priority: number = 50
+    readonly priority: number = 50
 
     constructor(
         private readonly conditions: ArrayLike<Node>,
@@ -271,7 +271,7 @@ export class HavingNode implements Node {
 }
 
 export class OrderByNode implements Node {
-    priority: number = 60
+    readonly priority: number = 60
 
     constructor(
         private readonly expr: ArrayLike<Node>,
@@ -285,7 +285,7 @@ export class OrderByNode implements Node {
 }
 
 export class LimitNode implements Node {
-    priority: number = 70
+    readonly priority: number = 70
 
     constructor(
         private readonly count: Node,
@@ -299,7 +299,7 @@ export class LimitNode implements Node {
 }
 
 export class OffsetNode implements Node {
-    priority: number = 80
+    readonly priority: number = 80
 
     constructor(
         private readonly count: Node,
@@ -342,7 +342,7 @@ export class SetNode implements Node {
 // ---------------------------------------------
 
 export class SelectNode implements Node {
-    priority: number = 0
+    readonly priority: number = 0
 
     constructor(
         private readonly columns?: ArrayLike<Node>,

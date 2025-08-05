@@ -2,16 +2,17 @@ import { type ArrayLike, castArray } from '~/core/utils.ts'
 import { type SqlString, type SqlValue, toSqlValue } from '~/core/sql.ts'
 import type { Parameters } from '~/core/parameter-registry.ts'
 import { LiteralNode } from '~/ast-nodes.ts'
+import { Column } from '~/api/column.ts'
 
 // ---------------------------------------------
 // ⚙️ Basics
 // ---------------------------------------------
 
 export type Param = SqlValue | boolean | Date | undefined
-export type NodeArg = ArrayLike<Node | Param>
+export type NodeArg = ArrayLike<Node | Param | Column> // fucking cross-ref for Column
 
 export interface Node {
-    priority?: number
+    readonly priority?: number
     render(params: Parameters): SqlString
 }
 
@@ -22,7 +23,10 @@ function isNode(arg: any): arg is Node {
 
 /** Converts args like factory functions to Nodes */
 export function toNode(arg: NodeArg): Node {
-    return (isNode(arg)) ? arg : new LiteralNode(toSqlValue(arg))
+    if ((isNode(arg))) return arg
+    if (arg instanceof Column) return arg.node
+
+    return new LiteralNode(toSqlValue(arg))
 }
 
 // ---------------------------------------------
@@ -44,52 +48,25 @@ export function sortAST(nodes: Node[]): readonly Node[] {
 }
 
 /**
- * Renders multiple nodes to SQL strings.
- *
- * @param {ArrayLike<Node>} args - Nodes to interpret
- * @param {Parameters} params - Parameter registry for value binding
- * @returns {string[]} Array of SQL string fragments
+ * @param nodes
+ * @param params
+ * @returns
  */
 export function renderAll(
-    args: ArrayLike<Node>,
+    nodes: ArrayLike<Node>,
     params: Parameters,
 ): string[] {
-    return castArray(args).map((arg) => arg.render(params))
+    return castArray(nodes).map((n) => n.render(params))
 }
 
 /**
- * Renders AST nodes to SQL in the specified clause order.
- * Groups nodes by type to ensure correct SQL syntax.
- *
- * @param {Node[]} nodes - AST nodes to render
- * @param {Parameters} params - Parameter registry for value binding
- * @param {string[]} order - Node type names in SQL clause order
- * @returns {string} Generated SQL string
+ * @param nodes
+ * @param params
+ * @returns
  */
 export function renderAST(
-    nodes: Node[],
+    nodes: ArrayLike<Node>,
     params: Parameters,
 ): string {
-    const nodeMap = new Map<string, Node[]>()
-    const types: string[] = []
-
-    for (const node of sortAST(nodes)) {
-        const type: string = node.constructor.name
-        if (!nodeMap.has(type)) {
-            nodeMap.set(type, [])
-            types.push(type)
-        }
-        nodeMap.get(type)!.push(node)
-    }
-
-    console.log(types)
-
-    const parts: string[] = []
-
-    for (const type of types) {
-        const nodes = nodeMap.get(type) || []
-        parts.push(...renderAll(nodes, params))
-    }
-
-    return parts.join(' ')
+    return renderAll([...sortAST(castArray(nodes))], params).join(' ')
 }

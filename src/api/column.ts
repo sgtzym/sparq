@@ -1,20 +1,28 @@
-import type { Node, NodeArg, Param } from '~/core/node.ts'
+import type { Node, NodeArg, Param } from '../core/node.ts'
+import type { ColumnValue, Schema } from '../core/schema-registry.ts'
+
 import * as fac from '~/factories.ts'
 
-export class Column {
+export class Column<
+    TSchema extends Schema = any,
+    K extends keyof TSchema = any,
+> {
     private _node?: Node
 
     constructor(
-        private readonly name: string,
-    ) {}
-
-    private get node(): Node {
-        return this._node ??= fac.name(this.name) // lazy init
+        private readonly _name: K & string,
+        readonly schema?: TSchema,
+    ) {
+        this._node = fac.id(_name)
     }
 
-    // ---------------------------------------------
-    // Value Comparisons, Assignments and Aliases
-    // ---------------------------------------------
+    get name(): string {
+        return this._name
+    }
+
+    get node(): Node {
+        return this._node ??= fac.id(this.name) // lazy init
+    }
 
     #comparison(
         fn: (left: NodeArg, right: NodeArg) => Node,
@@ -23,53 +31,68 @@ export class Column {
         return fn(this.node, value)
     }
 
-    eq(value: Param): Node {
-        return this.#comparison(fac.eq, value as Param)
+    eq(value: ColumnValue<TSchema, K>): Node {
+        return this.#comparison(fac.eq, value)
     }
 
-    ne(value: Param): Node {
-        return this.#comparison(fac.ne, value as Param)
+    ne(value: ColumnValue<TSchema, K>): Node {
+        return this.#comparison(fac.ne, value)
     }
 
-    gt(value: Param): Node {
-        return this.#comparison(fac.gt, value as Param)
+    gt(
+        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
+    ): Node {
+        return this.#comparison(fac.gt, value)
     }
 
-    lt(value: Param): Node {
-        return this.#comparison(fac.lt, value as Param)
+    lt(
+        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
+    ): Node {
+        return this.#comparison(fac.lt, value)
     }
 
-    ge(value: Param): Node {
-        return this.#comparison(fac.ge, value as Param)
+    ge(
+        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
+    ): Node {
+        return this.#comparison(fac.ge, value)
     }
 
-    le(value: Param): Node {
-        return this.#comparison(fac.le, value as Param)
+    le(
+        value: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
+    ): Node {
+        return this.#comparison(fac.le, value)
     }
 
-    like(value: Param): Node {
-        return this.#comparison(fac.like, value as Param)
+    between(
+        min: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
+        max: TSchema[K]['type'] extends 'INTEGER' | 'REAL' ? number : never,
+    ): Node {
+        return fac.between(this.node, min, max)
     }
 
-    in(values: Param[]): Node {
-        return this.#comparison(fac.in_, fac.valueList(...values as Param[]))
+    like(pattern: TSchema[K]['type'] extends 'TEXT' ? string : never): Node {
+        return this.#comparison(fac.like, pattern)
     }
 
-    between(min: Param, max: Param): Node {
-        return fac.between(this.node, min as Param, max as Param)
+    in(values: ColumnValue<TSchema, K>[]): Node {
+        return this.#comparison(fac.in_, fac.valueList(...values))
+    }
+
+    isNull(): Node {
+        return fac.isNull(this.node)
+    }
+
+    isNotNull(): Node {
+        return fac.isNotNull(this.node)
     }
 
     set(value: Param): Node {
         return fac.assign(this.node, value as Param)
     }
 
-    as(name: Param): Node {
-        return fac.alias(this.node, fac.name(name as string))
+    as(name: string): Node {
+        return fac.alias(this.node, fac.id(name))
     }
-
-    // ---------------------------------------------
-    // Aggregate Shorthands
-    // ---------------------------------------------
 
     #aggregate(fn: (node: NodeArg) => Node, distinct?: boolean): Node {
         const agg: Node = fn(this.node)
@@ -94,17 +117,5 @@ export class Column {
 
     sum(distinct?: boolean): Node {
         return this.#aggregate(fac.sum, distinct)
-    }
-
-    // ---------------------------------------------
-    // Utilities
-    // ---------------------------------------------
-
-    toString(): string {
-        return this.name
-    }
-
-    toNode(): Node {
-        return this.node
     }
 }

@@ -14,6 +14,13 @@ export type Schema = Record<string, {
         | 'CURRENT_TIME'
 }>
 
+export type ColumnValue<T extends Schema, K extends keyof T> =
+    T[K]['type'] extends 'TEXT' ? string
+        : T[K]['type'] extends 'INTEGER' ? number
+        : T[K]['type'] extends 'REAL' ? number
+        : T[K]['type'] extends 'BLOB' ? Uint8Array
+        : null
+
 class SchemaRegistry {
     static #instance: SchemaRegistry
     static readonly #schemas: Map<string, Schema> = new Map()

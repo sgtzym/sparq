@@ -6,7 +6,7 @@ import * as ast from '~/ast-nodes.ts'
 // 🏭 Factories: Primitives
 // ---------------------------------------------
 
-export const name = (name: string): Node => {
+export const id = (name: string): Node => {
     return new ast.IdentifierNode(name)
 }
 
@@ -141,24 +141,32 @@ export const sum = aggregate(sql('SUM'))
 // ---------------------------------------------
 
 //Basic clauses
-export const from = (...tables: string[]) =>
-    new ast.FromNode(tables.map((table) => name(table)))
+export const from = (...tables: NodeArg[]) =>
+    new ast.FromNode(
+        tables.map((table) =>
+            typeof table === 'string' ? id(table) : toNode(table)
+        ),
+    )
 
 export const where = (...conditions: NodeArg[]) =>
     new ast.WhereNode(conditions.map(toNode))
 
-export const groupBy = (...columns: string[]) =>
-    new ast.GroupByNode(columns.map((col) => name(col)))
+export const groupBy = (...columns: NodeArg[]) =>
+    new ast.GroupByNode(
+        columns.map((col) => typeof col === 'string' ? id(col) : toNode(col)),
+    )
 
 export const having = (...conditions: NodeArg[]) =>
     new ast.HavingNode(conditions.map(toNode))
 
-export const orderBy = (...columns: string[]) =>
-    new ast.OrderByNode(columns.map((col) => name(col)))
+export const orderBy = (...columns: NodeArg[]) =>
+    new ast.OrderByNode(
+        columns.map((col) => typeof col === 'string' ? id(col) : toNode(col)),
+    )
 
-export const limit = (count: number) => new ast.LimitNode(val(count))
+export const limit = (count: NodeArg) => new ast.LimitNode(toNode(count))
 
-export const offset = (count: number) => new ast.OffsetNode(val(count))
+export const offset = (count: NodeArg) => new ast.OffsetNode(toNode(count))
 
 // Joins
 const join = (type: string) => (table: NodeArg, condition?: NodeArg): Node =>
@@ -180,11 +188,7 @@ export const joinCross = (table: NodeArg) =>
 
 export const select = (columns?: NodeArg[]): Node =>
     new ast.SelectNode(
-        columns?.length
-            ? columns.map((col) =>
-                typeof col === 'string' ? name(col) : toNode(col)
-            )
-            : undefined,
+        columns.map((col) => typeof col === 'string' ? id(col) : toNode(col)),
     )
 
 export const update = (table: NodeArg): Node =>

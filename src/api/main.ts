@@ -1,11 +1,11 @@
+import type { SqlString, SqlValue } from '~/core/sql.ts'
+
 import { Parameters } from '~/core/parameter-registry.ts'
-import { type Node, type NodeArg, type Param, renderAST } from '~/core/node.ts'
+import { type Node, type NodeArg, renderAST } from '~/core/node.ts'
 
 import * as fac from '~/factories.ts'
 
-export type Query = [string, readonly Param[]]
-
-export class SelectApi {
+export class Select {
     private readonly nodes: Node[] = []
 
     constructor(table: string, columns?: NodeArg[]) {
@@ -66,7 +66,7 @@ export class SelectApi {
         return this
     }
 
-    _(): Query {
+    toSql(): [SqlString, readonly SqlValue[]] {
         const params = new Parameters()
         const sql = renderAST(this.nodes, params)
         return [sql, params.toArray()]
