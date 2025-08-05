@@ -9,7 +9,6 @@ import { Column } from '~/api/column.ts'
 // ---------------------------------------------
 
 export type Param = SqlValue | boolean | Date | undefined
-export type NodeArg = ArrayLike<Node | Param | Column> // fucking cross-ref for Column
 
 export interface Node {
     readonly priority?: number
@@ -19,14 +18,6 @@ export interface Node {
 /** Node type guard */
 function isNode(arg: any): arg is Node {
     return arg && typeof arg.render === 'function'
-}
-
-/** Converts args like factory functions to Nodes */
-export function toNode(arg: NodeArg): Node {
-    if ((isNode(arg))) return arg
-    if (arg instanceof Column) return arg.node
-
-    return new LiteralNode(toSqlValue(arg))
 }
 
 // ---------------------------------------------
@@ -69,4 +60,28 @@ export function renderAST(
     params: Parameters,
 ): string {
     return renderAll([...sortAST(castArray(nodes))], params).join(' ')
+}
+
+// ---------------------------------------------
+// ⚙️ Conversion
+// ---------------------------------------------
+
+export interface NodeConvertible {
+    readonly node: Node
+}
+
+export type NodeArg = ArrayLike<Node | NodeConvertible | Param>
+
+/** Node convertible type guard */
+function isNodeConvertible(arg: any): arg is NodeConvertible {
+    return arg && typeof arg === 'object' &&
+        'node' in arg &&
+        isNode(arg.node)
+}
+
+/** Converts args to Nodes */
+export function toNode(arg: Node | NodeConvertible | Param): Node {
+    if (isNode(arg)) return arg
+    if (isNodeConvertible(arg)) return arg.node
+    return new LiteralNode(toSqlValue(arg))
 }

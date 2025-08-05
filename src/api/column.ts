@@ -1,4 +1,4 @@
-import type { Node, NodeArg, Param } from '../core/node.ts'
+import type { Node, NodeArg, NodeConvertible, Param } from '../core/node.ts'
 import type { ColumnValue, Schema } from '../core/schema-registry.ts'
 
 import * as fac from '~/factories.ts'
@@ -6,7 +6,7 @@ import * as fac from '~/factories.ts'
 export class Column<
     TSchema extends Schema = any,
     K extends keyof TSchema = any,
-> {
+> implements NodeConvertible {
     private _node?: Node
 
     constructor(
