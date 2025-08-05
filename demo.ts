@@ -13,7 +13,11 @@ const { $ } = user // funny shorthand
 const [sql, params] = user
     .update(
         $.email.set('new@test.com'),
-        $.age.set(21)
+        $.age.set(21),
+        $.score.set($.score.add(10000)),
+    )
+    .where(
+        $.score.lt(1000)
     )
     .toSql()
 

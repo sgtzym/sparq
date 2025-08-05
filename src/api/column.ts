@@ -3,7 +3,10 @@ import type { Schema } from '~/core/schema-registry.ts'
 
 import * as fac from '~/factories.ts'
 
-type ColDataType<T extends Schema, K extends keyof T> = T[K]['type'] extends 'TEXT' ? string
+type ColDataType<
+    T extends Schema,
+    K extends keyof T,
+> = T[K]['type'] extends 'TEXT' ? string
     : T[K]['type'] extends 'INTEGER' ? number
     : T[K]['type'] extends 'REAL' ? number
     : T[K]['type'] extends 'BLOB' ? Uint8Array
@@ -11,10 +14,8 @@ type ColDataType<T extends Schema, K extends keyof T> = T[K]['type'] extends 'TE
 
 type SqlNumber = 'INTEGER' | 'REAL'
 
-export class Column<
-    TSchema extends Schema = any,
-    K extends keyof TSchema = any,
-> implements NodeConvertible {
+export class Column<TSchema extends Schema = any, K extends keyof TSchema = any>
+    implements NodeConvertible {
     private _node?: Node
 
     constructor(
@@ -29,9 +30,18 @@ export class Column<
     }
 
     get node(): Node {
-        return this._node ??= fac.id(this.name) // lazy init
+        return (this._node ??= fac.id(this.name)) // lazy init
     }
 
+    distinct(): Node {
+        return fac.distinct(this.node)
+    }
+
+    all(): Node {
+        return fac.all(this.node)
+    }
+
+    // Comparison operations
     #comparison(
         fn: (left: NodeArg, right: NodeArg) => Node,
         value: NodeArg,
@@ -86,6 +96,24 @@ export class Column<
         return fac.isNotNull(this.node)
     }
 
+    // Arithmetic operations
+    add(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+        return fac.add(this.node, fac.val(value))
+    }
+
+    sub(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+        return fac.sub(this.node, fac.val(value))
+    }
+
+    mul(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+        return fac.mul(this.node, fac.val(value))
+    }
+
+    div(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+        return fac.div(this.node, fac.val(value))
+    }
+
+    // Aggregate functions
     #aggregate(fn: (node: NodeArg) => Node, distinct?: boolean): Node {
         const agg: Node = fn(this.node)
         return distinct ? fac.distinct(agg) : agg
@@ -111,11 +139,14 @@ export class Column<
         return this.#aggregate(fac.sum, distinct)
     }
 
+    // Misc.
     as(name: string): Node {
         return fac.alias(this.node, fac.id(name))
     }
 
-    set(value: Param): Node {
-        return fac.assign(this.node, value as Param)
+    set(value: NodeArg): Node {
+        return fac.assign(this.node, value)
     }
+
+    // default() TODO
 }

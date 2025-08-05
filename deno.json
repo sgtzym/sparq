@@ -11,7 +11,7 @@
         "indentWidth": 4,
         "singleQuote": true,
         "semiColons": false,
-        "lineWidth": 100
+        "lineWidth": 80
     },
     "compilerOptions": {
         "strict": false,
