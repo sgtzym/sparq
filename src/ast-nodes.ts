@@ -335,6 +335,8 @@ export class ValuesNode implements Node {
 }
 
 export class SetNode implements Node {
+    readonly priority: number = 5
+
     constructor(private readonly assignments: ArrayLike<Node>) {}
 
     render(params: Parameters): SqlString {
@@ -366,6 +368,8 @@ export class SelectNode implements Node {
 }
 
 export class InsertNode implements Node {
+    readonly priority: number = 0
+
     constructor(
         private readonly table: Node,
         private readonly columns: ArrayLike<Node>,
@@ -380,6 +384,8 @@ export class InsertNode implements Node {
 }
 
 export class UpdateNode implements Node {
+    readonly priority: number = 0
+
     constructor(private readonly table: Node) {}
 
     render(params: Parameters): SqlString {
@@ -390,6 +396,8 @@ export class UpdateNode implements Node {
 }
 
 export class DeleteNode implements Node {
+    readonly priority: number = 0
+
     render(_params: Parameters): SqlString {
         return sql('DELETE')
     }

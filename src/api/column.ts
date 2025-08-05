@@ -1,12 +1,5 @@
-import {
-    type Node,
-    type NodeArg,
-    type NodeConvertible,
-    type Param,
-    toNode,
-} from '~/core/node.ts'
+import type { Node, NodeArg, NodeConvertible } from '~/core/node.ts'
 import type { Schema } from '~/core/schema-registry.ts'
-
 import * as fac from '~/factories.ts'
 
 type ColDataType<
