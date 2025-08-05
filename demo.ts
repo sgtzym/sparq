@@ -19,6 +19,7 @@ const [sql, params] = user
     .where(
         $.score.lt(1000)
     )
+    .limit(10)
     .toSql()
 
 console.log(sql, params)

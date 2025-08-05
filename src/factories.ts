@@ -162,7 +162,10 @@ export const joinInner = join(sql('INNER'))
 export const joinLeft = join(sql('LEFT'))
 export const joinLeftOuter = join(`${sql('LEFT')} ${sql('OUTER')}`)
 export const joinCross = (table: NodeArg) =>
-    new ast.JoinNode(raw(sql('CROSS')), toNode(table))
+    new ast.JoinNode(
+        raw(sql('CROSS')),
+        typeof table === 'string' ? id(table) : toNode(table),
+    )
 
 export const where = (...conditions: NodeArg[]) =>
     new ast.WhereNode(conditions.map(toNode))

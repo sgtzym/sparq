@@ -5,73 +5,45 @@ import * as fac from '~/factories.ts'
 import { AssignmentNode } from '~/ast-nodes.ts'
 import { Column } from '~/api/column.ts'
 
-interface StatementApi {
+interface SqlStatement {
     readonly clauses: Node[]
     toSql(): [SqlString, readonly SqlParam[]]
 }
 
-export class Select implements StatementApi {
+abstract class SqlStatementBuilder implements SqlStatement {
     readonly clauses: Node[] = []
 
-    constructor(
-        private readonly table: string,
-        private readonly columns?: NodeArg[],
-    ) {
-        this.clauses.push(fac.select(this.columns))
-        this.clauses.push(fac.from(this.table))
-    }
-
-    join(
-        dir: 'inner' | 'left' | 'leftOuter' | 'cross',
-        table: NodeArg,
-        condition?: NodeArg,
-    ): this {
-        switch (dir) {
-            case 'inner':
-                this.clauses.push(fac.joinInner(table, condition))
-                break
-            case 'left':
-                this.clauses.push(fac.joinLeft(table, condition))
-                break
-            case 'leftOuter':
-                this.clauses.push(fac.joinLeftOuter(table, condition))
-                break
-            case 'cross':
-                this.clauses.push(fac.joinCross(table))
-                break
-        }
-
+    protected addClause(clause: Node): this {
+        this.clauses.push(clause)
         return this
     }
 
     where(...conditions: NodeArg[]): this {
-        this.clauses.push(fac.where(...conditions))
-        return this
+        return this.addClause(fac.where(...conditions))
     }
 
     groupBy(...columns: NodeArg[]): this {
-        this.clauses.push(fac.groupBy(...columns))
-        return this
+        return this.addClause(fac.groupBy(...columns))
     }
 
     having(...conditions: NodeArg[]): this {
-        this.clauses.push(fac.having(...conditions))
-        return this
+        return this.addClause(fac.having(...conditions))
     }
 
     orderBy(...columns: NodeArg[]): this {
-        this.clauses.push(fac.orderBy(...columns))
-        return this
+        return this.addClause(fac.orderBy(...columns))
     }
 
     limit(count: NodeArg = 1): this {
-        this.clauses.push(fac.limit(count))
-        return this
+        return this.addClause(fac.limit(count))
     }
 
     offset(count: NodeArg = 1): this {
-        this.clauses.push(fac.offset(count))
-        return this
+        return this.addClause(fac.offset(count))
+    }
+
+    returning(...columns: NodeArg[]): this {
+        return this.addClause(fac.returning(...columns))
     }
 
     toSql(): [SqlString, readonly SqlParam[]] {
@@ -81,21 +53,48 @@ export class Select implements StatementApi {
     }
 }
 
-export class Insert implements StatementApi {
-    readonly clauses: Node[] = []
+export class Select extends SqlStatementBuilder {
+    constructor(
+        private readonly table: string,
+        private readonly columns?: NodeArg[],
+    ) {
+        super()
+        this.addClause(fac.select(this.columns))
+        this.addClause(fac.from(this.table))
+    }
 
+    joinInner(table: NodeArg, condition?: NodeArg): this {
+        return this.addClause(fac.joinInner(table, condition))
+    }
+
+    joinLeft(table: NodeArg, condition?: NodeArg): this {
+        return this.addClause(fac.joinLeft(table, condition))
+    }
+
+    joinLeftOuter(table: NodeArg, condition?: NodeArg): this {
+        return this.addClause(fac.joinLeftOuter(table, condition))
+    }
+
+    joinCross(table: NodeArg): this {
+        return this.addClause(fac.joinCross(table))
+    }
+}
+
+export class Insert extends SqlStatementBuilder {
     private readonly cols: Node[] = []
     private readonly rows: Node[] = []
 
     constructor(
         private readonly table: string,
-        args: NodeArg[],
+        columns: NodeArg[],
     ) {
-        for (const arg of args) {
-            this.cols.push(arg instanceof Column ? arg.node : toNode(arg))
+        super()
+
+        for (const col of columns) {
+            this.cols.push(col instanceof Column ? col.node : toNode(col))
         }
 
-        this.clauses.push(fac.insert(this.table, this.cols))
+        this.addClause(fac.insert(this.table, this.cols))
     }
 
     values(...values: NodeArg[]): this {
@@ -105,25 +104,27 @@ export class Insert implements StatementApi {
 
     // TODO(#sgtzym): Implement subqueries with SELECT
 
-    toSql(): [SqlString, readonly SqlParam[]] {
-        this.clauses.push(fac.values(...this.rows))
+    override toSql(): [SqlString, readonly SqlParam[]] {
+        if (this.rows.length > 0) {
+            this.addClause(fac.values(...this.rows))
+        }
 
-        const params = new Parameters()
-        const sql = renderAST(this.clauses, params)
-        return [sql, params.toArray()]
+        return super.toSql()
     }
+
+    // TODO(#sgtzym): Implement OnConflictBuilder for UPSERT
 }
 
-export class Update implements StatementApi {
-    readonly clauses: Node[] = []
-
+export class Update extends SqlStatementBuilder {
     private readonly assignments: Node[] = []
 
     constructor(
         private readonly table: string,
-        assignments?: NodeArg[],
+        assignments: NodeArg[],
     ) {
-        this.clauses.push(fac.update(this.table))
+        super()
+
+        this.addClause(fac.update(this.table))
 
         for (const assign of assignments) {
             if (assign instanceof AssignmentNode) {
@@ -131,67 +132,28 @@ export class Update implements StatementApi {
             }
         }
 
-        this.clauses.push(fac.set(...this.assignments))
-    }
-
-    where(...conditions: NodeArg[]): this {
-        this.clauses.push(fac.where(...conditions))
-        return this
-    }
-
-    orderBy(...columns: NodeArg[]): this {
-        this.clauses.push(fac.orderBy(...columns))
-        return this
-    }
-
-    limit(count: NodeArg = 1): this {
-        this.clauses.push(fac.limit(count))
-        return this
-    }
-
-    offset(count: NodeArg = 1): this {
-        this.clauses.push(fac.offset(count))
-        return this
-    }
-
-    toSql(): [SqlString, readonly SqlParam[]] {
-        const params = new Parameters()
-        const sql = renderAST(this.clauses, params)
-        return [sql, params.toArray()]
+        this.addClause(fac.set(...this.assignments))
     }
 }
 
-export class Delete implements StatementApi {
-    readonly clauses: Node[] = []
+export class Delete extends SqlStatementBuilder {
+    #unsupportedClauseErrMsg: string = 'is not supported in DELETE statements'
 
     constructor(private readonly table: string) {
-        this.clauses.push(fac.delete_())
-        this.clauses.push(fac.from(this.table))
+        super()
+        this.addClause(fac.delete_())
+        this.addClause(fac.from(this.table))
     }
 
-    where(...conditions: NodeArg[]): this {
-        this.clauses.push(fac.where(...conditions))
-        return this
+    override groupBy(): never {
+        throw new Error(`groupBy ${this.#unsupportedClauseErrMsg}`)
     }
 
-    orderBy(...columns: NodeArg[]): this {
-        this.clauses.push(fac.orderBy(...columns))
-        return this
+    override having(): never {
+        throw new Error(`having ${this.#unsupportedClauseErrMsg}`)
     }
 
-    limit(count: NodeArg = 1): this {
-        this.clauses.push(fac.limit(count))
-        return this
-    }
-
-    offset(count: NodeArg = 1): this {
-        this.clauses.push(fac.offset(count))
-        return this
-    }
-
-    toSql(): [SqlString, readonly SqlParam[]] {
-        const params = new Parameters()
-        const sql = renderAST(this.clauses, params)
-        return [sql, params.toArray()]
+    override returning(): never {
+        throw new Error(`returning ${this.#unsupportedClauseErrMsg}`)
     }
 }
