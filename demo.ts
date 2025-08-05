@@ -14,7 +14,7 @@ const [sql, params] = user
     .update(
         $.email.set('new@test.com'),
         $.age.set(21),
-        $.score.set($.score.add(10000)),
+        $.score.set($.score.add(9999)),
     )
     .where(
         $.score.lt(1000)

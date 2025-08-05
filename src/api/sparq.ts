@@ -9,10 +9,10 @@ type ColumnProperties<T extends Schema> = {
 
 class SparqApi<T extends Schema> {
     constructor(
-        private readonly name: string,
+        private readonly table: string,
         private readonly schema: T,
     ) {
-        schemas.add(name, schema)
+        schemas.add(table, schema)
 
         // Add props at runtime (bin to this)
         for (const columnName in this.schema) {
@@ -33,19 +33,19 @@ class SparqApi<T extends Schema> {
     }
 
     select(...args: Array<NodeArg>) {
-        return new Select(this.name, args)
+        return new Select(this.table, args)
     }
 
     insert(...args: Array<NodeArg>) {
-        return new Insert(this.name, args)
+        return new Insert(this.table, args)
     }
 
     update(...args: Array<NodeArg>) {
-        return new Update(this.name, args)
+        return new Update(this.table, args)
     }
 
     delete() {
-        return new Delete(this.name)
+        return new Delete(this.table)
     }
 }
 

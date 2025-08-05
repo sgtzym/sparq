@@ -76,8 +76,6 @@ function isNodeConvertible(arg: any): arg is NodeConvertible {
 /** Converts args to Nodes */
 export function toNode(arg: NodeArg): Node {
     if (isNode(arg)) return arg
-    if (isNodeConvertible(arg)) {
-        return arg.node
-    }
+    if (isNodeConvertible(arg)) return arg.node
     return new LiteralNode(toSqlParam(arg))
 }

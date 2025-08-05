@@ -102,9 +102,10 @@ export class ArithmeticNode implements Node {
 
     render(params: Parameters): SqlString {
         const left: string = this.left.render(params)
+        const op: string = this.operator.render(params)
         const right: string = this.right.render(params)
 
-        return `${left} ${this.operator} ${right}`
+        return `${left} ${op} ${right}`
     }
 }
 

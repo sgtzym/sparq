@@ -1,4 +1,10 @@
-import type { Node, NodeArg, NodeConvertible, Param } from '~/core/node.ts'
+import {
+    type Node,
+    type NodeArg,
+    type NodeConvertible,
+    type Param,
+    toNode,
+} from '~/core/node.ts'
 import type { Schema } from '~/core/schema-registry.ts'
 
 import * as fac from '~/factories.ts'
@@ -113,6 +119,8 @@ export class Column<TSchema extends Schema = any, K extends keyof TSchema = any>
         return fac.div(this.node, fac.val(value))
     }
 
+    // TODO(#sgtzym): String operations like UPPER, LOWER, LENGTH
+
     // Aggregate functions
     #aggregate(fn: (node: NodeArg) => Node, distinct?: boolean): Node {
         const agg: Node = fn(this.node)
@@ -147,6 +155,4 @@ export class Column<TSchema extends Schema = any, K extends keyof TSchema = any>
     set(value: NodeArg): Node {
         return fac.assign(this.node, value)
     }
-
-    // default() TODO
 }
