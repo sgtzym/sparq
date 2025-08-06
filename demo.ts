@@ -23,3 +23,7 @@ const [sql, params] = user
     .toSql()
 
 console.log(sql, params)
+
+// TODO: Bsp. nachbauen von SQLite Tutorial
+// TODO: Liste machen mit Features und Zielen
+// TODO: Docs (nicht übertreiben!)

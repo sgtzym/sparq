@@ -2,24 +2,22 @@ import type { Node, NodeArg, NodeConvertible } from '~/core/node.ts'
 import type { Schema } from '~/core/schema-registry.ts'
 import * as fac from '~/factories.ts'
 
-type ColDataType<
-    T extends Schema,
-    K extends keyof T,
-> = T[K]['type'] extends 'TEXT' ? string
-    : T[K]['type'] extends 'INTEGER' ? number
-    : T[K]['type'] extends 'REAL' ? number
-    : T[K]['type'] extends 'BLOB' ? Uint8Array
+type ColDataType<T extends Schema[keyof Schema]> = T['type'] extends 'TEXT'
+    ? string
+    : T['type'] extends 'INTEGER' ? number
+    : T['type'] extends 'REAL' ? number
+    : T['type'] extends 'BLOB' ? Uint8Array
     : null
 
 type SqlNumber = 'INTEGER' | 'REAL'
 
-export class Column<TSchema extends Schema = any, K extends keyof TSchema = any>
+export class Column<TType extends Schema[keyof Schema] = any>
     implements NodeConvertible {
     private _node?: Node
 
     constructor(
-        private readonly _name: K & string,
-        readonly schema?: TSchema,
+        private readonly _name: string,
+        private readonly _type: TType['type'],
     ) {
         this._node = fac.id(_name)
     }
@@ -48,42 +46,42 @@ export class Column<TSchema extends Schema = any, K extends keyof TSchema = any>
         return fn(this.node, value)
     }
 
-    eq(value: ColDataType<TSchema, K>): Node {
+    eq(value: ColDataType<TType>): Node {
         return this.#comparison(fac.eq, value)
     }
 
-    ne(value: ColDataType<TSchema, K>): Node {
+    ne(value: ColDataType<TType>): Node {
         return this.#comparison(fac.ne, value)
     }
 
-    gt(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    gt(value: TType['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.gt, value)
     }
 
-    lt(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    lt(value: TType['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.lt, value)
     }
 
-    ge(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    ge(value: TType['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.ge, value)
     }
 
-    le(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    le(value: TType['type'] extends SqlNumber ? number : never): Node {
         return this.#comparison(fac.le, value)
     }
 
     between(
-        min: TSchema[K]['type'] extends SqlNumber ? number : never,
-        max: TSchema[K]['type'] extends SqlNumber ? number : never,
+        min: TType['type'] extends SqlNumber ? number : never,
+        max: TType['type'] extends SqlNumber ? number : never,
     ): Node {
         return fac.between(this.node, min, max)
     }
 
-    like(pattern: TSchema[K]['type'] extends 'TEXT' ? string : never): Node {
+    like(pattern: TType['type'] extends 'TEXT' ? string : never): Node {
         return this.#comparison(fac.like, pattern)
     }
 
-    in(values: ColDataType<TSchema, K>[]): Node {
+    in(values: ColDataType<TType>[]): Node {
         return this.#comparison(fac.in_, fac.valueList(...values))
     }
 
@@ -96,19 +94,19 @@ export class Column<TSchema extends Schema = any, K extends keyof TSchema = any>
     }
 
     // Arithmetic operations
-    add(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    add(value: TType['type'] extends SqlNumber ? number : never): Node {
         return fac.add(this.node, fac.val(value))
     }
 
-    sub(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    sub(value: TType['type'] extends SqlNumber ? number : never): Node {
         return fac.sub(this.node, fac.val(value))
     }
 
-    mul(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    mul(value: TType['type'] extends SqlNumber ? number : never): Node {
         return fac.mul(this.node, fac.val(value))
     }
 
-    div(value: TSchema[K]['type'] extends SqlNumber ? number : never): Node {
+    div(value: TType['type'] extends SqlNumber ? number : never): Node {
         return fac.div(this.node, fac.val(value))
     }
 
