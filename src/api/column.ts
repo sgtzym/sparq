@@ -11,6 +11,10 @@ type ColDataType<T extends Schema[keyof Schema]> = T['type'] extends 'TEXT'
 
 type SqlNumber = 'INTEGER' | 'REAL'
 
+/**
+ * Represents a database column with type-safe operations.
+ * Provides methods for SQL comparisons, aggregates, and transformations.
+ */
 export class Column<TType extends Schema[keyof Schema] = any>
     implements NodeConvertible {
     private _node?: Node
@@ -30,12 +34,24 @@ export class Column<TType extends Schema[keyof Schema] = any>
         return (this._node ??= fac.id(this.name)) // lazy init
     }
 
+    // Set quantifiers
+
     distinct(): Node {
         return fac.distinct(this.node)
     }
 
     all(): Node {
         return fac.all(this.node)
+    }
+
+    // Sorting directions
+
+    asc(): Node {
+        return fac.asc(this.node)
+    }
+    
+    desc(): Node {
+        return fac.desc(this.node)
     }
 
     // Comparison operations

@@ -40,7 +40,7 @@ class SparqTable<T extends Schema> {
      * Creates a SELECT query for retreiving data
      * @param args Column expressions to select (defaults to * if empty)
      * @returns Chainable SELECT query builder
-     * 
+     *
      * @example
      * user.sel
      */
@@ -61,13 +61,13 @@ class SparqTable<T extends Schema> {
      * Creates an UPDATE query for modifying existing rows
      * @param args Column assignments to update
      * @returns Chainable UPDATE query builder
-     * 
+     *
      * @example
      * user.update(
      *     user.score.set(100)
      *     user.score.set(user.score.add(1))
      * )
-    */
+     */
     update(...args: Array<NodeArg>): Update {
         return new Update(this.table, args)
     }

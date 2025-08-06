@@ -7,6 +7,9 @@ import { type Node, type Param, renderAll } from '~/core/node.ts'
 // 🧬 Primitives
 // ---------------------------------------------
 
+/**
+ * Represents a raw SQL string.
+ */
 export class RawNode implements Node {
     constructor(private readonly sql: string) {}
 
@@ -19,6 +22,9 @@ export class RawNode implements Node {
     }
 }
 
+/**
+ * Represents a literal value with automatic parameterisation.
+ */
 export class LiteralNode implements Node {
     constructor(private readonly value: Param) {}
 
@@ -27,6 +33,9 @@ export class LiteralNode implements Node {
     }
 }
 
+/**
+ * Represents an identifier (table/column name) with automatic quoting.
+ */
 export class IdentifierNode implements Node {
     constructor(private readonly name: string) {}
 
@@ -44,7 +53,30 @@ export class IdentifierNode implements Node {
 // 🧬 Operators
 // ---------------------------------------------
 
-export class ComparisonNode implements Node {
+/**
+ * Represents a unary operation with configurable positioning (A x).
+ */
+export class UnaryNode implements Node {
+    constructor(
+        private readonly operator: Node,
+        private readonly expr?: Node,
+        private readonly position: 'pfx' | 'sfx' = 'sfx',
+    ) {}
+
+    render(params: Parameters): SqlString {
+        const op: string = this.operator.render(params)
+        const expr: string = this.expr?.render(params)
+
+        return this.expr
+            ? this.position === 'pfx' ? `${op} ${expr}` : `${expr} ${op}`
+            : op
+    }
+}
+
+/**
+ * Represents a binary operation (A x B).
+ */
+export class BinaryNode implements Node {
     constructor(
         private readonly left: Node,
         private readonly operator: Node,
@@ -52,15 +84,17 @@ export class ComparisonNode implements Node {
     ) {}
 
     render(params: Parameters): SqlString {
-        const parts: string[] = renderAll(
-            [this.left, this.operator, this.right],
-            params,
-        )
+        const left: string = this.left.render(params)
+        const op: string = this.operator.render(params)
+        const right: string = this.right.render(params)
 
-        return parts.join(' ')
+        return `${left} ${op} ${right}`
     }
 }
 
+/**
+ * Represents a conjunction operation (A and/or B).
+ */
 export class ConjunctionNode implements Node {
     constructor(
         private readonly operator: Node,
@@ -78,41 +112,13 @@ export class ConjunctionNode implements Node {
     }
 }
 
-export class ModifierNode implements Node {
-    constructor(
-        private readonly modifier: Node,
-        private readonly operand: Node,
-        private readonly position: 'prefix' | 'suffix',
-    ) {}
-
-    render(params: Parameters): SqlString {
-        const mod: string = this.modifier.render(params)
-        const op: string = this.operand.render(params)
-
-        return this.position === 'prefix' ? `${mod} ${op}` : `${op} ${mod}`
-    }
-}
-
-export class ArithmeticNode implements Node {
-    constructor(
-        private readonly left: Node,
-        private readonly operator: Node,
-        private readonly right: Node,
-    ) {}
-
-    render(params: Parameters): SqlString {
-        const left: string = this.left.render(params)
-        const op: string = this.operator.render(params)
-        const right: string = this.right.render(params)
-
-        return `${left} ${op} ${right}`
-    }
-}
-
 // ---------------------------------------------
 // 🧬 Values / Assignments
 // ---------------------------------------------
 
+/**
+ * Represents a column assignment for data modification.
+ */
 export class AssignmentNode implements Node {
     constructor(
         private readonly column: Node,
@@ -127,6 +133,9 @@ export class AssignmentNode implements Node {
     }
 }
 
+/**
+ * Represents a value list / single row for data creation.
+ */
 export class ValueListNode implements Node {
     constructor(private readonly values: ArrayLike<Node>) {}
 
@@ -138,55 +147,12 @@ export class ValueListNode implements Node {
 }
 
 // ---------------------------------------------
-// 🧬 Modifiers
-// ---------------------------------------------
-
-export class AliasNode implements Node {
-    constructor(
-        private readonly expr: Node,
-        private readonly alias: Node,
-    ) {}
-
-    render(params: Parameters): SqlString {
-        const expr: string = this.expr.render(params)
-        const alias: string = this.alias.render(params)
-
-        return `${expr} ${sql('AS')} ${alias}`
-    }
-}
-
-export class SetQuantifierNode implements Node {
-    constructor(
-        private readonly quantifier: Node,
-        private readonly expr?: Node,
-    ) {}
-
-    render(params: Parameters): SqlString {
-        const quantifier: string = this.quantifier.render(params)
-        const expr: string = this.expr?.render(params)
-
-        return this.expr ? `${quantifier} ${expr}` : quantifier
-    }
-}
-
-export class SortingDirectionNode implements Node {
-    constructor(
-        private readonly expr: Node,
-        private readonly dir: Node,
-    ) {}
-
-    render(params: Parameters): SqlString {
-        const expr: string = this.expr.render(params)
-        const dir: string = this.dir.render(params)
-
-        return `${expr} ${dir}`
-    }
-}
-
-// ---------------------------------------------
 // 🧬 Aggregate Functions
 // ---------------------------------------------
 
+/**
+ * Represents an aggregate function with optional expression.
+ */
 export class AggregateNode implements Node {
     constructor(
         private readonly fn: Node,
@@ -205,6 +171,9 @@ export class AggregateNode implements Node {
 // 🧬 Clauses
 // ---------------------------------------------
 
+/**
+ * Represents a FROM clause with table references.
+ */
 export class FromNode implements Node {
     readonly priority: number = 10
 
@@ -217,6 +186,9 @@ export class FromNode implements Node {
     }
 }
 
+/**
+ * Represents a JOIN clause with optional conditions.
+ */
 export class JoinNode implements Node {
     readonly priority: number = 20
 
@@ -237,6 +209,9 @@ export class JoinNode implements Node {
     }
 }
 
+/**
+ * Represents a WHERE clause for filtering rows.
+ */
 export class WhereNode implements Node {
     readonly priority: number = 30
 
@@ -251,6 +226,9 @@ export class WhereNode implements Node {
     }
 }
 
+/**
+ * Represents a GROUP BY clause for result aggregation.
+ */
 export class GroupByNode implements Node {
     readonly priority: number = 40
 
@@ -263,6 +241,9 @@ export class GroupByNode implements Node {
     }
 }
 
+/**
+ * Represents a HAVING clause for filtering grouped results.
+ */
 export class HavingNode implements Node {
     readonly priority: number = 50
 
@@ -277,6 +258,9 @@ export class HavingNode implements Node {
     }
 }
 
+/**
+ * Represents an ORDER BY clause for sorting results.
+ */
 export class OrderByNode implements Node {
     readonly priority: number = 60
 
@@ -289,6 +273,9 @@ export class OrderByNode implements Node {
     }
 }
 
+/**
+ * Represents a LIMIT clause for restricting result count.
+ */
 export class LimitNode implements Node {
     readonly priority: number = 70
 
@@ -301,6 +288,9 @@ export class LimitNode implements Node {
     }
 }
 
+/**
+ * Represents an OFFSET clause for result pagination.
+ */
 export class OffsetNode implements Node {
     readonly priority: number = 80
 
@@ -313,6 +303,9 @@ export class OffsetNode implements Node {
     }
 }
 
+/**
+ * Represents a RETURNING clause for getting affected row data.
+ */
 export class ReturningNode implements Node {
     readonly priority = 90
 
@@ -324,6 +317,9 @@ export class ReturningNode implements Node {
     }
 }
 
+/**
+ * Represents a VALUES clause for explicit row data.
+ */
 export class ValuesNode implements Node {
     constructor(private readonly rows: ArrayLike<Node>) {}
 
@@ -334,6 +330,9 @@ export class ValuesNode implements Node {
     }
 }
 
+/**
+ * Represents a SET clause for UPDATE operations.
+ */
 export class SetNode implements Node {
     readonly priority: number = 5
 
@@ -352,6 +351,9 @@ export class SetNode implements Node {
 // 🧬 Statements
 // ---------------------------------------------
 
+/**
+ * Represents a SELECT statement with optional column specification.
+ */
 export class SelectNode implements Node {
     readonly priority: number = 0
 
@@ -367,6 +369,9 @@ export class SelectNode implements Node {
     }
 }
 
+/**
+ * Represents an INSERT statement for adding new rows.
+ */
 export class InsertNode implements Node {
     readonly priority: number = 0
 
@@ -383,6 +388,9 @@ export class InsertNode implements Node {
     }
 }
 
+/**
+ * Represents an UPDATE statement for modifying existing rows.
+ */
 export class UpdateNode implements Node {
     readonly priority: number = 0
 
@@ -395,6 +403,9 @@ export class UpdateNode implements Node {
     }
 }
 
+/**
+ * Represents a DELETE statement for removing rows.
+ */
 export class DeleteNode implements Node {
     readonly priority: number = 0
 

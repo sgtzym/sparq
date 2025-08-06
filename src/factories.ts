@@ -27,7 +27,7 @@ export const raw = (sql: string): Node => {
 
 // Comparison operators (=, !=, ...)
 const comparison = (op: string) => (left: NodeArg, right: NodeArg): Node =>
-    new ast.ComparisonNode(toNode(left), raw(op), toNode(right))
+    new ast.BinaryNode(toNode(left), raw(op), toNode(right))
 
 export const eq = comparison('=')
 export const ne = comparison('!=')
@@ -39,7 +39,7 @@ export const like = comparison(sql('LIKE'))
 export const in_ = comparison(sql('IN'))
 
 export const between = (test: NodeArg, lower: NodeArg, upper: NodeArg): Node =>
-    new ast.ComparisonNode(
+    new ast.BinaryNode(
         toNode(test),
         raw(sql('BETWEEN')),
         new ast.ConjunctionNode(raw(sql('AND')), [
@@ -58,20 +58,20 @@ export const or = conjunction(sql('OR'), true)
 
 // Modifier operators (NOT, EXISTS, ...)
 const modifier =
-    (op: string, position: 'prefix' | 'suffix') => (operand: NodeArg): Node =>
-        new ast.ModifierNode(raw(op), toNode(operand), position)
+    (op: string, position: 'pfx' | 'sfx') => (operand: NodeArg): Node =>
+        new ast.UnaryNode(raw(op), toNode(operand), position)
 
-export const not = modifier(sql('NOT'), 'prefix')
-export const exists = modifier(sql('EXISTS'), 'prefix')
-export const isNull = modifier(`${sql('IS')} ${sql('NULL')}`, 'suffix')
+export const not = modifier(sql('NOT'), 'pfx')
+export const exists = modifier(sql('EXISTS'), 'pfx')
+export const isNull = modifier(`${sql('IS')} ${sql('NULL')}`, 'sfx')
 export const isNotNull = modifier(
     `${sql('IS')} ${sql('NOT')} ${sql('NULL')}`,
-    'suffix',
+    'sfx',
 )
 
 // Arithmetic operators
 const arithmetic = (op: string) => (left: NodeArg, right: NodeArg): Node =>
-    new ast.ArithmeticNode(toNode(left), raw(op), toNode(right))
+    new ast.BinaryNode(toNode(left), raw(op), toNode(right))
 
 export const add = arithmetic('+')
 export const sub = arithmetic('-')
@@ -97,17 +97,14 @@ export const valueList = (...values: NodeArg[]): Node => {
 
 // Set quantifiers
 const quantifier = (q: string) => (expr?: NodeArg): Node =>
-    new ast.SetQuantifierNode(raw(q), expr ? toNode(expr) : undefined)
+    new ast.UnaryNode(raw(q), toNode(expr), 'pfx')
 
 export const distinct = quantifier(sql('DISTINCT'))
 export const all = quantifier(sql('ALL'))
 
 // Sorting directions
 const sortDir = (dir: string) => (expr: NodeArg): Node => {
-    if (!expr) {
-        throw new Error('Sorting direction requires an expr')
-    }
-    return new ast.SortingDirectionNode(toNode(expr), raw(dir))
+    return new ast.UnaryNode(raw(dir), toNode(expr))
 }
 
 export const asc = sortDir(sql('ASC'))
@@ -115,10 +112,7 @@ export const desc = sortDir(sql('DESC'))
 
 // Alias
 export const alias = (expr: NodeArg, as: NodeArg): Node => {
-    if (!expr || !as) {
-        throw new Error('Alias requires both expr and name')
-    }
-    return new ast.AliasNode(toNode(expr), toNode(as))
+    return new ast.BinaryNode(toNode(expr), raw(sql('AS')), toNode(as))
 }
 
 // ---------------------------------------------
