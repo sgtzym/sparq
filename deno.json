@@ -14,7 +14,6 @@
         "lineWidth": 80
     },
     "compilerOptions": {
-        "strict": false,
         "exactOptionalPropertyTypes": false
     }
 }

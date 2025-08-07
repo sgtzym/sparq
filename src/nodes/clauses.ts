@@ -8,7 +8,6 @@ import {
     toNode,
 } from '~/core/node.ts'
 import { id, raw } from '~/nodes/primitives.ts'
-import { ValueListNode } from './values.ts'
 
 // ---------------------------------------------
 // Clauses
@@ -46,7 +45,7 @@ export class JoinNode implements Node {
     render(params: ParameterReg): SqlString {
         const type: string = this.joinType.render(params)
         const table: string = this.table.render(params)
-        const condition: string = this.condition?.render(params)
+        const condition: string | undefined = this.condition?.render(params)
 
         return condition
             ? `${type} ${sql('JOIN')} ${table} ${sql('ON')} ${condition}`

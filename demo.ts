@@ -1,37 +1,27 @@
-import { sparq } from '~/api/sparq.ts'
+import { sparq } from '@sgtzym/sparq'
 
 const user = sparq('user', {
     id: { type: 'INTEGER', primaryKey: true },
     name: { type: 'TEXT' },
-    email: { type: 'TEXT' },
+    email: { type: 'TEXT', unique: true },
     age: { type: 'INTEGER' },
-    score: { type: 'REAL' }
+    score: { type: 'REAL' },
 })
 
-const { $ } = user // funny shorthand
+// 2. Query data
 
-const query = user
-    .update(
-        $.email.set('new@test.com'),
-        $.age.set(21),
-        $.score.set($.score.add(9999)),
-    )
-    .where(
-        $.score.lt(1000)
-    )
-    .limit(10)
+const { $ } = user
 
-console.log(query.sql, query.params)
+const query = user.select(
+    // ...$.all(),
+    // ...$.except($.id),
+    // ...$.pk()
+).where(
+    $.age.ge(18),
+    $.email.like('%@example.com'),
+).orderBy(
+    $.score.desc(),
+).limit(10)
 
-// TODO: Bsp. nachbauen von SQLite Tutorial
-// TODO: Liste machen mit Features und Zielen
-// TODO: Docs (nicht übertreiben!)
-
-const q2 = user.insert(
-    user.id
-)
-.values(123, 'asdasdas', 'asd')
-.values(456)
-.values(789)
-
-console.log(q2.sql, q2.params)
+console.log(query.sql) // Generated SQL
+console.log(query.params) // Parameterized values

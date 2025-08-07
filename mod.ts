@@ -1,1 +1,1 @@
-export * from '~/api/sparq.ts'
+export { sparq } from '~/api/sparq.ts'

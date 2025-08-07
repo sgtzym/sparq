@@ -1,39 +1,100 @@
-# SPARQ ✨
+# SPARQ
 
-A declarative, AST-based and type-safe SQLite query builder for [Deno](https://deno.com/) 🦕
+## Quick start
 
 ```ts
+import { sparq } from '@sgtzym/sparq'
 
-// Abstrakte Idee (outside the box): columns immer per $`column` aufrufen und methoden dran chainen? geht das? mit autocompletion? als kompletter ersatz für json.
+// 1. Define table data
 
-sparq.user
-  .select(
-    $`id`.all(),
-    $`email`,
-    $`name`.distinct(),
-    count($`name`).as('name_count')
-    $`groupId`.as('group')
-  )
-  .where(
-    $`id`.eq('123')
-    or(
-      $`b`.lt(100)
-      $`c`.between(0, 99)
-    )
-  )
-  .limit(10)
-  .offset(10)
+const user = sparq('user', {
+  id: { type: 'INTEGER', primaryKey: true },
+  name: { type: 'TEXT' },
+  email: { type: 'TEXT', unique: true },
+  age: { type: 'INTEGER' },
+  score: { type: 'REAL' },
+})
 
-sparq.user
-  .update(
-    $`a`.set('123'),
-    $`b`.set(false),
-    $`c`.set(null)
-  )
+// 2. Query table data
 
-sparq.user
-  .insert(
-    $`a`.default()
-    $`b`.set('')
-  )
+const { $ } = user
+
+const query = user.select(
+  $.id,
+  $.name,
+  $.score.as('points'),
+).where(
+  $.age.ge(18),
+  $.email.like('%@example.com'),
+).orderBy(
+  $.score.desc(),
+).limit(10)
+
+console.log(query.sql) // Generated SQL
+console.log(query.params) // Parameterized values
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+A declarative and type-safe SQLite query builder for Deno with zero dependencies. Sparq makes use of the abstract-syntax-tree concept (AST) to generate a node-tree based on query input, then translates it to parameterized SQL syntax.
+
+User input ➡️ AST ➡️ SQL syntax
+
+Sparq also provides an easy to use API, that allows most operations directly columns:
+
+```ts
+album.album_id.as('album') // album_id AS album
+track.score.gt(1000) // score > 1000
+```
+
+Or if you prefer ist the classical way:
+
+```ts
+as(album.album_id, 'album')
+gt(track.score, 1000)
+```
+
+Less readable but capable of more complex stuff.
+
+> [!WARNING]
+> This is a personal project for educational purposes - use at own risk!
+
+## Features
+
+## Roadmap
+- [x] Core AST rendering
+- [x] Primitives, 
+- [x] Basic clauses and statements
+- [x] Table schema definition and schema aware column API
+- [ ] UPSERT - added in `v.1.1.0`
+- [ ] Subqueries
+- [ ] String operations
+- [ ] Tests / CI 

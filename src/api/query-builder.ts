@@ -33,6 +33,7 @@ abstract class SqlStatementBuilder {
 
     constructor() {
         this._clauses = []
+        this._sql = ''
         this._params = new ParameterReg()
     }
 

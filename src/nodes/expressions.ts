@@ -27,7 +27,7 @@ export class UnaryNode implements Node {
 
     render(params: ParameterReg): SqlString {
         const op: string = this.operator.render(params)
-        const expr: string = this.expr?.render(params)
+        const expr: string | undefined = this.expr?.render(params)
 
         return this.expr
             ? this.position === 'pfx' ? `${op} ${expr}` : `${expr} ${op}`
