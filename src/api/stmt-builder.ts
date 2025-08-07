@@ -16,7 +16,12 @@ import {
     joinLeftOuter,
     limit,
     offset,
-    onAbort,
+    onConflictAbort,
+    onConflictFail,
+    onConflictIgnore,
+    onConflictNothing,
+    onConflictReplace,
+    onConflictRollback,
     orderBy,
     returning,
     set,
@@ -27,45 +32,9 @@ import { delete_, insert, select, update } from '~/nodes/statements.ts'
 import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import { Column } from '~/api/column.ts'
 
-interface Filtering {
-    where(...conditions: NodeArg[]): this
-    orderBy(...columns: NodeArg[]): this
-    limit(count: NodeArg): this
-    offset(count: NodeArg): this
-}
-
-interface Joins {
-    joinInner(table: NodeArg, condition?: NodeArg): this
-    joinLeft(table: NodeArg, condition?: NodeArg): this
-    joinLeftOuter(table: NodeArg, condition?: NodeArg): this
-    joinCross(table: NodeArg): this
-}
-
-interface ConflictResolving {
-    onAbort(...target: NodeArg[]): this
-    onFail(...target: NodeArg[]): this
-    onIgnore(...target: NodeArg[]): this
-    onReplace(...target: NodeArg[]): this
-    onRollback(...target: NodeArg[]): this
-}
-
-interface SelectStatement extends Filtering, Joins {
-    groupBy(...columns: NodeArg[]): this
-    having(...conditions: NodeArg[]): this
-}
-
-interface InsertStatement extends ConflictResolving {
-    values(...args: NodeArg[]): this
-    returning(...columns: NodeArg[]): this
-}
-
-interface UpdateStatement extends Filtering, ConflictResolving {
-    returning(...columns: NodeArg[]): this
-}
-
-interface DeleteStatement extends Filtering {
-    returning(...columns: NodeArg[]): this
-}
+// ---------------------------------------------
+// Base statement builder
+// ---------------------------------------------
 
 abstract class SqlStatementBuilder {
     protected _clauses: Node[]
@@ -99,7 +68,83 @@ abstract class SqlStatementBuilder {
     }
 }
 
-export class Select extends SqlStatementBuilder implements SelectStatement {
+// ---------------------------------------------
+// Capability mixins
+// ---------------------------------------------
+
+interface Where {
+    where(...conditions: NodeArg[]): this
+}
+
+interface OrderBy {
+    orderBy(...columns: NodeArg[]): this
+}
+
+interface Limit {
+    limit(count: NodeArg): this & Offset
+}
+
+interface Offset {
+    offset(count: NodeArg): this
+}
+
+interface Join<T> {
+    inner(table: NodeArg, condition?: NodeArg): T
+    left(table: NodeArg, condition?: NodeArg): T
+    leftOuter(table: NodeArg, condition?: NodeArg): T
+    cross(table: NodeArg): T
+}
+
+interface GroupBy {
+    groupBy(...columns: NodeArg[]): this & Having
+}
+
+interface Having {
+    having(...conditions: NodeArg[]): this
+}
+
+interface Returning {
+    returning(...columns: NodeArg[]): this
+}
+
+interface OnConflict<T> {
+    abort(...target: NodeArg[]): T
+    fail(...target: NodeArg[]): T
+    ignore(...target: NodeArg[]): T
+    replace(...target: NodeArg[]): T
+    rollback(...target: NodeArg[]): T
+    nothing(...target: NodeArg[]): T
+    // update(
+    //     assignments: NodeArg[],
+    //     target?: NodeArg[],
+    //     condition?: NodeArg,
+    // ): T
+}
+
+// ---------------------------------------------
+// Statement capabilities
+// ---------------------------------------------
+
+interface SelectCapabilities extends Where, GroupBy, OrderBy, Limit {
+    join: Join<Select>
+}
+
+interface InsertCapabilities extends Returning {
+    values(...args: NodeArg[]): this
+    conflict: OnConflict<Insert>
+}
+
+interface UpdateCapabilities extends Where, OrderBy, Limit, Returning {
+    conflict: OnConflict<Update>
+}
+
+interface DeleteCapabilities extends Where, OrderBy, Limit, Returning {}
+
+// ---------------------------------------------
+// Statement builders
+// ---------------------------------------------
+
+export class Select extends SqlStatementBuilder implements SelectCapabilities {
     constructor(
         private readonly table: string,
         private readonly columns?: NodeArg[],
@@ -109,21 +154,27 @@ export class Select extends SqlStatementBuilder implements SelectStatement {
         this.addClause(from(this.table))
     }
 
-    joinInner(table: NodeArg, condition?: NodeArg): this {
-        return this.addClause(joinInner(table, condition))
-    }
-    joinLeft(table: NodeArg, condition?: NodeArg): this {
-        return this.addClause(joinLeft(table, condition))
-    }
-    joinLeftOuter(table: NodeArg, condition?: NodeArg): this {
-        return this.addClause(joinLeftOuter(table, condition))
-    }
-    joinCross(table: NodeArg): this {
-        return this.addClause(joinCross(table))
-    }
-
     where(...conditions: NodeArg[]): this {
         return this.addClause(where(...conditions))
+    }
+
+    get join(): Join<Select> {
+        return {
+            inner: (table: NodeArg, condition?: NodeArg): this =>
+                this.addClause(joinInner(table, condition)),
+            left: (table: NodeArg, condition?: NodeArg): this =>
+                this.addClause(joinLeft(table, condition)),
+            leftOuter: (table: NodeArg, condition?: NodeArg): this =>
+                this.addClause(joinLeftOuter(table, condition)),
+            cross: (table: NodeArg): this => this.addClause(joinCross(table)),
+        }
+    }
+
+    groupBy(...columns: NodeArg[]): this {
+        return this.addClause(groupBy(...columns))
+    }
+    having(...conditions: NodeArg[]): this {
+        return this.addClause(having(...conditions))
     }
     orderBy(...columns: NodeArg[]): this {
         return this.addClause(orderBy(...columns))
@@ -134,16 +185,9 @@ export class Select extends SqlStatementBuilder implements SelectStatement {
     offset(count: NodeArg): this {
         return this.addClause(offset(count))
     }
-
-    groupBy(...columns: NodeArg[]): this {
-        return this.addClause(groupBy(...columns))
-    }
-    having(...conditions: NodeArg[]): this {
-        return this.addClause(having(...conditions))
-    }
 }
 
-export class Insert extends SqlStatementBuilder implements InsertStatement {
+export class Insert extends SqlStatementBuilder implements InsertCapabilities {
     private readonly cols: Node[] = []
     private readonly _values = values()
 
@@ -161,6 +205,23 @@ export class Insert extends SqlStatementBuilder implements InsertStatement {
         this.addClause(this._values)
     }
 
+    get conflict(): OnConflict<Insert> {
+        return {
+            abort: (...target: NodeArg[]) =>
+                this.addClause(onConflictAbort(...target)),
+            fail: (...target: NodeArg[]) =>
+                this.addClause(onConflictFail(...target)),
+            ignore: (...target: NodeArg[]) =>
+                this.addClause(onConflictIgnore(...target)),
+            replace: (...target: NodeArg[]) =>
+                this.addClause(onConflictReplace(...target)),
+            rollback: (...target: NodeArg[]) =>
+                this.addClause(onConflictRollback(...target)),
+            nothing: (...target: NodeArg[]) =>
+                this.addClause(onConflictNothing(...target)),
+        }
+    }
+
     values(...args: NodeArg[]): this {
         if (args.length !== this.cols.length) {
             throw new Error(
@@ -173,28 +234,12 @@ export class Insert extends SqlStatementBuilder implements InsertStatement {
         return this
     }
 
-    onAbort(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onFail(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onIgnore(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onReplace(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onRollback(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-
     returning(...columns: NodeArg[]): this {
         return this.addClause(returning(...columns))
     }
 }
 
-export class Update extends SqlStatementBuilder implements UpdateStatement {
+export class Update extends SqlStatementBuilder implements UpdateCapabilities {
     private readonly assignments: Node[] = []
 
     constructor(
@@ -227,20 +272,21 @@ export class Update extends SqlStatementBuilder implements UpdateStatement {
         return this.addClause(offset(count))
     }
 
-    onAbort(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onFail(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onIgnore(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onReplace(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
-    }
-    onRollback(...target: NodeArg[]): this {
-        return this.addClause(onAbort(...target))
+    get conflict(): OnConflict<Update> {
+        return {
+            abort: (...target: NodeArg[]) =>
+                this.addClause(onConflictAbort(...target)),
+            fail: (...target: NodeArg[]) =>
+                this.addClause(onConflictFail(...target)),
+            ignore: (...target: NodeArg[]) =>
+                this.addClause(onConflictIgnore(...target)),
+            replace: (...target: NodeArg[]) =>
+                this.addClause(onConflictReplace(...target)),
+            rollback: (...target: NodeArg[]) =>
+                this.addClause(onConflictRollback(...target)),
+            nothing: (...target: NodeArg[]) =>
+                this.addClause(onConflictNothing(...target)),
+        }
     }
 
     returning(...columns: NodeArg[]): this {
@@ -248,7 +294,7 @@ export class Update extends SqlStatementBuilder implements UpdateStatement {
     }
 }
 
-export class Delete extends SqlStatementBuilder implements DeleteStatement {
+export class Delete extends SqlStatementBuilder implements DeleteCapabilities {
     constructor(private readonly table: string) {
         super()
         this.addClause(delete_())

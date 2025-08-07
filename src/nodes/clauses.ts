@@ -201,8 +201,6 @@ export class SetNode implements Node {
  * Represents a ON CONFLICT clause for INSERT / UPDATE statements.
  */
 export class OnConflictNode implements Node {
-    priority: number = 99
-
     constructor(
         private readonly action: Node,
         private readonly target?: ArrayLike<Node>,
@@ -215,8 +213,20 @@ export class OnConflictNode implements Node {
             : undefined
 
         return target
-            ? sql(`ON CONFLICT(${target}) DO ${action}`)
-            : sql(`ON CONFLICT DO ${action}`)
+            ? sql(`ON CONFLICT(${target})`, `DO ${action}`)
+            : sql(`ON CONFLICT`, `DO ${action}`)
+    }
+}
+
+export class ConflictResolutionNode implements Node {
+    constructor(
+        private readonly action: Node,
+    ) {}
+
+    render(params: ParameterReg): SqlString {
+        const action: string = this.action.render(params)
+
+        return sql('OR', action)
     }
 }
 
@@ -371,32 +381,46 @@ const conflict = (action: NodeArg) => (...target: NodeArg[]) =>
  * @param target - The conflict target (columns)
  * @returns A OnConflict node
  */
-export const onAbort = conflict(sql('ABORT'))
+export const onConflictAbort = conflict(sql('ABORT'))
 
 /**
  * Creates a ON CONFLICT (FAIL) clause for INSERT/UPDATE statements.
  * @param target - The conflict target (columns)
  * @returns A OnConflict node
  */
-export const onFail = conflict(sql('FAIL'))
+export const onConflictFail = conflict(sql('FAIL'))
 
 /**
  * Creates a ON CONFLICT (IGNORE) clause for INSERT/UPDATE statements.
  * @param target - The conflict target (columns)
  * @returns A OnConflict node
  */
-export const onIgnore = conflict(sql('IGNORE'))
+export const onConflictIgnore = conflict(sql('IGNORE'))
 
 /**
  * Creates a ON CONFLICT (RECPLACE) clause for INSERT/UPDATE statements.
  * @param target - The conflict target (columns)
  * @returns A OnConflict node
  */
-export const onReplace = conflict(sql('REPLACE'))
+export const onConflictReplace = conflict(sql('REPLACE'))
 
 /**
  * Creates a ON CONFLICT (ROLLBACK) clause for INSERT/UPDATE statements.
  * @param target - The conflict target (columns)
  * @returns A OnConflict node
  */
-export const onRollback = conflict(sql('ROLLBACK'))
+export const onConflictRollback = conflict(sql('ROLLBACK'))
+
+/**
+ * Creates a ON CONFLICT (NOTHING) clause for INSERT/UPDATE statements.
+ * @param target - The conflict target (columns)
+ * @returns A OnConflict node
+ */
+export const onConflictNothing = conflict(sql('NOTHING'))
+
+/**
+ * Creates a ON CONFLICT (UPSERT) clause for INSERT/UPDATE statements.
+ * @param target - The conflict target (columns)
+ * @returns A OnConflict node
+ */
+export const onConflictUpdate = conflict(sql('ROLLBACK'))
