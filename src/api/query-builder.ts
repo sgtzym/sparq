@@ -1,8 +1,29 @@
 import type { SqlParam, SqlString } from '~/core/sql.ts'
-import { Parameters } from '~/core/parameter-registry.ts'
-import { type Node, type NodeArg, renderAST, toNode } from '~/core/node.ts'
-import * as fac from '~/factories.ts'
-import { AssignmentNode } from '~/ast-nodes.ts'
+import {
+    type Node,
+    type NodeArg,
+    ParameterReg,
+    renderAST,
+    toNode,
+} from '~/core/node.ts'
+import {
+    from,
+    groupBy,
+    having,
+    joinCross,
+    joinInner,
+    joinLeft,
+    joinLeftOuter,
+    limit,
+    offset,
+    orderBy,
+    returning,
+    set,
+    values,
+    where,
+} from '~/nodes/clauses.ts'
+import { delete_, insert, select, update } from '~/nodes/statements.ts'
+import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import { Column } from '~/api/column.ts'
 
 interface SqlStatement {
@@ -19,35 +40,35 @@ abstract class SqlStatementBuilder implements SqlStatement {
     }
 
     where(...conditions: NodeArg[]): this {
-        return this.addClause(fac.where(...conditions))
+        return this.addClause(where(...conditions))
     }
 
     groupBy(...columns: NodeArg[]): this {
-        return this.addClause(fac.groupBy(...columns))
+        return this.addClause(groupBy(...columns))
     }
 
     having(...conditions: NodeArg[]): this {
-        return this.addClause(fac.having(...conditions))
+        return this.addClause(having(...conditions))
     }
 
     orderBy(...columns: NodeArg[]): this {
-        return this.addClause(fac.orderBy(...columns))
+        return this.addClause(orderBy(...columns))
     }
 
     limit(count: NodeArg = 1): this {
-        return this.addClause(fac.limit(count))
+        return this.addClause(limit(count))
     }
 
     offset(count: NodeArg = 1): this {
-        return this.addClause(fac.offset(count))
+        return this.addClause(offset(count))
     }
 
     returning(...columns: NodeArg[]): this {
-        return this.addClause(fac.returning(...columns))
+        return this.addClause(returning(...columns))
     }
 
     toSql(): [SqlString, readonly SqlParam[]] {
-        const params = new Parameters()
+        const params = new ParameterReg()
         const sql = renderAST(this.clauses, params)
         return [sql, params.toArray()]
     }
@@ -59,24 +80,24 @@ export class Select extends SqlStatementBuilder {
         private readonly columns?: NodeArg[],
     ) {
         super()
-        this.addClause(fac.select(this.columns))
-        this.addClause(fac.from(this.table))
+        this.addClause(select(this.columns))
+        this.addClause(from(this.table))
     }
 
     joinInner(table: NodeArg, condition?: NodeArg): this {
-        return this.addClause(fac.joinInner(table, condition))
+        return this.addClause(joinInner(table, condition))
     }
 
     joinLeft(table: NodeArg, condition?: NodeArg): this {
-        return this.addClause(fac.joinLeft(table, condition))
+        return this.addClause(joinLeft(table, condition))
     }
 
     joinLeftOuter(table: NodeArg, condition?: NodeArg): this {
-        return this.addClause(fac.joinLeftOuter(table, condition))
+        return this.addClause(joinLeftOuter(table, condition))
     }
 
     joinCross(table: NodeArg): this {
-        return this.addClause(fac.joinCross(table))
+        return this.addClause(joinCross(table))
     }
 }
 
@@ -94,11 +115,11 @@ export class Insert extends SqlStatementBuilder {
             this.cols.push(col instanceof Column ? col.node : toNode(col))
         }
 
-        this.addClause(fac.insert(this.table, this.cols))
+        this.addClause(insert(this.table, this.cols))
     }
 
     values(...values: NodeArg[]): this {
-        this.rows.push(fac.valueList(...values))
+        this.rows.push(valueList(...values))
         return this
     }
 
@@ -106,7 +127,7 @@ export class Insert extends SqlStatementBuilder {
 
     override toSql(): [SqlString, readonly SqlParam[]] {
         if (this.rows.length > 0) {
-            this.addClause(fac.values(...this.rows))
+            this.addClause(values(...this.rows))
         }
 
         return super.toSql()
@@ -124,7 +145,7 @@ export class Update extends SqlStatementBuilder {
     ) {
         super()
 
-        this.addClause(fac.update(this.table))
+        this.addClause(update(this.table))
 
         for (const assign of assignments) {
             if (assign instanceof AssignmentNode) {
@@ -132,7 +153,7 @@ export class Update extends SqlStatementBuilder {
             }
         }
 
-        this.addClause(fac.set(...this.assignments))
+        this.addClause(set(...this.assignments))
     }
 }
 
@@ -141,8 +162,8 @@ export class Delete extends SqlStatementBuilder {
 
     constructor(private readonly table: string) {
         super()
-        this.addClause(fac.delete_())
-        this.addClause(fac.from(this.table))
+        this.addClause(delete_())
+        this.addClause(from(this.table))
     }
 
     override groupBy(): never {

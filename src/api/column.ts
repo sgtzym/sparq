@@ -1,6 +1,30 @@
 import type { Node, NodeArg, NodeConvertible } from '~/core/node.ts'
 import type { Schema } from '~/core/schema-registry.ts'
-import * as fac from '~/factories.ts'
+import { id, val } from '~/nodes/primitives.ts'
+import {
+    add,
+    alias,
+    all,
+    asc,
+    between,
+    desc,
+    distinct,
+    div,
+    eq,
+    ge,
+    gt,
+    in_,
+    isNotNull,
+    isNull,
+    le,
+    like,
+    lt,
+    mul,
+    ne,
+    sub,
+} from '~/nodes/expressions.ts'
+import { avg, count, max, min, sum } from '~/nodes/aggregates.ts'
+import { assign, valueList } from '~/nodes/values.ts'
 
 type ColDataType<T extends Schema[keyof Schema]> = T['type'] extends 'TEXT'
     ? string
@@ -23,7 +47,7 @@ export class Column<TType extends Schema[keyof Schema] = any>
         private readonly _name: string,
         private readonly _type: TType['type'],
     ) {
-        this._node = fac.id(_name)
+        this._node = id(_name)
     }
 
     get name(): string {
@@ -31,27 +55,27 @@ export class Column<TType extends Schema[keyof Schema] = any>
     }
 
     get node(): Node {
-        return (this._node ??= fac.id(this.name)) // lazy init
+        return (this._node ??= id(this.name)) // lazy init
     }
 
     // Set quantifiers
 
     distinct(): Node {
-        return fac.distinct(this.node)
+        return distinct(this.node)
     }
 
     all(): Node {
-        return fac.all(this.node)
+        return all(this.node)
     }
 
     // Sorting directions
 
     asc(): Node {
-        return fac.asc(this.node)
+        return asc(this.node)
     }
 
     desc(): Node {
-        return fac.desc(this.node)
+        return desc(this.node)
     }
 
     // Comparison operations
@@ -63,103 +87,103 @@ export class Column<TType extends Schema[keyof Schema] = any>
     }
 
     eq(value: ColDataType<TType>): Node {
-        return this.#comparison(fac.eq, value)
+        return this.#comparison(eq, value)
     }
 
     ne(value: ColDataType<TType>): Node {
-        return this.#comparison(fac.ne, value)
+        return this.#comparison(ne, value)
     }
 
     gt(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(fac.gt, value)
+        return this.#comparison(gt, value)
     }
 
     lt(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(fac.lt, value)
+        return this.#comparison(lt, value)
     }
 
     ge(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(fac.ge, value)
+        return this.#comparison(ge, value)
     }
 
     le(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(fac.le, value)
+        return this.#comparison(le, value)
     }
 
     between(
         min: TType['type'] extends SqlNumber ? number : never,
         max: TType['type'] extends SqlNumber ? number : never,
     ): Node {
-        return fac.between(this.node, min, max)
+        return between(this.node, min, max)
     }
 
     like(pattern: TType['type'] extends 'TEXT' ? string : never): Node {
-        return this.#comparison(fac.like, pattern)
+        return this.#comparison(like, pattern)
     }
 
     in(values: ColDataType<TType>[]): Node {
-        return this.#comparison(fac.in_, fac.valueList(...values))
+        return this.#comparison(in_, valueList(...values))
     }
 
     isNull(): Node {
-        return fac.isNull(this.node)
+        return isNull(this.node)
     }
 
     isNotNull(): Node {
-        return fac.isNotNull(this.node)
+        return isNotNull(this.node)
     }
 
     // Arithmetic operations
     add(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return fac.add(this.node, fac.val(value))
+        return add(this.node, val(value))
     }
 
     sub(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return fac.sub(this.node, fac.val(value))
+        return sub(this.node, val(value))
     }
 
     mul(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return fac.mul(this.node, fac.val(value))
+        return mul(this.node, val(value))
     }
 
     div(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return fac.div(this.node, fac.val(value))
+        return div(this.node, val(value))
     }
 
     // TODO(#sgtzym): String operations like UPPER, LOWER, LENGTH
 
     // Aggregate functions
-    #aggregate(fn: (node: NodeArg) => Node, distinct?: boolean): Node {
+    #aggregate(fn: (node: NodeArg) => Node, distinct_?: boolean): Node {
         const agg: Node = fn(this.node)
-        return distinct ? fac.distinct(agg) : agg
+        return distinct_ ? distinct(agg) : agg
     }
 
     avg(distinct?: boolean): Node {
-        return this.#aggregate(fac.avg, distinct)
+        return this.#aggregate(avg, distinct)
     }
 
     count(distinct?: boolean): Node {
-        return this.#aggregate(fac.count, distinct)
+        return this.#aggregate(count, distinct)
     }
 
     max(distinct?: boolean): Node {
-        return this.#aggregate(fac.max, distinct)
+        return this.#aggregate(max, distinct)
     }
 
     min(distinct?: boolean): Node {
-        return this.#aggregate(fac.min, distinct)
+        return this.#aggregate(min, distinct)
     }
 
     sum(distinct?: boolean): Node {
-        return this.#aggregate(fac.sum, distinct)
+        return this.#aggregate(sum, distinct)
     }
 
     // Misc.
     as(name: string): Node {
-        return fac.alias(this.node, fac.id(name))
+        return alias(this.node, id(name))
     }
 
     set(value: NodeArg): Node {
-        return fac.assign(this.node, value)
+        return assign(this.node, value)
     }
 }
