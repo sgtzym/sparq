@@ -30,7 +30,7 @@ console.log(query.sql, query.params)
 const q2 = user.insert(
     user.id
 )
-.values(123)
+.values(123, 'asdasdas', 'asd')
 .values(456)
 .values(789)
 

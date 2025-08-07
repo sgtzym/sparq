@@ -168,9 +168,8 @@ export class ReturningNode implements Node {
 export class ValuesNode implements Node {
     private rows: Node[] = []
 
-    addRow(valueList: ValueListNode, params: ParameterReg): void {
+    addRow(valueList: Node): void {
         this.rows.push(valueList)
-        this.render(params)
     }
 
     render(params: ParameterReg): SqlString {

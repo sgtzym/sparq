@@ -20,7 +20,6 @@ import {
     returning,
     set,
     values,
-    ValuesNode,
     where,
 } from '~/nodes/clauses.ts'
 import { delete_, insert, select, update } from '~/nodes/statements.ts'
@@ -28,24 +27,32 @@ import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import { Column } from '~/api/column.ts'
 
 abstract class SqlStatementBuilder {
-    protected _sql: SqlString[]
+    protected _clauses: Node[]
+    protected _sql: SqlString
     protected _params: ParameterReg
 
     constructor() {
-        this._sql = []
+        this._clauses = []
         this._params = new ParameterReg()
     }
 
+    protected render() {
+        this._sql = renderAST(this._clauses, this._params)
+    }
+
     get sql(): SqlString {
-        return this._sql.join('\n')
+        this.render()
+        return this._sql
     }
 
     get params(): readonly SqlParam[] {
+        this.render()
         return this._params.toArray()
     }
 
     protected addClause(clause: Node): this {
-        this._sql.push(renderAST(clause, this._params))
+        this._clauses.push(clause)
+        this.render()
         return this
     }
 
@@ -107,7 +114,7 @@ export class Select extends SqlStatementBuilder {
 
 export class Insert extends SqlStatementBuilder {
     private readonly cols: Node[] = []
-    private readonly _values: ValuesNode = new ValuesNode()
+    private readonly _values = values()
 
     constructor(
         private readonly table: string,
@@ -120,11 +127,11 @@ export class Insert extends SqlStatementBuilder {
         }
 
         this.addClause(insert(this.table, this.cols))
-        this.addClause(values())
+        this.addClause(this._values)
     }
 
     values(...args: NodeArg[]): this {
-        this._values.addRow(valueList(...args), this._params)
+        this._values.addRow(valueList(...args))
         return this
     }
 
