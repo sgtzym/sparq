@@ -49,7 +49,7 @@ export class Column<TType extends Schema[keyof Schema] = any>
     asc(): Node {
         return fac.asc(this.node)
     }
-    
+
     desc(): Node {
         return fac.desc(this.node)
     }
