@@ -25,3 +25,7 @@ const query = user.select(
 
 console.log(query.sql) // Generated SQL
 console.log(query.params) // Parameterized values
+
+const query2 = user.select()
+
+console.log(query2.sql)

@@ -163,4 +163,5 @@ export const SQL_KEYWORDS = {
     SUM: Symbol('SUM'),
 } as const
 
-export type SqlKeyword = keyof typeof SQL_KEYWORDS
+// (string & {}) prevents from collapsing into plain string (for auto-completion)
+export type SqlSnippet = keyof typeof SQL_KEYWORDS | (string & {})

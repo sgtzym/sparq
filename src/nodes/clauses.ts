@@ -26,7 +26,7 @@ export class FromNode implements Node {
     render(params: ParameterReg): SqlString {
         const tables: string = renderAll(this.tables, params).join(', ')
 
-        return `${sql('FROM')} ${tables}`
+        return sql('FROM', tables)
     }
 }
 
@@ -48,8 +48,8 @@ export class JoinNode implements Node {
         const condition: string | undefined = this.condition?.render(params)
 
         return condition
-            ? `${type} ${sql('JOIN')} ${table} ${sql('ON')} ${condition}`
-            : `${type} ${sql('JOIN')} ${table}`
+            ? sql(type, 'JOIN', table, 'ON', condition)
+            : sql(type, 'JOIN', table)
     }
 }
 
@@ -66,7 +66,7 @@ export class WhereNode implements Node {
             ` ${sql('AND')} `,
         )
 
-        return `${sql('WHERE')} ${conditions}`
+        return sql('WHERE', conditions)
     }
 }
 
@@ -81,7 +81,7 @@ export class GroupByNode implements Node {
     render(params: ParameterReg): SqlString {
         const expr: string = renderAll(this.expr, params).join(', ')
 
-        return `${sql('GROUP')} ${sql('BY')} ${expr}`
+        return sql('GROUP BY', expr)
     }
 }
 
@@ -98,7 +98,7 @@ export class HavingNode implements Node {
             ` ${sql('AND')} `,
         )
 
-        return `${sql('HAVING')} ${conditions}`
+        return sql('HAVING', conditions)
     }
 }
 
@@ -113,7 +113,7 @@ export class OrderByNode implements Node {
     render(params: ParameterReg): SqlString {
         const expr: string = renderAll(this.expr, params).join(', ')
 
-        return `${sql('ORDER')} ${sql('BY')} ${expr}`
+        return sql('ORDER BY', expr)
     }
 }
 
@@ -128,7 +128,7 @@ export class LimitNode implements Node {
     render(params: ParameterReg): SqlString {
         const count: string = this.count.render(params)
 
-        return `${sql('LIMIT')} ${count}`
+        return sql('LIMIT', count)
     }
 }
 
@@ -143,7 +143,7 @@ export class OffsetNode implements Node {
     render(params: ParameterReg): SqlString {
         const count: string = this.count.render(params)
 
-        return `${sql('OFFSET')} ${count}`
+        return sql('OFFSET', count)
     }
 }
 
@@ -153,11 +153,13 @@ export class OffsetNode implements Node {
 export class ReturningNode implements Node {
     readonly priority = 90
 
-    constructor(private readonly columns: ArrayLike<Node>) {}
+    constructor(private readonly columns?: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const cols = renderAll(this.columns, params).join(', ')
-        return `${sql('RETURNING')} ${cols}`
+        const columns = this.columns
+            ? renderAll(this.columns, params).join(', ')
+            : '*'
+        return `${sql('RETURNING', columns)};`
     }
 }
 
@@ -174,7 +176,7 @@ export class ValuesNode implements Node {
     render(params: ParameterReg): SqlString {
         const rows: string = renderAll(this.rows, params).join(', ')
 
-        return `${sql('VALUES')} ${rows}`
+        return sql('VALUES', rows)
     }
 }
 
@@ -191,7 +193,30 @@ export class SetNode implements Node {
             ', ',
         )
 
-        return `${sql('SET')} ${assignments};`
+        return sql('SET', assignments)
+    }
+}
+
+/**
+ * Represents a ON CONFLICT clause for INSERT / UPDATE statements.
+ */
+export class OnConflictNode implements Node {
+    priority: number = 99
+
+    constructor(
+        private readonly action: Node,
+        private readonly target?: ArrayLike<Node>,
+    ) {}
+
+    render(params: ParameterReg): SqlString {
+        const action: string = this.action.render(params)
+        const target: string | undefined = this.target
+            ? renderAll(this.target, params).join(',  ')
+            : undefined
+
+        return target
+            ? sql(`ON CONFLICT(${target}) DO ${action}`)
+            : sql(`ON CONFLICT DO ${action}`)
     }
 }
 
@@ -199,7 +224,7 @@ export class SetNode implements Node {
 
 /**
  * Creates a FROM clause with table references.
- * @param tables The tables to select from
+ * @param tables - The tables to select from
  * @returns A FROM node
  */
 export const from = (...tables: NodeArg[]) =>
@@ -211,7 +236,7 @@ export const from = (...tables: NodeArg[]) =>
 
 /**
  * Creates a JOIN clause factory.
- * @param type The join type string
+ * @param type - The join type string
  * @returns A function that creates join nodes
  */
 const join = (type: string) => (table: NodeArg, condition?: NodeArg): Node =>
@@ -223,7 +248,7 @@ const join = (type: string) => (table: NodeArg, condition?: NodeArg): Node =>
 
 /**
  * Creates an INNER JOIN clause.
- * @param table The table to join
+ * @param table - The table to join
  * @param condition The optional join condition
  * @returns A join node
  */
@@ -231,23 +256,23 @@ export const joinInner = join(sql('INNER'))
 
 /**
  * Creates a LEFT JOIN clause.
- * @param table The table to join
- * @param condition The optional join condition
+ * @param table - The table to join
+ * @param condition - The optional join condition
  * @returns A join node
  */
 export const joinLeft = join(sql('LEFT'))
 
 /**
  * Creates a LEFT OUTER JOIN clause.
- * @param table The table to join
- * @param condition The optional join condition
+ * @param table - The table to join
+ * @param condition - The optional join condition
  * @returns A join node
  */
-export const joinLeftOuter = join(`${sql('LEFT')} ${sql('OUTER')}`)
+export const joinLeftOuter = join(sql('LEFT OUTER'))
 
 /**
  * Creates a CROSS JOIN clause.
- * @param table The table to join
+ * @param table - The table to join
  * @returns A join node
  */
 export const joinCross = (table: NodeArg) =>
@@ -258,7 +283,7 @@ export const joinCross = (table: NodeArg) =>
 
 /**
  * Creates a WHERE clause with filter conditions.
- * @param conditions The conditions to filter by
+ * @param conditions - The conditions to filter by
  * @returns A WHERE node
  */
 export const where = (...conditions: NodeArg[]) =>
@@ -266,7 +291,7 @@ export const where = (...conditions: NodeArg[]) =>
 
 /**
  * Creates a GROUP BY clause for result aggregation.
- * @param columns The columns to group by
+ * @param columns - The columns to group by
  * @returns A GROUP BY node
  */
 export const groupBy = (...columns: NodeArg[]) =>
@@ -276,7 +301,7 @@ export const groupBy = (...columns: NodeArg[]) =>
 
 /**
  * Creates a HAVING clause for filtering grouped results.
- * @param conditions The conditions to filter grouped results by
+ * @param conditions - The conditions to filter grouped results by
  * @returns A HAVING node
  */
 export const having = (...conditions: NodeArg[]) =>
@@ -284,7 +309,7 @@ export const having = (...conditions: NodeArg[]) =>
 
 /**
  * Creates an ORDER BY clause for sorting results.
- * @param columns The columns to sort by
+ * @param columns - The columns to sort by
  * @returns An ORDER BY node
  */
 export const orderBy = (...columns: NodeArg[]) =>
@@ -294,21 +319,21 @@ export const orderBy = (...columns: NodeArg[]) =>
 
 /**
  * Creates a LIMIT clause for restricting result count.
- * @param count The maximum number of results
+ * @param count - The maximum number of results
  * @returns A LIMIT node
  */
 export const limit = (count: NodeArg) => new LimitNode(toNode(count))
 
 /**
  * Creates an OFFSET clause for result pagination.
- * @param count The number of results to skip
+ * @param count - The number of results to skip
  * @returns An OFFSET node
  */
 export const offset = (count: NodeArg) => new OffsetNode(toNode(count))
 
 /**
  * Creates a RETURNING clause for getting affected row data.
- * @param columns The columns to return
+ * @param columns - The columns to return
  * @returns A RETURNING node
  */
 export const returning = (...columns: NodeArg[]) =>
@@ -316,15 +341,62 @@ export const returning = (...columns: NodeArg[]) =>
 
 /**
  * Creates a VALUES clause for explicit row data.
- * @param rows The rows of data
+ * @param rows - The rows of data
  * @returns A VALUES node
  */
 export const values = () => new ValuesNode()
 
 /**
- * Creates a SET clause for UPDATE operations.
- * @param assignments The column assignments
+ * Creates a SET clause for UPDATE statements.
+ * @param assignments - The column assignments
  * @returns A SET node
  */
 export const set = (...assignments: NodeArg[]) =>
     new SetNode(assignments.map(toNode))
+
+/**
+ * Creates a ON CONFLICT clause factory.
+ * @param action - The action to resolve the conflict
+ * @param target - The conflict target (columns)
+ * @returns A function that creates join nodes
+ */
+const conflict = (action: NodeArg) => (...target: NodeArg[]) =>
+    new OnConflictNode(
+        toNode(action),
+        target.map((t) => typeof t === 'string' ? id(t) : toNode(t)),
+    )
+
+/**
+ * Creates a ON CONFLICT (ABORT) clause for INSERT/UPDATE statements.
+ * @param target - The conflict target (columns)
+ * @returns A OnConflict node
+ */
+export const onAbort = conflict(sql('ABORT'))
+
+/**
+ * Creates a ON CONFLICT (FAIL) clause for INSERT/UPDATE statements.
+ * @param target - The conflict target (columns)
+ * @returns A OnConflict node
+ */
+export const onFail = conflict(sql('FAIL'))
+
+/**
+ * Creates a ON CONFLICT (IGNORE) clause for INSERT/UPDATE statements.
+ * @param target - The conflict target (columns)
+ * @returns A OnConflict node
+ */
+export const onIgnore = conflict(sql('IGNORE'))
+
+/**
+ * Creates a ON CONFLICT (RECPLACE) clause for INSERT/UPDATE statements.
+ * @param target - The conflict target (columns)
+ * @returns A OnConflict node
+ */
+export const onReplace = conflict(sql('REPLACE'))
+
+/**
+ * Creates a ON CONFLICT (ROLLBACK) clause for INSERT/UPDATE statements.
+ * @param target - The conflict target (columns)
+ * @returns A OnConflict node
+ */
+export const onRollback = conflict(sql('ROLLBACK'))

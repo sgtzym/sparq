@@ -26,7 +26,7 @@ import {
 import { avg, count, max, min, sum } from '~/nodes/aggregates.ts'
 import { assign, valueList } from '~/nodes/values.ts'
 
-type ColDataType<T extends Table[keyof Table]> = T['type'] extends 'TEXT'
+export type ColDataType<T extends Table[keyof Table]> = T['type'] extends 'TEXT'
     ? string
     : T['type'] extends 'INTEGER' ? number
     : T['type'] extends 'REAL' ? number

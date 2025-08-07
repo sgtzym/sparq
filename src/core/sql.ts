@@ -1,4 +1,4 @@
-import { SQL_KEYWORDS, type SqlKeyword } from '~/core/sql-constants.ts'
+import { SQL_KEYWORDS, type SqlSnippet } from '~/core/sql-constants.ts'
 
 export type SqlString = string
 
@@ -71,7 +71,11 @@ export function toSqlParam(arg: unknown): SqlParam {
     }
 }
 
-/** ... */
-export function sql(keyword: SqlKeyword): string {
-    return String(keyword)
+/**
+ * Creates a syntax snippet based on valid SQLite keywords and string inputs.
+ * @param snippets - The SQL keywords/strings to use
+ * @returns A joined SQLite string
+ */
+export function sql(...snippets: SqlSnippet[]): string {
+    return String(snippets.join(' '))
 }
