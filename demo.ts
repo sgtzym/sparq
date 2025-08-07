@@ -1,5 +1,4 @@
 import { sparq } from '~/api/sparq.ts'
-import { Parameters } from '~/core/parameter-registry.ts'
 
 const user = sparq('user', {
     id: { type: 'INTEGER', primaryKey: true },
@@ -28,13 +27,3 @@ console.log(sql, params)
 // TODO: Bsp. nachbauen von SQLite Tutorial
 // TODO: Liste machen mit Features und Zielen
 // TODO: Docs (nicht übertreiben!)
-
-console.log($.email.as('yeeet').render(new Parameters()))
-
-
-console.log($.score.asc().render(new Parameters()))
-console.log($.score.desc().render(new Parameters()))
-
-
-console.log($.score.all().render(new Parameters()))
-console.log($.score.distinct().render(new Parameters()))

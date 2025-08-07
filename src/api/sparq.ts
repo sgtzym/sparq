@@ -1,20 +1,22 @@
 import type { NodeArg } from '~/core/node.ts'
-import schemas, { type Schema } from '~/core/schema-registry.ts'
 import { Column } from '~/api/column.ts'
+import tables, { type Table } from '~/api/table.ts'
 import { Delete, Insert, Select, Update } from '~/api/query-builder.ts'
 
-type SparqColumns<T extends Schema> = {
+// Columns api
+type SparqColumns<T extends Table> = {
     readonly [K in keyof T]: Column<T[K]>
 }
 
-class SparqTable<T extends Schema> {
+// Table api
+class SparqTable<T extends Table> {
     readonly #columns: SparqColumns<T>
 
     constructor(
         private readonly table: string,
         private readonly schema: T,
     ) {
-        schemas.add(table, schema)
+        tables.add(table, schema)
 
         const cols: { [K in keyof T]?: Column<T[K]> } = {}
 
@@ -82,7 +84,7 @@ class SparqTable<T extends Schema> {
     }
 }
 
-type Sparq<T extends Schema> = SparqTable<T> & SparqColumns<T>
+type Sparq<T extends Table> = SparqTable<T> & SparqColumns<T>
 
 /**
  * Public entry point
@@ -90,7 +92,7 @@ type Sparq<T extends Schema> = SparqTable<T> & SparqColumns<T>
  * @param schema
  * @returns
  */
-export const sparq = <T extends Schema>(name: string, schema: T): Sparq<T> => {
+export const sparq = <T extends Table>(name: string, schema: T): Sparq<T> => {
     const table: SparqTable<T> = new SparqTable(name, schema)
 
     return new Proxy(table, {

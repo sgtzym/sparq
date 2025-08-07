@@ -1,5 +1,5 @@
 import type { Node, NodeArg, NodeConvertible } from '~/core/node.ts'
-import type { Schema } from '~/core/schema-registry.ts'
+import type { Table } from './table.ts'
 import { id, val } from '~/nodes/primitives.ts'
 import {
     add,
@@ -26,7 +26,7 @@ import {
 import { avg, count, max, min, sum } from '~/nodes/aggregates.ts'
 import { assign, valueList } from '~/nodes/values.ts'
 
-type ColDataType<T extends Schema[keyof Schema]> = T['type'] extends 'TEXT'
+type ColDataType<T extends Table[keyof Table]> = T['type'] extends 'TEXT'
     ? string
     : T['type'] extends 'INTEGER' ? number
     : T['type'] extends 'REAL' ? number
@@ -39,7 +39,7 @@ type SqlNumber = 'INTEGER' | 'REAL'
  * Represents a database column with type-safe operations.
  * Provides methods for SQL comparisons, aggregates, and transformations.
  */
-export class Column<TType extends Schema[keyof Schema] = any>
+export class Column<TType extends Table[keyof Table] = any>
     implements NodeConvertible {
     private _node?: Node
 
