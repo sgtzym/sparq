@@ -8,6 +8,7 @@ import {
     toNode,
 } from '~/core/node.ts'
 import { id, raw } from '~/nodes/primitives.ts'
+import { ValueListNode } from './values.ts'
 
 // ---------------------------------------------
 // Clauses
@@ -165,12 +166,17 @@ export class ReturningNode implements Node {
  * Represents a VALUES clause for explicit row data.
  */
 export class ValuesNode implements Node {
-    constructor(private readonly rows: ArrayLike<Node>) {}
+    private rows: Node[] = []
+
+    addRow(valueList: ValueListNode, params: ParameterReg): void {
+        this.rows.push(valueList)
+        this.render(params)
+    }
 
     render(params: ParameterReg): SqlString {
         const rows: string = renderAll(this.rows, params).join(', ')
 
-        return `${sql('VALUES')} ${rows};`
+        return `${sql('VALUES')} ${rows}`
     }
 }
 
@@ -315,7 +321,7 @@ export const returning = (...columns: NodeArg[]) =>
  * @param rows The rows of data
  * @returns A VALUES node
  */
-export const values = (...rows: NodeArg[]) => new ValuesNode(rows.map(toNode))
+export const values = () => new ValuesNode()
 
 /**
  * Creates a SET clause for UPDATE operations.

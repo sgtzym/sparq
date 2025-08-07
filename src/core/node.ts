@@ -1,5 +1,5 @@
-import { type SqlParam, type SqlString, toSqlParam } from '~/core/sql.ts'
 import { type ArrayLike, castArray } from '~/core/utils.ts'
+import { type SqlParam, type SqlString, toSqlParam } from '~/core/sql.ts'
 import { LiteralNode } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
@@ -118,7 +118,7 @@ function isNode(arg: any): arg is Node {
 }
 
 // ---------------------------------------------
-// Sorting and Rendering
+// Sorting and rendering
 // ---------------------------------------------
 
 /**
@@ -170,7 +170,7 @@ export interface NodeConvertible {
 export type NodeArg = Node | NodeConvertible | Param
 
 /** Node convertible type guard */
-function isNodeConvertible(arg: any): arg is NodeConvertible {
+function isNodeConvertible(arg: unknown): arg is NodeConvertible {
     return arg && typeof arg === 'object' && 'node' in arg && isNode(arg.node)
 }
 

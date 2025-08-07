@@ -20,22 +20,32 @@ import {
     returning,
     set,
     values,
+    ValuesNode,
     where,
 } from '~/nodes/clauses.ts'
 import { delete_, insert, select, update } from '~/nodes/statements.ts'
 import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import { Column } from '~/api/column.ts'
 
-interface SqlStatement {
-    readonly clauses: Node[]
-    toSql(): [SqlString, readonly SqlParam[]]
-}
+abstract class SqlStatementBuilder {
+    protected _sql: SqlString[]
+    protected _params: ParameterReg
 
-abstract class SqlStatementBuilder implements SqlStatement {
-    readonly clauses: Node[] = []
+    constructor() {
+        this._sql = []
+        this._params = new ParameterReg()
+    }
+
+    get sql(): SqlString {
+        return this._sql.join('\n')
+    }
+
+    get params(): readonly SqlParam[] {
+        return this._params.toArray()
+    }
 
     protected addClause(clause: Node): this {
-        this.clauses.push(clause)
+        this._sql.push(renderAST(clause, this._params))
         return this
     }
 
@@ -65,12 +75,6 @@ abstract class SqlStatementBuilder implements SqlStatement {
 
     returning(...columns: NodeArg[]): this {
         return this.addClause(returning(...columns))
-    }
-
-    toSql(): [SqlString, readonly SqlParam[]] {
-        const params = new ParameterReg()
-        const sql = renderAST(this.clauses, params)
-        return [sql, params.toArray()]
     }
 }
 
@@ -103,7 +107,7 @@ export class Select extends SqlStatementBuilder {
 
 export class Insert extends SqlStatementBuilder {
     private readonly cols: Node[] = []
-    private readonly rows: Node[] = []
+    private readonly _values: ValuesNode = new ValuesNode()
 
     constructor(
         private readonly table: string,
@@ -116,22 +120,15 @@ export class Insert extends SqlStatementBuilder {
         }
 
         this.addClause(insert(this.table, this.cols))
+        this.addClause(values())
     }
 
-    values(...values: NodeArg[]): this {
-        this.rows.push(valueList(...values))
+    values(...args: NodeArg[]): this {
+        this._values.addRow(valueList(...args), this._params)
         return this
     }
 
     // TODO(#sgtzym): Implement subqueries with SELECT
-
-    override toSql(): [SqlString, readonly SqlParam[]] {
-        if (this.rows.length > 0) {
-            this.addClause(values(...this.rows))
-        }
-
-        return super.toSql()
-    }
 
     // TODO(#sgtzym): Implement OnConflictBuilder for UPSERT
 }
