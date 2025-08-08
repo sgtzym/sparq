@@ -18,7 +18,7 @@ const query = user.select(
     // ...$.pk()
 ).where(
     $.age.ge(18),
-    $.email.like('%@example.com'),
+    $.email.like('%@example.com')
 ).orderBy(
     $.score.desc(),
 ).limit(10)
@@ -28,13 +28,12 @@ console.log(query.params) // Parameterized values
 
 
 // enhancement: automatically determine param types to let this through?
-const query2 = user.insert(
-    $.email
-).values('asdf@asdf.de').conflict.upsert(
-    $.email,
-    $.score.set(0),
-    $.score.gt(0),
-    $.score.isNotNull()
-)
+const query2 = user.insert($.email)
+    .values('asdf@asdf.de')
+    .conflict($.email)
+    .upsert($.score.set(0))
+    .where(
+        $.score.gt(0)
+    )
 
 console.log(query2.sql, query2.params)

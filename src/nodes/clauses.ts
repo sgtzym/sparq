@@ -231,7 +231,6 @@ export class UpsertNode implements Node {
     constructor(
         private readonly assignments: ArrayLike<Node>,
         private readonly targets?: ArrayLike<Node>,
-        private readonly conditions?: ArrayLike<Node>,
     ) {}
 
     render(params: ParameterReg): SqlString {
@@ -242,16 +241,11 @@ export class UpsertNode implements Node {
             ? renderAll(this.targets, params).join(', ')
             : undefined
 
-        const _conditions: SqlString | undefined = this.conditions
-            ? renderAll(this.conditions, params).join(` ${sql('AND')} `)
-            : undefined
-
         return sql(
             'ON CONFLICT',
             _targets ? `(${_targets})` : '',
             'DO UPDATE SET',
             _assignments,
-            _conditions ? `WHERE ${_conditions}` : '',
         )
     }
 }
@@ -435,29 +429,12 @@ export const onConflictNothing = conflict(sql('NOTHING'))
 /**
  * Creates a ON CONFLICT clause for UPSERT resolution.
  */
-export const onConflictUpdate = (...args: NodeArg[]) => {
-    const _assignments = []
-    const _targets = []
-    const _conditions = []
-
-    for (const arg of args) {
-        switch (true) {
-            case isNodeConvertible(arg): // Columns like "$.id"
-                _targets.push(arg)
-                break
-            case arg instanceof AssignmentNode:
-                _assignments.push(arg)
-                break
-            case arg instanceof UnaryNode:
-            case arg instanceof BinaryNode:
-            case arg instanceof ConjunctionNode:
-                _conditions.push(arg)
-        }
-    }
-
+export const onConflictUpdate = (
+    assignments: NodeArg[],
+    targets?: NodeArg[],
+) => {
     return new UpsertNode(
-        _assignments.map(toNode),
-        _targets.length > 0 ? _targets.map(toNode) : undefined,
-        _conditions.length > 0 ? _conditions.map(toNode) : undefined,
+        assignments.map(toNode),
+        targets && targets.length > 0 ? targets.map(toNode) : undefined,
     )
 }

@@ -98,7 +98,7 @@ interface Limit {
      * Adds OFFSET capability.
      * @param count - The maximum number of rows to return
      */
-    limit(count: NodeArg): this & Offset
+    limit(count: NodeArg): this
 }
 
 interface Offset {
@@ -144,7 +144,7 @@ interface GroupBy {
      * Adds HAVING capability.
      * @param columns - The columns to group by
      */
-    groupBy(...columns: NodeArg[]): this & Having
+    groupBy(...columns: NodeArg[]): this
 }
 
 interface Having {
@@ -202,11 +202,11 @@ interface OnConflict<T> {
 
     /**
      * Handles conflicts by updating the existing row with new values.
-     * @param targets - The optional conflict targets columns or constraints
      * @param assignments - The column assignments for the update
+     * @param targets - The optional conflict targets columns or constraints
      * @param conditions - The optional WHERE condition for the update
      */
-    upsert(...args: NodeArg[]): T
+    upsert(...assignments: NodeArg[]): T
 }
 
 // ---------------------------------------------
@@ -217,10 +217,10 @@ interface SelectCapabilities extends Where, GroupBy, OrderBy, Limit {
     /**
      * Provides table join operations for combining data from multiple tables.
      */
-    join: Join<Select>
+    join(table: NodeArg): Join<Select>
 }
 
-interface InsertCapabilities extends Returning {
+interface InsertCapabilities extends Where, Returning {
     /**
      * Specifies the values (row) to insert into the table.
      * Can be recalled for additional new rows.
@@ -231,14 +231,14 @@ interface InsertCapabilities extends Returning {
     /**
      * Provides conflict resolution strategies for handling constraint violations during insertion.
      */
-    conflict: OnConflict<Insert>
+    conflict(...targets: NodeArg[]): OnConflict<Insert>
 }
 
 interface UpdateCapabilities extends Where, OrderBy, Limit, Returning {
     /**
      * Provides conflict resolution strategies for handling constraint violations during updates.
      */
-    conflict: OnConflict<Update>
+    conflict(...targets: NodeArg[]): OnConflict<Update>
 }
 
 interface DeleteCapabilities extends Where, OrderBy, Limit, Returning {}
@@ -260,15 +260,15 @@ export class Select extends SqlStatementBuilder implements SelectCapabilities {
     where(...conditions: NodeArg[]): this {
         return this.addClause(where(...conditions))
     }
-    get join(): Join<Select> {
+    join(table: NodeArg): Join<Select> {
         return {
-            inner: (table: NodeArg, condition?: NodeArg): this =>
+            inner: (condition?: NodeArg): this =>
                 this.addClause(joinInner(table, condition)),
-            left: (table: NodeArg, condition?: NodeArg): this =>
+            left: (condition?: NodeArg): this =>
                 this.addClause(joinLeft(table, condition)),
-            leftOuter: (table: NodeArg, condition?: NodeArg): this =>
+            leftOuter: (condition?: NodeArg): this =>
                 this.addClause(joinLeftOuter(table, condition)),
-            cross: (table: NodeArg): this => this.addClause(joinCross(table)),
+            cross: (): this => this.addClause(joinCross(table)),
         }
     }
     groupBy(...columns: NodeArg[]): this {
@@ -306,23 +306,21 @@ export class Insert extends SqlStatementBuilder implements InsertCapabilities {
         this.addClause(this._values)
     }
 
-    get conflict(): OnConflict<Insert> {
+    conflict(...targets: NodeArg[]): OnConflict<Insert> {
         return {
-            abort: (...target: NodeArg[]) =>
-                this.addClause(onConflictAbort(...target)),
-            fail: (...target: NodeArg[]) =>
-                this.addClause(onConflictFail(...target)),
-            ignore: (...target: NodeArg[]) =>
-                this.addClause(onConflictIgnore(...target)),
-            replace: (...target: NodeArg[]) =>
-                this.addClause(onConflictReplace(...target)),
-            rollback: (...target: NodeArg[]) =>
-                this.addClause(onConflictRollback(...target)),
-            nothing: (...target: NodeArg[]) =>
-                this.addClause(onConflictNothing(...target)),
-            upsert: (...args: NodeArg[]) =>
-                this.addClause(onConflictUpdate(...args)),
+            abort: (): this => this.addClause(onConflictAbort(...targets)),
+            fail: (): this => this.addClause(onConflictFail(...targets)),
+            ignore: (): this => this.addClause(onConflictIgnore(...targets)),
+            replace: (): this => this.addClause(onConflictReplace(...targets)),
+            rollback: (): this =>
+                this.addClause(onConflictRollback(...targets)),
+            nothing: (): this => this.addClause(onConflictNothing(...targets)),
+            upsert: (...assignments: NodeArg[]): this =>
+                this.addClause(onConflictUpdate(assignments, targets)),
         }
+    }
+    where(...conditions: NodeArg[]): this {
+        return this.addClause(where(...conditions))
     }
     values(...args: NodeArg[]): this {
         if (args.length !== this.cols.length) {
@@ -359,9 +357,7 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
 
         this.addClause(set(...this.assignments))
     }
-    where(...conditions: NodeArg[]): this {
-        return this.addClause(where(...conditions))
-    }
+
     orderBy(...columns: NodeArg[]): this {
         return this.addClause(orderBy(...columns))
     }
@@ -371,23 +367,20 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
     offset(count: NodeArg): this {
         return this.addClause(offset(count))
     }
-    get conflict(): OnConflict<Update> {
+    conflict(...targets: NodeArg[]): OnConflict<Update> {
         return {
-            abort: (...target: NodeArg[]) =>
-                this.addClause(onConflictAbort(...target)),
-            fail: (...target: NodeArg[]) =>
-                this.addClause(onConflictFail(...target)),
-            ignore: (...target: NodeArg[]) =>
-                this.addClause(onConflictIgnore(...target)),
-            replace: (...target: NodeArg[]) =>
-                this.addClause(onConflictReplace(...target)),
-            rollback: (...target: NodeArg[]) =>
-                this.addClause(onConflictRollback(...target)),
-            nothing: (...target: NodeArg[]) =>
-                this.addClause(onConflictNothing(...target)),
-            upsert: (...args: NodeArg[]) =>
-                this.addClause(onConflictUpdate(...args)),
+            abort: () => this.addClause(onConflictAbort(...targets)),
+            fail: () => this.addClause(onConflictFail(...targets)),
+            ignore: () => this.addClause(onConflictIgnore(...targets)),
+            replace: () => this.addClause(onConflictReplace(...targets)),
+            rollback: () => this.addClause(onConflictRollback(...targets)),
+            nothing: () => this.addClause(onConflictNothing(...targets)),
+            upsert: (...assignments: NodeArg[]): this =>
+                this.addClause(onConflictUpdate(assignments, targets)),
         }
+    }
+    where(...conditions: NodeArg[]): this {
+        return this.addClause(where(...conditions))
     }
     returning(...columns: NodeArg[]): this {
         return this.addClause(returning(...columns))
