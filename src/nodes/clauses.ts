@@ -231,6 +231,7 @@ export class UpsertNode implements Node {
     constructor(
         private readonly assignments: ArrayLike<Node>,
         private readonly targets?: ArrayLike<Node>,
+        private readonly conditions?: ArrayLike<Node>,
     ) {}
 
     render(params: ParameterReg): SqlString {
@@ -241,11 +242,16 @@ export class UpsertNode implements Node {
             ? renderAll(this.targets, params).join(', ')
             : undefined
 
+        const _conditions: SqlString | undefined = this.conditions
+            ? renderAll(this.conditions, params).join(` ${sql('AND')} `)
+            : undefined
+
         return sql(
             'ON CONFLICT',
             _targets ? `(${_targets})` : '',
             'DO UPDATE SET',
             _assignments,
+            _conditions ? `WHERE ${_conditions}` : '',
         )
     }
 }
@@ -432,9 +438,14 @@ export const onConflictNothing = conflict(sql('NOTHING'))
 export const onConflictUpdate = (
     assignments: NodeArg[],
     targets?: NodeArg[],
+    conditions?: NodeArg[],
 ) => {
+    const _targets: Node[] | undefined = targets?.map(toNode) ?? undefined
+    const _conditions: Node[] | undefined = conditions?.map(toNode) ?? undefined
+
     return new UpsertNode(
         assignments.map(toNode),
-        targets && targets.length > 0 ? targets.map(toNode) : undefined,
+        _targets,
+        _conditions,
     )
 }

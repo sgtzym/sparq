@@ -206,7 +206,7 @@ interface OnConflict<T> {
      * @param targets - The optional conflict targets columns or constraints
      * @param conditions - The optional WHERE condition for the update
      */
-    upsert(...assignments: NodeArg[]): T
+    upsert(assignments: NodeArg[], ...conditions: NodeArg[]): T
 }
 
 // ---------------------------------------------
@@ -220,7 +220,7 @@ interface SelectCapabilities extends Where, GroupBy, OrderBy, Limit {
     join(table: NodeArg): Join<Select>
 }
 
-interface InsertCapabilities extends Where, Returning {
+interface InsertCapabilities extends Returning {
     /**
      * Specifies the values (row) to insert into the table.
      * Can be recalled for additional new rows.
@@ -315,12 +315,11 @@ export class Insert extends SqlStatementBuilder implements InsertCapabilities {
             rollback: (): this =>
                 this.addClause(onConflictRollback(...targets)),
             nothing: (): this => this.addClause(onConflictNothing(...targets)),
-            upsert: (...assignments: NodeArg[]): this =>
-                this.addClause(onConflictUpdate(assignments, targets)),
+            upsert: (assignments: NodeArg[], ...conditions: NodeArg[]): this =>
+                this.addClause(
+                    onConflictUpdate(assignments, targets, conditions),
+                ),
         }
-    }
-    where(...conditions: NodeArg[]): this {
-        return this.addClause(where(...conditions))
     }
     values(...args: NodeArg[]): this {
         if (args.length !== this.cols.length) {
@@ -358,6 +357,9 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
         this.addClause(set(...this.assignments))
     }
 
+    where(...conditions: NodeArg[]): this {
+        return this.addClause(where(...conditions))
+    }
     orderBy(...columns: NodeArg[]): this {
         return this.addClause(orderBy(...columns))
     }
@@ -375,12 +377,11 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
             replace: () => this.addClause(onConflictReplace(...targets)),
             rollback: () => this.addClause(onConflictRollback(...targets)),
             nothing: () => this.addClause(onConflictNothing(...targets)),
-            upsert: (...assignments: NodeArg[]): this =>
-                this.addClause(onConflictUpdate(assignments, targets)),
+            upsert: (assignments: NodeArg[], ...conditions: NodeArg[]): this =>
+                this.addClause(
+                    onConflictUpdate(assignments, targets, conditions),
+                ),
         }
-    }
-    where(...conditions: NodeArg[]): this {
-        return this.addClause(where(...conditions))
     }
     returning(...columns: NodeArg[]): this {
         return this.addClause(returning(...columns))

@@ -31,8 +31,8 @@ console.log(query.params) // Parameterized values
 const query2 = user.insert($.email)
     .values('asdf@asdf.de')
     .conflict($.email)
-    .upsert($.score.set(0))
-    .where(
+    .upsert(
+        [ $.score.set(0) ],
         $.score.gt(0)
     )
 
