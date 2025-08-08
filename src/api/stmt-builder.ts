@@ -22,6 +22,7 @@ import {
     onConflictNothing,
     onConflictReplace,
     onConflictRollback,
+    onConflictUpdate,
     orderBy,
     returning,
     set,
@@ -165,51 +166,51 @@ interface Returning {
 interface OnConflict<T> {
     /**
      * Handles conflicts by aborting the current statement.
-     * @param target - The optional conflict target columns or constraints
+     * @param targets - The optional conflict target columns or constraints
      */
-    abort(...target: NodeArg[]): T
+    abort(...targets: NodeArg[]): T
 
     /**
      * Handles conflicts by failing the statement with an error.
-     * @param target - The optional conflict target columns or constraints
+     * @param targets - The optional conflict target columns or constraints
      */
-    fail(...target: NodeArg[]): T
+    fail(...targets: NodeArg[]): T
 
     /**
      * Handles conflicts by ignoring the conflicting row.
-     * @param target - The optional conflict target columns or constraints
+     * @param targets - The optional conflict target columns or constraints
      */
-    ignore(...target: NodeArg[]): T
+    ignore(...targets: NodeArg[]): T
 
     /**
      * Handles conflicts by replacing the existing row.
-     * @param target - The optional conflict target columns or constraints
+     * @param targets - The optional conflict target columns or constraints
      */
-    replace(...target: NodeArg[]): T
+    replace(...targets: NodeArg[]): T
 
     /**
      * Handles conflicts by rolling back the current transaction.
-     * @param target - The optional conflict target columns or constraints
+     * @param targets - The optional conflict target columns or constraints
      */
-    rollback(...target: NodeArg[]): T
+    rollback(...targets: NodeArg[]): T
 
     /**
      * Handles conflicts by doing nothing (skipping the row).
-     * @param target - The optional conflict target columns or constraints
+     * @param targets - The optional conflict target columns or constraints
      */
-    nothing(...target: NodeArg[]): T
+    nothing(...targets: NodeArg[]): T
 
     /**
      * Handles conflicts by updating the existing row with new values.
+     * @param targets - The optional conflict targets columns or constraints
      * @param assignments - The column assignments for the update
-     * @param target - The optional conflict target columns or constraints
-     * @param condition - The optional WHERE condition for the update
+     * @param conditions - The optional WHERE condition for the update
      */
-    // update(
-    //     assignments: NodeArg[],
-    //     target?: NodeArg[],
-    //     condition?: NodeArg,
-    // ): T
+    upsert(
+        assignments: NodeArg[],
+        targets?: NodeArg[],
+        conditions?: NodeArg[],
+    ): T
 }
 
 // ---------------------------------------------
@@ -323,6 +324,13 @@ export class Insert extends SqlStatementBuilder implements InsertCapabilities {
                 this.addClause(onConflictRollback(...target)),
             nothing: (...target: NodeArg[]) =>
                 this.addClause(onConflictNothing(...target)),
+            upsert: (
+                assignments: NodeArg[],
+                targets?: NodeArg[],
+                conditions?: NodeArg[],
+            ) => this.addClause(
+                onConflictUpdate(assignments, targets, conditions),
+            ),
         }
     }
     values(...args: NodeArg[]): this {
@@ -386,6 +394,13 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
                 this.addClause(onConflictRollback(...target)),
             nothing: (...target: NodeArg[]) =>
                 this.addClause(onConflictNothing(...target)),
+            upsert: (
+                assignments: NodeArg[],
+                targets?: NodeArg[],
+                conditions?: NodeArg[],
+            ) => this.addClause(
+                onConflictUpdate(assignments, targets, conditions),
+            ),
         }
     }
     returning(...columns: NodeArg[]): this {

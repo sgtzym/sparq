@@ -77,5 +77,5 @@ export function toSqlParam(arg: unknown): SqlParam {
  * @returns A joined SQLite string
  */
 export function sql(...snippets: SqlSnippet[]): string {
-    return String(snippets.join(' '))
+    return String(snippets.filter(Boolean).join(' '))
 }

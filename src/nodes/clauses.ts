@@ -24,9 +24,9 @@ export class FromNode implements Node {
     constructor(private readonly tables: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const tables: string = renderAll(this.tables, params).join(', ')
+        const _tables: SqlString = renderAll(this.tables, params).join(', ')
 
-        return sql('FROM', tables)
+        return sql('FROM', _tables)
     }
 }
 
@@ -43,13 +43,13 @@ export class JoinNode implements Node {
     ) {}
 
     render(params: ParameterReg): SqlString {
-        const type: string = this.joinType.render(params)
-        const table: string = this.table.render(params)
-        const condition: string | undefined = this.condition?.render(params)
+        const _type: SqlString = this.joinType.render(params)
+        const _table: SqlString = this.table.render(params)
+        const _condition: SqlString | undefined = this.condition?.render(params)
 
-        return condition
-            ? sql(type, 'JOIN', table, 'ON', condition)
-            : sql(type, 'JOIN', table)
+        return _condition
+            ? sql(_type, 'JOIN', _table, 'ON', _condition)
+            : sql(_type, 'JOIN', _table)
     }
 }
 
@@ -62,11 +62,11 @@ export class WhereNode implements Node {
     constructor(private readonly conditions: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const conditions: string = renderAll(this.conditions, params).join(
+        const _conditions: SqlString = renderAll(this.conditions, params).join(
             ` ${sql('AND')} `,
         )
 
-        return sql('WHERE', conditions)
+        return sql('WHERE', _conditions)
     }
 }
 
@@ -79,9 +79,9 @@ export class GroupByNode implements Node {
     constructor(private readonly expr: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const expr: string = renderAll(this.expr, params).join(', ')
+        const _expr: SqlString = renderAll(this.expr, params).join(', ')
 
-        return sql('GROUP BY', expr)
+        return sql('GROUP BY', _expr)
     }
 }
 
@@ -94,11 +94,11 @@ export class HavingNode implements Node {
     constructor(private readonly conditions: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const conditions: string = renderAll(this.conditions, params).join(
+        const _conditions: SqlString = renderAll(this.conditions, params).join(
             ` ${sql('AND')} `,
         )
 
-        return sql('HAVING', conditions)
+        return sql('HAVING', _conditions)
     }
 }
 
@@ -111,9 +111,9 @@ export class OrderByNode implements Node {
     constructor(private readonly expr: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const expr: string = renderAll(this.expr, params).join(', ')
+        const _expr: SqlString = renderAll(this.expr, params).join(', ')
 
-        return sql('ORDER BY', expr)
+        return sql('ORDER BY', _expr)
     }
 }
 
@@ -126,9 +126,9 @@ export class LimitNode implements Node {
     constructor(private readonly count: Node) {}
 
     render(params: ParameterReg): SqlString {
-        const count: string = this.count.render(params)
+        const _count: SqlString = this.count.render(params)
 
-        return sql('LIMIT', count)
+        return sql('LIMIT', _count)
     }
 }
 
@@ -141,9 +141,9 @@ export class OffsetNode implements Node {
     constructor(private readonly count: Node) {}
 
     render(params: ParameterReg): SqlString {
-        const count: string = this.count.render(params)
+        const _count: SqlString = this.count.render(params)
 
-        return sql('OFFSET', count)
+        return sql('OFFSET', _count)
     }
 }
 
@@ -156,10 +156,10 @@ export class ReturningNode implements Node {
     constructor(private readonly columns?: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const columns = this.columns
+        const _columns: SqlString = this.columns
             ? renderAll(this.columns, params).join(', ')
             : '*'
-        return `${sql('RETURNING', columns)};`
+        return `${sql('RETURNING', _columns)};`
     }
 }
 
@@ -174,9 +174,9 @@ export class ValuesNode implements Node {
     }
 
     render(params: ParameterReg): SqlString {
-        const rows: string = renderAll(this.rows, params).join(', ')
+        const _rows: SqlString = renderAll(this.rows, params).join(', ')
 
-        return sql('VALUES', rows)
+        return sql('VALUES', _rows)
     }
 }
 
@@ -189,11 +189,10 @@ export class SetNode implements Node {
     constructor(private readonly assignments: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const assignments: string = renderAll(this.assignments, params).join(
-            ', ',
-        )
+        const _assignments: SqlString = renderAll(this.assignments, params)
+            .join(', ')
 
-        return sql('SET', assignments)
+        return sql('SET', _assignments)
     }
 }
 
@@ -203,30 +202,54 @@ export class SetNode implements Node {
 export class OnConflictNode implements Node {
     constructor(
         private readonly action: Node,
-        private readonly target?: ArrayLike<Node>,
+        private readonly targets?: ArrayLike<Node>,
     ) {}
 
     render(params: ParameterReg): SqlString {
-        const action: string = this.action.render(params)
-        const target: string | undefined = this.target
-            ? renderAll(this.target, params).join(',  ')
-            : undefined
+        const _action: SqlString = this.action.render(params)
 
-        return target
-            ? sql(`ON CONFLICT(${target})`, `DO ${action}`)
-            : sql(`ON CONFLICT`, `DO ${action}`)
+        const _targets: SqlString = this.targets
+            ? `(${renderAll(this.targets, params).join(', ')})`
+            : ''
+
+        return sql(
+            'ON CONFLICT',
+            _targets,
+            'DO',
+            _action,
+        )
     }
 }
 
-export class ConflictResolutionNode implements Node {
+/**
+ * Represents an UPSERT clause for INSERT / UPDATE statements.
+ */
+export class UpsertNode implements Node {
     constructor(
-        private readonly action: Node,
+        private readonly assignments: ArrayLike<Node>,
+        private readonly targets?: ArrayLike<Node>,
+        private readonly conditions?: ArrayLike<Node>,
     ) {}
 
     render(params: ParameterReg): SqlString {
-        const action: string = this.action.render(params)
+        const _assignments: SqlString = renderAll(this.assignments, params)
+            .join(', ')
 
-        return sql('OR', action)
+        const _targets: SqlString = this.targets
+            ? `(${renderAll(this.targets, params).join(', ')})`
+            : ''
+
+        const _conditions: SqlString = this.conditions
+            ? renderAll(this.conditions, params).join(` ${sql('AND')} `)
+            : ''
+
+        return sql(
+            'ON CONFLICT',
+            _targets,
+            'DO UPDATE SET',
+            _assignments,
+            _conditions,
+        )
     }
 }
 
@@ -370,57 +393,53 @@ export const set = (...assignments: NodeArg[]) =>
  * @param target - The conflict target (columns)
  * @returns A function that creates join nodes
  */
-const conflict = (action: NodeArg) => (...target: NodeArg[]) =>
+const conflict = (action: NodeArg) => (...targets: NodeArg[]) =>
     new OnConflictNode(
         toNode(action),
-        target.map((t) => typeof t === 'string' ? id(t) : toNode(t)),
+        targets.map((t) => typeof t === 'string' ? id(t) : toNode(t)),
     )
 
 /**
- * Creates a ON CONFLICT (ABORT) clause for INSERT/UPDATE statements.
- * @param target - The conflict target (columns)
- * @returns A OnConflict node
+ * Creates a ON CONFLICT clause for DO ABORT resolution.
  */
 export const onConflictAbort = conflict(sql('ABORT'))
 
 /**
- * Creates a ON CONFLICT (FAIL) clause for INSERT/UPDATE statements.
- * @param target - The conflict target (columns)
- * @returns A OnConflict node
+ * Creates a ON CONFLICT clause for DO FAIL resolution.
  */
 export const onConflictFail = conflict(sql('FAIL'))
 
 /**
- * Creates a ON CONFLICT (IGNORE) clause for INSERT/UPDATE statements.
- * @param target - The conflict target (columns)
- * @returns A OnConflict node
+ * Creates a ON CONFLICT clause for DO IGNORE resolution.
  */
 export const onConflictIgnore = conflict(sql('IGNORE'))
 
 /**
- * Creates a ON CONFLICT (RECPLACE) clause for INSERT/UPDATE statements.
- * @param target - The conflict target (columns)
- * @returns A OnConflict node
+ * Creates a ON CONFLICT clause for DO REPLACE resolution.
  */
 export const onConflictReplace = conflict(sql('REPLACE'))
 
 /**
- * Creates a ON CONFLICT (ROLLBACK) clause for INSERT/UPDATE statements.
- * @param target - The conflict target (columns)
- * @returns A OnConflict node
+ * Creates a ON CONFLICT clause for DO ROLLBACK resolution.
  */
 export const onConflictRollback = conflict(sql('ROLLBACK'))
 
 /**
- * Creates a ON CONFLICT (NOTHING) clause for INSERT/UPDATE statements.
- * @param target - The conflict target (columns)
- * @returns A OnConflict node
+ * Creates a ON CONFLICT clause for DO NOTHING resolution.
  */
 export const onConflictNothing = conflict(sql('NOTHING'))
 
 /**
- * Creates a ON CONFLICT (UPSERT) clause for INSERT/UPDATE statements.
- * @param target - The conflict target (columns)
- * @returns A OnConflict node
+ * Creates a ON CONFLICT clause for UPSERT resolution.
  */
-export const onConflictUpdate = conflict(sql('ROLLBACK'))
+export const onConflictUpdate = (
+    assignments: NodeArg[],
+    targets?: NodeArg[],
+    conditions?: NodeArg[],
+) => new UpsertNode(
+    assignments.map(toNode),
+    targets
+        ? targets.map((t) => typeof t === 'string' ? id(t) : toNode(t))
+        : undefined,
+    conditions ? conditions.map(toNode) : undefined,
+)
