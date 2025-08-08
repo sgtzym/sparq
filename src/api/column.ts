@@ -1,5 +1,9 @@
-import type { Node, NodeArg, NodeConvertible } from '~/core/node.ts'
-import type { Table } from './table.ts'
+import {
+    isNode,
+    type Node,
+    type NodeConvertible,
+    type Param,
+} from '~/core/node.ts'
 import { id, val } from '~/nodes/primitives.ts'
 import {
     add,
@@ -26,36 +30,23 @@ import {
 import { avg, count, max, min, sum } from '~/nodes/aggregates.ts'
 import { assign, valueList } from '~/nodes/values.ts'
 
-export type ColDataType<T extends Table[keyof Table]> = T['type'] extends 'TEXT'
-    ? string
-    : T['type'] extends 'INTEGER' ? number
-    : T['type'] extends 'REAL' ? number
-    : T['type'] extends 'BLOB' ? Uint8Array
-    : null
-
-type SqlNumber = 'INTEGER' | 'REAL'
-
 /**
  * Represents a database column with type-safe operations.
  * Provides methods for SQL comparisons, aggregates, and transformations.
  */
-export class Column<TType extends Table[keyof Table] = any>
+export class Column<TName extends string = string, TType extends Param = Param>
     implements NodeConvertible {
-    private _node?: Node
-
     constructor(
-        private readonly _name: string,
-        private readonly _type: TType['type'],
-    ) {
-        this._node = id(_name)
-    }
+        private readonly _name: TName,
+        private readonly _type?: TType,
+    ) {}
 
     get name(): string {
         return this._name
     }
 
     get node(): Node {
-        return (this._node ??= id(this.name)) // lazy init
+        return id(this.name) // lazy init
     }
 
     // -> Set quantifiers
@@ -74,77 +65,54 @@ export class Column<TType extends Table[keyof Table] = any>
         return all(this.node)
     }
 
-    // -> Sorting directions
-
-    /**
-     * Sorts in ascending order (ASC).
-     */
-    asc(): Node {
-        return asc(this.node)
-    }
-
-    /**
-     * Sorts in descending order (DESC).
-     */
-    desc(): Node {
-        return desc(this.node)
-    }
-
     // -> Comparison operations
-
-    #comparison(
-        fn: (left: NodeArg, right: NodeArg) => Node,
-        value: NodeArg,
-    ): Node {
-        return fn(this.node, value)
-    }
 
     /**
      * Tests for equality (=).
      * @param value - Value to test against
      */
-    eq(value: ColDataType<TType>): Node {
-        return this.#comparison(eq, value)
+    eq(value: TType): Node {
+        return eq(this.node, val(value))
     }
 
     /**
      * Tests for inequality (!=).
      * @param value - Value to test against
      */
-    ne(value: ColDataType<TType>): Node {
-        return this.#comparison(ne, value)
+    ne(value: TType): Node {
+        return ne(this.node, val(value))
     }
 
     /**
      * Tests if greater than (>).
      * @param value - Value to test against
      */
-    gt(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(gt, value)
+    gt(value: TType extends number | bigint | Date ? TType : never): Node {
+        return gt(this.node, val(value))
     }
 
     /**
      * Tests if less than (<).
      * @param value - Value to test against
      */
-    lt(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(lt, value)
+    lt(value: TType extends number | bigint | Date ? TType : never): Node {
+        return lt(this.node, val(value))
     }
 
     /**
      * Tests if greater than or equal to (>=).
      * @param value - Value to test against
      */
-    ge(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(ge, value)
+    ge(value: TType extends number | bigint | Date ? TType : never): Node {
+        return ge(this.node, val(value))
     }
 
     /**
      * Tests if less than or equal to (<=).
      * @param value - Value to test against
      */
-    le(value: TType['type'] extends SqlNumber ? number : never): Node {
-        return this.#comparison(le, value)
+    le(value: TType extends number | bigint | Date ? TType : never): Node {
+        return le(this.node, val(value))
     }
 
     /**
@@ -152,9 +120,9 @@ export class Column<TType extends Table[keyof Table] = any>
      * @param lower - Lower bound (inclusive)
      * @param upper - Upper bound (inclusive)
      */
-    between(
-        lower: TType['type'] extends SqlNumber ? number : never,
-        upper: TType['type'] extends SqlNumber ? number : never,
+    between<T extends TType & (number | bigint | Date)>(
+        lower: T,
+        upper: T,
     ): Node {
         return between(this.node, lower, upper)
     }
@@ -163,16 +131,16 @@ export class Column<TType extends Table[keyof Table] = any>
      * Matches pattern (LIKE).
      * @param pattern - SQL pattern with % and _ wildcards
      */
-    like(pattern: TType['type'] extends 'TEXT' ? string : never): Node {
-        return this.#comparison(like, pattern)
+    like(pattern: TType extends string ? string : never): Node {
+        return like(this.node, val(pattern))
     }
 
     /**
      * Tests for membership in set (IN).
-     * @param set - Array of values to test against
+     * @param values - Array of values to test against
      */
-    in(set: ColDataType<TType>[]): Node {
-        return this.#comparison(in_, valueList(...set))
+    in(values: TType[]): Node {
+        return in_(this.node, valueList(...values))
     }
 
     /**
@@ -189,13 +157,29 @@ export class Column<TType extends Table[keyof Table] = any>
         return isNotNull(this.node)
     }
 
+    /**
+     * Creates an alias (AS).
+     * @param asName - The new (alias) name
+     */
+    as(asName: string): Node {
+        return alias(this.node, id(asName))
+    }
+
+    /** s
+     * Assigns a value to the column.
+     * @param value - Param or expression to set as new value
+     */
+    set(value: TType | Node): Node {
+        return assign(this.node, isNode(value) ? value : val(value))
+    }
+
     // -> Arithmetic operations
 
     /**
      * Adds value (+).
      * @param value - Value to add
      */
-    add(value: TType['type'] extends SqlNumber ? number : never): Node {
+    add(value: TType extends number | bigint ? TType : never): Node {
         return add(this.node, val(value))
     }
 
@@ -203,7 +187,7 @@ export class Column<TType extends Table[keyof Table] = any>
      * Subtracts value (-).
      * @param value - Value to subtract
      */
-    sub(value: TType['type'] extends SqlNumber ? number : never): Node {
+    sub(value: TType extends number | bigint ? TType : never): Node {
         return sub(this.node, val(value))
     }
 
@@ -211,7 +195,7 @@ export class Column<TType extends Table[keyof Table] = any>
      * Multiplies by value (*).
      * @param value - Value to multiply with
      */
-    mul(value: TType['type'] extends SqlNumber ? number : never): Node {
+    mul(value: TType extends number | bigint ? TType : never): Node {
         return mul(this.node, val(value))
     }
 
@@ -219,72 +203,60 @@ export class Column<TType extends Table[keyof Table] = any>
      * Divides by value (/).
      * @param value - Value to divide by
      */
-    div(value: TType['type'] extends SqlNumber ? number : never): Node {
+    div(value: TType extends number | bigint ? TType : never): Node {
         return div(this.node, val(value))
+    }
+
+    // -> Sorting directions
+
+    /**
+     * Sorts in ascending order (ASC).
+     */
+    asc(): Node {
+        return asc(this.node)
+    }
+
+    /**
+     * Sorts in descending order (DESC).
+     */
+    desc(): Node {
+        return desc(this.node)
     }
 
     // -> Aggregate functions
 
-    #aggregate(fn: (node: NodeArg) => Node, distinct_?: boolean): Node {
-        const agg: Node = fn(this.node)
-        return distinct_ ? distinct(agg) : agg
-    }
-
     /**
      * Calculates average (AVG).
-     * @param distinct - If true, averages distinct values only
      */
-    avg(distinct?: boolean): Node {
-        return this.#aggregate(avg, distinct)
+    avg(): Node {
+        return avg(this.node)
     }
 
     /**
      * Counts rows (COUNT).
-     * @param distinct - If true, counts distinct values only
      */
-    count(distinct?: boolean): Node {
-        return this.#aggregate(count, distinct)
+    count(): Node {
+        return count(this.node)
     }
 
     /**
      * Finds maximum value (MAX).
-     * @param distinct - If true, finds maximum of distinct values only
      */
-    max(distinct?: boolean): Node {
-        return this.#aggregate(max, distinct)
+    max(): Node {
+        return max(this.node)
     }
 
     /**
      * Finds minimum value (MIN).
-     * @param distinct - If true, finds minimum of distinct values only
      */
-    min(distinct?: boolean): Node {
-        return this.#aggregate(min, distinct)
+    min(): Node {
+        return min(this.node)
     }
 
     /**
      * Calculates sum (SUM).
-     * @param distinct - If true, sums distinct values only
      */
-    sum(distinct?: boolean): Node {
-        return this.#aggregate(sum, distinct)
-    }
-
-    // -> Misc.
-
-    /**
-     * Creates an alias (AS).
-     * @param name - The new (alias) name
-     */
-    as(name: string): Node {
-        return alias(this.node, id(name))
-    }
-
-    /**
-     * Assigns a value to the column.
-     * @param value - Param or expression to set as new value
-     */
-    set(value: NodeArg): Node {
-        return assign(this.node, value)
+    sum(): Node {
+        return sum(this.node)
     }
 }

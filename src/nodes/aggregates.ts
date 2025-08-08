@@ -24,7 +24,7 @@ export class AggregateNode implements Node {
 
     render(params: ParameterReg): SqlString {
         const fn: string = this.fn.render(params)
-        const expr: string = this.expr?.render(params)
+        const expr: string | undefined = this.expr?.render(params)
 
         return this.expr ? `${fn}(${expr})` : `${fn}(*)`
     }

@@ -1,18 +1,21 @@
 import { sparq } from '@sgtzym/sparq'
 import { select } from '~/nodes/statements.ts'
 
-const user = sparq('user', {
-    id: { type: 'INTEGER', primaryKey: true },
-    name: { type: 'TEXT' },
-    email: { type: 'TEXT', unique: true },
-    age: { type: 'INTEGER' },
-    score: { type: 'REAL' },
-    active: { type: 'INTEGER' }
+const userTable = sparq('users', {
+    id: 0 as number,
+    name: '' as string,
+    email: '' as string,
+    age: 0 as number,
+    score: 0 as number,
+    active: true as boolean,
+    created: new Date() as Date,
+    data: null as Uint8Array | null,
+    // metadata: undefined as Record<string, any> | undefined
 })
 
-// 2. Query data
+const { $ } = userTable
 
-const { $ } = user
+$.data.avg()
 
 // const query = user.select(
 //     // ...$.all(),
@@ -48,11 +51,11 @@ const { $ } = user
 // )
 // SELECT * FROM top_tracks;
 
-const query1 = user
-    .select($.age, $.email)
-    .with(
-        'active_users',
-        select() // ❌ sub-queries...
-    ).limit(10)
+// const query1 = user
+//     .select($.age, $.email)
+//     .with(
+//         'active_users',
+//         select() // ❌ sub-queries...
+//     ).limit(10)
 
-console.log(query1.sql, query1.params)
+// console.log(query1.sql, query1.params)

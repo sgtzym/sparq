@@ -113,7 +113,7 @@ export interface Node {
 }
 
 /** Node type guard */
-function isNode(arg: any): arg is Node {
+export function isNode(arg: any): arg is Node {
     return arg && typeof arg.render === 'function'
 }
 
