@@ -1,5 +1,5 @@
 import type { NodeArg } from '~/core/node.ts'
-import { type ColDataType, Column } from '~/api/column.ts'
+import { Column } from '~/api/column.ts'
 import tables, { type Table } from '~/api/table.ts'
 import { Delete, Insert, Select, Update } from './stmt-builder.ts'
 
@@ -10,21 +10,21 @@ type SparqColumns<T extends Table> =
     }
     & {
         /**
-         * Selects all columns.
-         * @returns A list of columns.
+         * Selects all columns from the corresponding table.
+         * @returns A list of all columns
          */
         all(): Column<T[keyof T]>[]
 
         /**
-         * Selects all except specific columns.
-         * @param {} columns
-         * @returns A filtered list of columns.
+         * Selects all except specific columns from the corresponding table.
+         * @param {} columns - Columns to filter out
+         * @returns A filtered list of columns
          */
         except(...columns: Column<T[keyof T]>[]): Column<T[keyof T]>[]
 
         /**
-         * Returns all columns declared as primary key.
-         * @returns A list of pk columns.
+         * Returns all columns declared as primary key (pk).
+         * @returns A list of pk columns
          */
         pk(): Column<T[keyof T]>[]
     }
@@ -80,36 +80,31 @@ class SparqTable<T extends Table> {
     }
 
     /**
-     * Creates a SELECT query for retreiving data.
-     * @param args Column expressions to select (defaults to * if empty)
-     * @returns Chainable SELECT query builder
+     * Creates a SELECT statement for retreiving data.
+     * @param args - Column expressions to select (defaults to * if empty)
      */
     select(...args: Array<NodeArg>): Select {
         return new Select(this.table, args)
     }
 
     /**
-     * Creates an INSERT query for adding new rows.
-     * @param args Column assignments for the new row
-     * @returns Chainable INSERT query builder
+     * Creates an INSERT statement for adding new rows.
+     * @param args - Column assignments for the new row
      */
     insert(...args: Array<NodeArg>): Insert {
         return new Insert(this.table, args)
     }
 
     /**
-     * Creates an UPDATE query for modifying existing rows.
-     * @param args Column assignments to update
-     * @returns Chainable UPDATE query builder
+     * Creates an UPDATE statement for modifying existing rows.
+     * @param args - Column assignments to update
      */
     update(...args: Array<NodeArg>): Update {
         return new Update(this.table, args)
     }
 
     /**
-     * Creates a DELETE query for removing rows.
-     * @param args
-     * @returns Chainable DELETE query builder
+     * Creates a DELETE statement for removing rows.
      */
     delete(): Delete {
         return new Delete(this.table)
@@ -119,10 +114,10 @@ class SparqTable<T extends Table> {
 type Sparq<T extends Table> = SparqTable<T> & SparqColumns<T>
 
 /**
- * Public entry point
- * @param name
- * @param schema
- * @returns
+ * SPARQ's API entry point.
+ * @param name - The name of the table to perform operations on
+ * @param schema - A predefined table schema for type-safety
+ * @returns A reusable, schema-aware API
  */
 export const sparq = <T extends Table>(name: string, schema: T): Sparq<T> => {
     const table: SparqTable<T> = new SparqTable(name, schema)

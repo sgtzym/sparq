@@ -61,6 +61,9 @@ abstract class SqlStatementBuilder {
         return this._params.toArray()
     }
 
+    /**
+     * Pushed clause to tree, re-renders sql
+     */
     protected addClause(clause: Node): this {
         this._clauses.push(clause)
         this.render()
@@ -73,47 +76,135 @@ abstract class SqlStatementBuilder {
 // ---------------------------------------------
 
 interface Where {
+    /**
+     * Creates a WHERE clause for data filtering.
+     * @param conditions - The conditions to filter by
+     */
     where(...conditions: NodeArg[]): this
 }
 
 interface OrderBy {
+    /**
+     * Creates a ORDER BY clause for data sorting.
+     * @param columns - The columns to sort by
+     */
     orderBy(...columns: NodeArg[]): this
 }
 
 interface Limit {
+    /**
+     * Creates a LIMIT clause for restricting result count.
+     * Adds OFFSET capability.
+     * @param count - The maximum number of rows to return
+     */
     limit(count: NodeArg): this & Offset
 }
 
 interface Offset {
+    /**
+     * Creates an OFFSET clause for result pagination.
+     * @param count - The number of rows to skip
+     */
     offset(count: NodeArg): this
 }
 
 interface Join<T> {
+    /**
+     * Creates an INNER JOIN clause.
+     * @param table - The table to join
+     * @param condition - The optional join condition
+     */
     inner(table: NodeArg, condition?: NodeArg): T
+
+    /**
+     * Creates a LEFT JOIN clause.
+     * @param table - The table to join
+     * @param condition - The optional join condition
+     */
     left(table: NodeArg, condition?: NodeArg): T
+
+    /**
+     * Creates a LEFT OUTER JOIN clause.
+     * @param table - The table to join
+     * @param condition - The optional join condition
+     */
     leftOuter(table: NodeArg, condition?: NodeArg): T
+
+    /**
+     * Creates a CROSS JOIN clause.
+     * @param table - The table to join
+     */
     cross(table: NodeArg): T
 }
 
 interface GroupBy {
+    /**
+     * Creates a GROUP BY clause for result aggregation.
+     * Adds HAVING capability.
+     * @param columns - The columns to group by
+     */
     groupBy(...columns: NodeArg[]): this & Having
 }
 
 interface Having {
+    /**
+     * Creates a HAVING clause for filtering grouped results.
+     * @param conditions - The filter conditions for grouped data
+     */
     having(...conditions: NodeArg[]): this
 }
 
 interface Returning {
+    /**
+     * Creates a RETURNING clause for retrieving affected row data.
+     * @param columns - The columns to return from affected rows
+     */
     returning(...columns: NodeArg[]): this
 }
 
 interface OnConflict<T> {
+    /**
+     * Handles conflicts by aborting the current statement.
+     * @param target - The optional conflict target columns or constraints
+     */
     abort(...target: NodeArg[]): T
+
+    /**
+     * Handles conflicts by failing the statement with an error.
+     * @param target - The optional conflict target columns or constraints
+     */
     fail(...target: NodeArg[]): T
+
+    /**
+     * Handles conflicts by ignoring the conflicting row.
+     * @param target - The optional conflict target columns or constraints
+     */
     ignore(...target: NodeArg[]): T
+
+    /**
+     * Handles conflicts by replacing the existing row.
+     * @param target - The optional conflict target columns or constraints
+     */
     replace(...target: NodeArg[]): T
+
+    /**
+     * Handles conflicts by rolling back the current transaction.
+     * @param target - The optional conflict target columns or constraints
+     */
     rollback(...target: NodeArg[]): T
+
+    /**
+     * Handles conflicts by doing nothing (skipping the row).
+     * @param target - The optional conflict target columns or constraints
+     */
     nothing(...target: NodeArg[]): T
+
+    /**
+     * Handles conflicts by updating the existing row with new values.
+     * @param assignments - The column assignments for the update
+     * @param target - The optional conflict target columns or constraints
+     * @param condition - The optional WHERE condition for the update
+     */
     // update(
     //     assignments: NodeArg[],
     //     target?: NodeArg[],
@@ -126,15 +217,30 @@ interface OnConflict<T> {
 // ---------------------------------------------
 
 interface SelectCapabilities extends Where, GroupBy, OrderBy, Limit {
+    /**
+     * Provides table join operations for combining data from multiple tables.
+     */
     join: Join<Select>
 }
 
 interface InsertCapabilities extends Returning {
+    /**
+     * Specifies the values (row) to insert into the table.
+     * Can be recalled for additional new rows.
+     * @param args - The values to insert, corresponding to the specified columns
+     */
     values(...args: NodeArg[]): this
+
+    /**
+     * Provides conflict resolution strategies for handling constraint violations during insertion.
+     */
     conflict: OnConflict<Insert>
 }
 
 interface UpdateCapabilities extends Where, OrderBy, Limit, Returning {
+    /**
+     * Provides conflict resolution strategies for handling constraint violations during updates.
+     */
     conflict: OnConflict<Update>
 }
 
@@ -157,7 +263,6 @@ export class Select extends SqlStatementBuilder implements SelectCapabilities {
     where(...conditions: NodeArg[]): this {
         return this.addClause(where(...conditions))
     }
-
     get join(): Join<Select> {
         return {
             inner: (table: NodeArg, condition?: NodeArg): this =>
@@ -169,7 +274,6 @@ export class Select extends SqlStatementBuilder implements SelectCapabilities {
             cross: (table: NodeArg): this => this.addClause(joinCross(table)),
         }
     }
-
     groupBy(...columns: NodeArg[]): this {
         return this.addClause(groupBy(...columns))
     }
@@ -221,7 +325,6 @@ export class Insert extends SqlStatementBuilder implements InsertCapabilities {
                 this.addClause(onConflictNothing(...target)),
         }
     }
-
     values(...args: NodeArg[]): this {
         if (args.length !== this.cols.length) {
             throw new Error(
@@ -233,7 +336,6 @@ export class Insert extends SqlStatementBuilder implements InsertCapabilities {
 
         return this
     }
-
     returning(...columns: NodeArg[]): this {
         return this.addClause(returning(...columns))
     }
@@ -258,7 +360,6 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
 
         this.addClause(set(...this.assignments))
     }
-
     where(...conditions: NodeArg[]): this {
         return this.addClause(where(...conditions))
     }
@@ -271,7 +372,6 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
     offset(count: NodeArg): this {
         return this.addClause(offset(count))
     }
-
     get conflict(): OnConflict<Update> {
         return {
             abort: (...target: NodeArg[]) =>
@@ -288,7 +388,6 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
                 this.addClause(onConflictNothing(...target)),
         }
     }
-
     returning(...columns: NodeArg[]): this {
         return this.addClause(returning(...columns))
     }
@@ -313,7 +412,6 @@ export class Delete extends SqlStatementBuilder implements DeleteCapabilities {
     offset(count: NodeArg): this {
         return this.addClause(offset(count))
     }
-
     returning(...columns: NodeArg[]): this {
         return this.addClause(returning(...columns))
     }
