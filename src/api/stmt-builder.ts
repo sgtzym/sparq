@@ -30,6 +30,7 @@ import {
     where,
 } from '~/nodes/clauses.ts'
 import { delete_, insert, select, update } from '~/nodes/statements.ts'
+import { cte, withCte } from '~/nodes/ctes.ts'
 import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import { Column } from '~/api/column.ts'
 
@@ -38,37 +39,49 @@ import { Column } from '~/api/column.ts'
 // ---------------------------------------------
 
 abstract class SqlStatementBuilder {
+    protected _modifiers: Node[]
     protected _clauses: Node[]
     protected _sql: SqlString
     protected _params: ParameterReg
 
     constructor() {
+        this._modifiers = []
         this._clauses = []
         this._sql = ''
         this._params = new ParameterReg()
     }
 
-    protected render() {
-        this._sql = renderAST(this._clauses, this._params)
+    protected update(): void {
+        this._sql = renderAST([
+            ...this._modifiers,
+            ...this._clauses,
+        ], this._params)
     }
 
     get sql(): SqlString {
-        this.render()
+        this.update()
         return this._sql
     }
 
     get params(): readonly SqlParam[] {
-        this.render()
+        this.update()
         return this._params.toArray()
     }
 
-    /**
-     * Pushed clause to tree, re-renders sql
-     */
+    protected addModifier(modifier: Node): this {
+        this._modifiers.push(modifier)
+        this.update()
+        return this
+    }
+
     protected addClause(clause: Node): this {
         this._clauses.push(clause)
-        this.render()
+        this.update()
         return this
+    }
+
+    with(name: string, query: NodeArg, recursive?: boolean): this {
+        return this.addModifier(withCte(recursive, cte(name, query)))
     }
 }
 
@@ -76,37 +89,47 @@ abstract class SqlStatementBuilder {
 // Capability mixins
 // ---------------------------------------------
 
-interface Where {
+interface With<T> {
+    /**
+     * Creates a common table expression for subqueries.
+     * @param name - The name of the temp. table
+     * @param query - The subquery
+     * @param recursive - Sets WITH to recursive, if set
+     */
+    with(name: string, query: NodeArg, recursive?: boolean): T
+}
+
+interface Where<T> {
     /**
      * Creates a WHERE clause for data filtering.
      * @param conditions - The conditions to filter by
      */
-    where(...conditions: NodeArg[]): this
+    where(...conditions: NodeArg[]): T
 }
 
-interface OrderBy {
+interface OrderBy<T> {
     /**
      * Creates a ORDER BY clause for data sorting.
      * @param columns - The columns to sort by
      */
-    orderBy(...columns: NodeArg[]): this
+    orderBy(...columns: NodeArg[]): T
 }
 
-interface Limit {
+interface Limit<T> {
     /**
      * Creates a LIMIT clause for restricting result count.
      * Adds OFFSET capability.
      * @param count - The maximum number of rows to return
      */
-    limit(count: NodeArg): this
+    limit(count: NodeArg): T
 }
 
-interface Offset {
+interface Offset<T> {
     /**
      * Creates an OFFSET clause for result pagination.
      * @param count - The number of rows to skip
      */
-    offset(count: NodeArg): this
+    offset(count: NodeArg): T
 }
 
 interface Join<T> {
@@ -138,29 +161,29 @@ interface Join<T> {
     cross(table: NodeArg): T
 }
 
-interface GroupBy {
+interface GroupBy<T> {
     /**
      * Creates a GROUP BY clause for result aggregation.
      * Adds HAVING capability.
      * @param columns - The columns to group by
      */
-    groupBy(...columns: NodeArg[]): this
+    groupBy(...columns: NodeArg[]): T
 }
 
-interface Having {
+interface Having<T> {
     /**
      * Creates a HAVING clause for filtering grouped results.
      * @param conditions - The filter conditions for grouped data
      */
-    having(...conditions: NodeArg[]): this
+    having(...conditions: NodeArg[]): T
 }
 
-interface Returning {
+interface Returning<T> {
     /**
      * Creates a RETURNING clause for retrieving affected row data.
      * @param columns - The columns to return from affected rows
      */
-    returning(...columns: NodeArg[]): this
+    returning(...columns: NodeArg[]): T
 }
 
 interface OnConflict<T> {
@@ -213,14 +236,20 @@ interface OnConflict<T> {
 // Statement capabilities
 // ---------------------------------------------
 
-interface SelectCapabilities extends Where, GroupBy, OrderBy, Limit {
+interface SelectCapabilities
+    extends
+        With<Select>,
+        Where<Select>,
+        GroupBy<Select>,
+        OrderBy<Select>,
+        Limit<Select> {
     /**
      * Provides table join operations for combining data from multiple tables.
      */
     join(table: NodeArg): Join<Select>
 }
 
-interface InsertCapabilities extends Returning {
+interface InsertCapabilities extends With<Insert>, Returning<Insert> {
     /**
      * Specifies the values (row) to insert into the table.
      * Can be recalled for additional new rows.
@@ -234,14 +263,26 @@ interface InsertCapabilities extends Returning {
     conflict(...targets: NodeArg[]): OnConflict<Insert>
 }
 
-interface UpdateCapabilities extends Where, OrderBy, Limit, Returning {
+interface UpdateCapabilities
+    extends
+        With<Update>,
+        Where<Update>,
+        OrderBy<Update>,
+        Limit<Update>,
+        Returning<Update> {
     /**
      * Provides conflict resolution strategies for handling constraint violations during updates.
      */
     conflict(...targets: NodeArg[]): OnConflict<Update>
 }
 
-interface DeleteCapabilities extends Where, OrderBy, Limit, Returning {}
+interface DeleteCapabilities
+    extends
+        With<Delete>,
+        Where<Delete>,
+        OrderBy<Delete>,
+        Limit<Delete>,
+        Returning<Delete> {}
 
 // ---------------------------------------------
 // Statement builders
@@ -356,7 +397,6 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
 
         this.addClause(set(...this.assignments))
     }
-
     where(...conditions: NodeArg[]): this {
         return this.addClause(where(...conditions))
     }

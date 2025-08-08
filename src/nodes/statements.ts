@@ -7,7 +7,7 @@ import {
     renderAll,
     toNode,
 } from '~/core/node.ts'
-import { id } from '~/nodes/primitives.ts'
+import { id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Statements
@@ -21,15 +21,12 @@ import { id } from '~/nodes/primitives.ts'
 export class SelectNode implements Node {
     readonly priority: number = 0
 
-    constructor(private readonly columns?: ArrayLike<Node>) {}
+    constructor(private readonly columns: ArrayLike<Node>) {}
 
     render(params: ParameterReg): SqlString {
-        const cols: string =
-            this.columns && Array.isArray(this.columns) && this.columns.length
-                ? renderAll(this.columns, params).join(', ')
-                : '*'
+        const _columns: SqlString = renderAll(this.columns, params).join(', ')
 
-        return `${sql('SELECT')} ${cols}`
+        return `${sql('SELECT')} ${_columns}`
     }
 }
 
@@ -85,18 +82,22 @@ export class DeleteNode implements Node {
  * @param columns The optional columns to select
  * @returns A SELECT node
  */
-export const select = (columns?: NodeArg[]): Node =>
-    new SelectNode(
-        columns.map((col) => (typeof col === 'string' ? id(col) : toNode(col))),
-    )
+export const select = (columns?: NodeArg[]): Node => {
+    const _columns: Node[] = []
+
+    columns && columns.length > 0
+        ? columns.map((c) => typeof c === 'string' ? id(c) : toNode(c))
+        : _columns.push(raw('*'))
+
+    return new SelectNode(_columns)
+}
 
 /**
  * Creates an UPDATE statement for the specified table.
  * @param table The table to update
  * @returns An UPDATE node
  */
-export const update = (table: NodeArg): Node =>
-    new UpdateNode(typeof table === 'string' ? id(table) : toNode(table))
+export const update = (table: string): Node => new UpdateNode(id(table))
 
 /**
  * Creates an INSERT statement with table and column specification.
@@ -104,11 +105,8 @@ export const update = (table: NodeArg): Node =>
  * @param columns The columns to insert
  * @returns An INSERT node
  */
-export const insert = (table: NodeArg, columns: NodeArg[]): Node =>
-    new InsertNode(
-        typeof table === 'string' ? id(table) : toNode(table),
-        columns.map(toNode),
-    )
+export const insert = (table: string, columns: NodeArg[]): Node =>
+    new InsertNode(id(table), columns.map(toNode))
 
 /**
  * Creates a DELETE statement.

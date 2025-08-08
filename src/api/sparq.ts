@@ -2,6 +2,7 @@ import type { NodeArg } from '~/core/node.ts'
 import { Column } from '~/api/column.ts'
 import tables, { type Table } from '~/api/table.ts'
 import { Delete, Insert, Select, Update } from './stmt-builder.ts'
+import { with_ } from '../nodes/ctes.ts'
 
 // Columns API
 type SparqColumns<T extends Table> =

@@ -1,7 +1,6 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
 import {
-    isNodeConvertible,
     type Node,
     type NodeArg,
     type ParameterReg,
@@ -9,8 +8,6 @@ import {
     toNode,
 } from '~/core/node.ts'
 import { id, raw } from '~/nodes/primitives.ts'
-import { BinaryNode, ConjunctionNode, UnaryNode } from '~/nodes/expressions.ts'
-import { AssignmentNode } from '~/nodes/values.ts'
 
 // ---------------------------------------------
 // Clauses
@@ -218,7 +215,7 @@ export class OnConflictNode implements Node {
         return sql(
             'ON CONFLICT',
             _targets ? `(${_targets})` : '',
-            'DO',
+            '\nDO',
             _action,
         )
     }
@@ -249,9 +246,9 @@ export class UpsertNode implements Node {
         return sql(
             'ON CONFLICT',
             _targets ? `(${_targets})` : '',
-            'DO UPDATE SET',
+            '\nDO UPDATE SET',
             _assignments,
-            _conditions ? `WHERE ${_conditions}` : '',
+            _conditions ? `\nWHERE ${_conditions}` : '',
         )
     }
 }
