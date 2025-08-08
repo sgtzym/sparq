@@ -25,3 +25,20 @@ const query = user.select(
 
 console.log(query.sql) // Generated SQL
 console.log(query.params) // Parameterized values
+
+
+
+const query2 = user.insert(
+    $.email
+).values('asdf@asdf.de').conflict.upsert(
+    [
+        $.score.set(0),
+        $.email.set('nö!')
+    ],
+    [ $.email ],
+    [
+        $.score.ge(9999)
+    ]
+)
+
+console.log(query2.sql, query2.params)

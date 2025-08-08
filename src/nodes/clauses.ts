@@ -248,7 +248,7 @@ export class UpsertNode implements Node {
             _targets,
             'DO UPDATE SET',
             _assignments,
-            _conditions,
+            _conditions ? `WHERE ${_conditions}` : '',
         )
     }
 }
