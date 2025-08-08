@@ -9,8 +9,8 @@ import {
     toNode,
 } from '~/core/node.ts'
 import { id, raw } from '~/nodes/primitives.ts'
-import { AssignmentNode } from './values.ts'
-import { BinaryNode, UnaryNode } from './expressions.ts'
+import { BinaryNode, ConjunctionNode, UnaryNode } from '~/nodes/expressions.ts'
+import { AssignmentNode } from '~/nodes/values.ts'
 
 // ---------------------------------------------
 // Clauses
@@ -442,21 +442,22 @@ export const onConflictUpdate = (...args: NodeArg[]) => {
 
     for (const arg of args) {
         switch (true) {
+            case isNodeConvertible(arg): // Columns like "$.id"
+                _targets.push(arg)
+                break
             case arg instanceof AssignmentNode:
                 _assignments.push(arg)
                 break
-            case isNodeConvertible(arg):
-                _targets.push(arg)
-                break
             case arg instanceof UnaryNode:
             case arg instanceof BinaryNode:
+            case arg instanceof ConjunctionNode:
                 _conditions.push(arg)
         }
     }
 
     return new UpsertNode(
         _assignments.map(toNode),
-        _targets.map(toNode),
-        _conditions.map(toNode),
+        _targets.length > 0 ? _targets.map(toNode) : undefined,
+        _conditions.length > 0 ? _conditions.map(toNode) : undefined,
     )
 }
