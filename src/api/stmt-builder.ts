@@ -206,11 +206,7 @@ interface OnConflict<T> {
      * @param assignments - The column assignments for the update
      * @param conditions - The optional WHERE condition for the update
      */
-    upsert(
-        assignments: NodeArg[],
-        targets?: NodeArg[],
-        conditions?: NodeArg[],
-    ): T
+    upsert(...args: NodeArg[]): T
 }
 
 // ---------------------------------------------
@@ -324,13 +320,8 @@ export class Insert extends SqlStatementBuilder implements InsertCapabilities {
                 this.addClause(onConflictRollback(...target)),
             nothing: (...target: NodeArg[]) =>
                 this.addClause(onConflictNothing(...target)),
-            upsert: (
-                assignments: NodeArg[],
-                targets?: NodeArg[],
-                conditions?: NodeArg[],
-            ) => this.addClause(
-                onConflictUpdate(assignments, targets, conditions),
-            ),
+            upsert: (...args: NodeArg[]) =>
+                this.addClause(onConflictUpdate(...args)),
         }
     }
     values(...args: NodeArg[]): this {
@@ -394,13 +385,8 @@ export class Update extends SqlStatementBuilder implements UpdateCapabilities {
                 this.addClause(onConflictRollback(...target)),
             nothing: (...target: NodeArg[]) =>
                 this.addClause(onConflictNothing(...target)),
-            upsert: (
-                assignments: NodeArg[],
-                targets?: NodeArg[],
-                conditions?: NodeArg[],
-            ) => this.addClause(
-                onConflictUpdate(assignments, targets, conditions),
-            ),
+            upsert: (...args: NodeArg[]) =>
+                this.addClause(onConflictUpdate(...args)),
         }
     }
     returning(...columns: NodeArg[]): this {

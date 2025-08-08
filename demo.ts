@@ -27,18 +27,14 @@ console.log(query.sql) // Generated SQL
 console.log(query.params) // Parameterized values
 
 
-
+// enhancement: automatically determine param types to let this through?
 const query2 = user.insert(
     $.email
 ).values('asdf@asdf.de').conflict.upsert(
-    [
-        $.score.set(0),
-        $.email.set('nö!')
-    ],
-    [ $.email ],
-    [
-        $.score.ge(9999)
-    ]
+    $.email,
+    $.score.set(0),
+    $.score.gt(0),
+    $.score.isNotNull()
 )
 
 console.log(query2.sql, query2.params)

@@ -170,7 +170,7 @@ export interface NodeConvertible {
 export type NodeArg = Node | NodeConvertible | Param
 
 /** Node convertible type guard */
-function isNodeConvertible(arg: unknown): arg is NodeConvertible {
+export function isNodeConvertible(arg: any): arg is NodeConvertible {
     return arg && typeof arg === 'object' && 'node' in arg && isNode(arg.node)
 }
 

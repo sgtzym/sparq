@@ -1,6 +1,7 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
 import {
+    isNodeConvertible,
     type Node,
     type NodeArg,
     type ParameterReg,
@@ -8,6 +9,8 @@ import {
     toNode,
 } from '~/core/node.ts'
 import { id, raw } from '~/nodes/primitives.ts'
+import { AssignmentNode } from './values.ts'
+import { BinaryNode, UnaryNode } from './expressions.ts'
 
 // ---------------------------------------------
 // Clauses
@@ -208,13 +211,13 @@ export class OnConflictNode implements Node {
     render(params: ParameterReg): SqlString {
         const _action: SqlString = this.action.render(params)
 
-        const _targets: SqlString = this.targets
-            ? `(${renderAll(this.targets, params).join(', ')})`
-            : ''
+        const _targets: SqlString | undefined = this.targets
+            ? renderAll(this.targets, params).join(', ')
+            : undefined
 
         return sql(
             'ON CONFLICT',
-            _targets,
+            _targets ? `(${_targets})` : '',
             'DO',
             _action,
         )
@@ -235,17 +238,17 @@ export class UpsertNode implements Node {
         const _assignments: SqlString = renderAll(this.assignments, params)
             .join(', ')
 
-        const _targets: SqlString = this.targets
-            ? `(${renderAll(this.targets, params).join(', ')})`
-            : ''
+        const _targets: SqlString | undefined = this.targets
+            ? renderAll(this.targets, params).join(', ')
+            : undefined
 
-        const _conditions: SqlString = this.conditions
+        const _conditions: SqlString | undefined = this.conditions
             ? renderAll(this.conditions, params).join(` ${sql('AND')} `)
-            : ''
+            : undefined
 
         return sql(
             'ON CONFLICT',
-            _targets,
+            _targets ? `(${_targets})` : '',
             'DO UPDATE SET',
             _assignments,
             _conditions ? `WHERE ${_conditions}` : '',
@@ -393,9 +396,9 @@ export const set = (...assignments: NodeArg[]) =>
  * @param target - The conflict target (columns)
  * @returns A function that creates join nodes
  */
-const conflict = (action: NodeArg) => (...targets: NodeArg[]) =>
+const conflict = (action: string) => (...targets: NodeArg[]) =>
     new OnConflictNode(
-        toNode(action),
+        raw(action),
         targets.map((t) => typeof t === 'string' ? id(t) : toNode(t)),
     )
 
@@ -432,14 +435,28 @@ export const onConflictNothing = conflict(sql('NOTHING'))
 /**
  * Creates a ON CONFLICT clause for UPSERT resolution.
  */
-export const onConflictUpdate = (
-    assignments: NodeArg[],
-    targets?: NodeArg[],
-    conditions?: NodeArg[],
-) => new UpsertNode(
-    assignments.map(toNode),
-    targets
-        ? targets.map((t) => typeof t === 'string' ? id(t) : toNode(t))
-        : undefined,
-    conditions ? conditions.map(toNode) : undefined,
-)
+export const onConflictUpdate = (...args: NodeArg[]) => {
+    const _assignments = []
+    const _targets = []
+    const _conditions = []
+
+    for (const arg of args) {
+        switch (true) {
+            case arg instanceof AssignmentNode:
+                _assignments.push(arg)
+                break
+            case isNodeConvertible(arg):
+                _targets.push(arg)
+                break
+            case arg instanceof UnaryNode:
+            case arg instanceof BinaryNode:
+                _conditions.push(arg)
+        }
+    }
+
+    return new UpsertNode(
+        _assignments.map(toNode),
+        _targets.map(toNode),
+        _conditions.map(toNode),
+    )
+}
