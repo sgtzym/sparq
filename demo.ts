@@ -6,6 +6,7 @@ const user = sparq('user', {
     email: { type: 'TEXT', unique: true },
     age: { type: 'INTEGER' },
     score: { type: 'REAL' },
+    active: { type: 'INTEGER' }
 })
 
 // 2. Query data
@@ -27,13 +28,13 @@ console.log(query.sql) // Generated SQL
 console.log(query.params) // Parameterized values
 
 
-// enhancement: automatically determine param types to let this through?
 const query2 = user.insert($.email)
-    .values('asdf@asdf.de')
+    .values('test@example.com')
     .conflict($.email)
     .upsert(
-        [ $.score.set(0) ],
-        $.score.gt(0)
+        [$.score.set(100)],
+        $.score.gt(0),
+        $.active.eq(1)
     )
 
 console.log(query2.sql, query2.params)

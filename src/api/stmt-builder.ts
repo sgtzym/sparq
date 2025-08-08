@@ -202,9 +202,9 @@ interface OnConflict<T> {
 
     /**
      * Handles conflicts by updating the existing row with new values.
-     * @param assignments - The column assignments for the update
-     * @param targets - The optional conflict targets columns or constraints
-     * @param conditions - The optional WHERE condition for the update
+     * @param assignments - The list of column assignments
+     * @param targets - The optional conflict target columns or constraints
+     * @param conditions - The optional WHERE condition
      */
     upsert(assignments: NodeArg[], ...conditions: NodeArg[]): T
 }
