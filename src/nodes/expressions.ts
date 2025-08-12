@@ -1,0 +1,329 @@
+import type { ArrayLike } from '~/core/utils.ts'
+import { sql, type SqlString } from '~/core/sql.ts'
+import {
+    type Node,
+    type NodeArg,
+    type ParameterReg,
+    renderAll,
+    toNode,
+} from '~/core/node.ts'
+import { raw } from '~/nodes/primitives.ts'
+
+// ---------------------------------------------
+// Expressions
+// ---------------------------------------------
+
+// -> 🔷 Nodes
+
+/**
+ * Represents a unary operation with configurable positioning (A x).
+ */
+export class UnaryNode implements Node {
+    constructor(
+        private readonly operator: Node,
+        private readonly expr?: Node,
+        private readonly position: 'pfx' | 'sfx' = 'sfx',
+    ) {}
+
+    render(params: ParameterReg): SqlString {
+        const op: string = this.operator.render(params)
+        const expr: string | undefined = this.expr?.render(params)
+
+        return this.expr
+            ? this.position === 'pfx' ? `${op} ${expr}` : `${expr} ${op}`
+            : op
+    }
+}
+
+/**
+ * Represents a binary operation (A x B).
+ */
+export class BinaryNode implements Node {
+    constructor(
+        private readonly left: Node,
+        private readonly operator: Node,
+        private readonly right: Node,
+    ) {}
+
+    render(params: ParameterReg): SqlString {
+        const left: string = this.left.render(params)
+        const op: string = this.operator.render(params)
+        const right: string = this.right.render(params)
+
+        return `${left} ${op} ${right}`
+    }
+}
+
+/**
+ * Represents a conjunction operation (A and/or B).
+ */
+export class ConjunctionNode implements Node {
+    constructor(
+        private readonly operator: Node,
+        private readonly conditions: ArrayLike<Node>,
+        private readonly grouped: boolean = false,
+    ) {}
+
+    render(params: ParameterReg): SqlString {
+        const op: string = this.operator.render(params)
+        const conditions: string = renderAll(this.conditions, params).join(
+            ` ${op} `,
+        )
+
+        return this.grouped ? `(${conditions})` : conditions
+    }
+}
+
+// -> 🏭 Factories
+
+/**
+ * Creates a conjunction operator factory with optional grouping.
+ * @param op - The conjunction operator string
+ * @param grouped - Whether to wrap in parentheses
+ * @returns A function that creates conjunction nodes
+ */
+const conjunction =
+    (op: string, grouped = false) => (...conditions: NodeArg[]): Node =>
+        new ConjunctionNode(raw(op), conditions.map(toNode), grouped)
+
+/**
+ * Creates a logical AND operation with parentheses.
+ * @param conditions - The conditions to combine
+ * @returns A conjunction node
+ */
+export const and = conjunction(sql('AND'), true)
+
+/**
+ * Creates a logical OR operation with parentheses.
+ * @param conditions - The conditions to combine
+ * @returns A conjunction node
+ */
+export const or = conjunction(sql('OR'), true)
+
+/**
+ * Creates a comparison expression factory.
+ * @param {string} op - The comparison operator
+ * @returns A factory function for comparison nodes
+ */
+const comparison = (op: string) => (left: NodeArg, right: NodeArg): Node =>
+    new BinaryNode(toNode(left), raw(op), toNode(right))
+
+/**
+ * Creates an equality comparison (=).
+ * @param left - The left-hand expression
+ * @param right - The right-hand expression
+ * @returns A comparison node
+ */
+export const eq = comparison('=')
+
+/**
+ * Creates a not-equal comparison (!=).
+ * @param left - The left-hand expression
+ * @param right - The right-hand expression
+ * @returns A comparison node
+ */
+export const ne = comparison('!=')
+
+/**
+ * Creates a greater-than comparison (>).
+ * @param left - The left-hand expression
+ * @param right - The right-hand expression
+ * @returns A comparison node
+ */
+export const gt = comparison('>')
+
+/**
+ * Creates a less-than comparison (<).
+ * @param left - The left-hand expression
+ * @param right - The right-hand expression
+ * @returns A comparison node
+ */
+export const lt = comparison('<')
+
+/**
+ * Creates a greater-than-or-equal comparison (>=).
+ * @param left - The left-hand expression
+ * @param right - The right-hand expression
+ * @returns A comparison node
+ */
+export const ge = comparison('>=')
+
+/**
+ * Creates a less-than-or-equal comparison (<=).
+ * @param left - The left-hand expression
+ * @param right - The right-hand expression
+ * @returns A comparison node
+ */
+export const le = comparison('<=')
+
+/**
+ * Creates a LIKE pattern matching comparison.
+ * @param left - The expression to match
+ * @param right - The pattern to match against
+ * @returns A comparison node
+ */
+export const like = comparison(sql('LIKE'))
+
+/**
+ * Creates a GLOB pattern matching comparison.
+ * @param left - The expression to match
+ * @param right - The pattern to match against
+ * @returns A comparison node
+ */
+export const glob = comparison(sql('GLOB'))
+
+/**
+ * Creates an IN membership comparison.
+ * @param left - The expression to test
+ * @param right - The list of values to test against
+ * @returns A comparison node
+ */
+export const in_ = comparison(sql('IN'))
+
+/**
+ * Creates a BETWEEN range comparison.
+ * @param test - The expression to test
+ * @param lower - The lower bound value
+ * @param upper - The upper bound value
+ * @returns A comparison node
+ */
+export const between = (test: NodeArg, lower: NodeArg, upper: NodeArg): Node =>
+    new BinaryNode(
+        toNode(test),
+        raw(sql('BETWEEN')),
+        new ConjunctionNode(raw(sql('AND')), [
+            toNode(lower),
+            toNode(upper),
+        ]),
+    )
+
+/**
+ * Creates a NOT logical negation.
+ * @param operand - The expression to negate
+ * @returns A unary node
+ */
+export const not = (expr: NodeArg): Node =>
+    new UnaryNode(raw(sql('NOT')), toNode(expr), 'pfx')
+
+/**
+ * Creates an EXISTS subquery check.
+ * @param operand - The subquery to check
+ * @returns A unary node
+ */
+export const exists = (expr: NodeArg): Node =>
+    new UnaryNode(raw(sql('EXISTS')), toNode(expr), 'pfx')
+
+/**
+ * Creates an IS NULL check.
+ * @param operand - The expression to test
+ * @returns A unary node
+ */
+export const isNull = (expr: NodeArg): Node =>
+    new UnaryNode(raw(`${sql('IS')} ${sql('NULL')}`), toNode(expr), 'pfx')
+
+/**
+ * Creates an IS NOT NULL check.
+ * @param operand - The expression to test
+ * @returns A unary node
+ */
+export const isNotNull = (expr: NodeArg): Node =>
+    new UnaryNode(
+        raw(`${sql('IS')} ${sql('NOT')} ${sql('NULL')}`),
+        toNode(expr),
+        'pfx',
+    )
+
+/**
+ * Creates an arithmetic operator factory.
+ * @param op - The arithmetic operator string
+ * @returns A function that creates binary nodes
+ */
+const arithmetic = (op: string) => (left: NodeArg, right: NodeArg): Node =>
+    new BinaryNode(toNode(left), raw(op), toNode(right))
+
+/**
+ * Creates an addition operation (+).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const add = arithmetic('+')
+
+/**
+ * Creates a subtraction operation (-).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const sub = arithmetic('-')
+
+/**
+ * Creates a multiplication operation (*).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const mul = arithmetic('*')
+
+/**
+ * Creates a division operation (/).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const div = arithmetic('/')
+
+/**
+ * Creates a set quantifier factory.
+ * @param q - The quantifier string
+ * @returns A function that creates unary nodes
+ */
+const quantifier = (q: string) => (expr?: NodeArg): Node =>
+    new UnaryNode(raw(q), toNode(expr), 'pfx')
+
+/**
+ * Creates a DISTINCT modifier for removing duplicates.
+ * @param expr - The optional expression to apply DISTINCT to
+ * @returns A unary node
+ */
+export const distinct = quantifier(sql('DISTINCT'))
+
+/**
+ * Creates an ALL quantifier (opposite of DISTINCT).
+ * @param expr - The optional expression to apply ALL to
+ * @returns A unary node
+ */
+export const all = quantifier(sql('ALL'))
+
+/**
+ * Creates a sorting direction factory.
+ * @param dir - The sorting direction string
+ * @returns A function that creates unary nodes
+ */
+const sortDir = (dir: string) => (expr: NodeArg): Node => {
+    return new UnaryNode(raw(dir), toNode(expr))
+}
+
+/**
+ * Creates an ascending sort order (ASC).
+ * @param expr - The expression to sort by
+ * @returns A unary node
+ */
+export const asc = sortDir(sql('ASC'))
+
+/**
+ * Creates a descending sort order (DESC).
+ * @param expr - The expression to sort by
+ * @returns A unary node
+ */
+export const desc = sortDir(sql('DESC'))
+
+/**
+ * Creates a column or expression alias using AS.
+ * @param expr - The expression to alias
+ * @param as - The alias name
+ * @returns A binary node
+ */
+export const alias = (expr: NodeArg, as: NodeArg): Node => {
+    return new BinaryNode(toNode(expr), raw(sql('AS')), toNode(as))
+}
