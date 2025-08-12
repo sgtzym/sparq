@@ -41,7 +41,12 @@ import { AssignmentNode, valueList } from '~/nodes/values.ts'
 const joinImpl = function <T extends SqlQueryBuilder>(
     this: T,
     table: NodeArg,
-) {
+): {
+    inner: (condition?: NodeArg) => T
+    left: (condition?: NodeArg) => T
+    leftOuter: (condition?: NodeArg) => T
+    cross: () => T
+} {
     return {
         inner: (condition?: NodeArg): T =>
             this.add(joinInner(table, condition)),
@@ -103,7 +108,15 @@ const returningImpl = function <T extends SqlQueryBuilder>(
 const conflictImpl = function <T extends SqlQueryBuilder>(
     this: T,
     ...targets: NodeArg[]
-) {
+): {
+    abort: () => T
+    fail: () => T
+    ignore: () => T
+    replace: () => T
+    rollback: () => T
+    nothing: () => T
+    upsert: (assignments: NodeArg[], ...conditions: NodeArg[]) => T
+} {
     return {
         abort: (): T => this.add(onConflictAbort(...targets)),
         fail: (): T => this.add(onConflictFail(...targets)),
