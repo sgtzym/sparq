@@ -28,7 +28,7 @@ deno add @sgtzym/sparq
 3. Use the generated results to prepare statements with any SQLite driver that supports named parameters
 
 > [!TIP]
-> Column definitions are exposed via the `$` property.  
+> Columns are exposed via the `$` property.  
 > Assign them to local variables to simplify access, especially in JOINs and subqueries.
 
 ```ts
@@ -83,7 +83,7 @@ ORDER BY posts.view_count DESC, posts.published_at DESC
 LIMIT :p3
 ```
 
-Parameter list:
+Parameters:
 
 ```ts
 [ 1, "2024-01-01T00:00:00.000Z", 20 ]
