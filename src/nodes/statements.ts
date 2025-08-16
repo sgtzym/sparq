@@ -82,10 +82,15 @@ export class DeleteNode implements Node {
  * @param columns The optional columns to select
  * @returns A SELECT node
  */
-export const _select = (columns?: NodeArg[]): Node =>
-    new SelectNode(
-        columns && columns.length > 0 ? columns.map(toNode) : raw('*'),
-    )
+export const _select = (columns?: NodeArg[]): Node => {
+    if (!columns || columns.length === 0) {
+        return new SelectNode(raw('*'))
+    }
+
+    const _columns: Node[] = columns.map(id)
+
+    return new SelectNode(_columns)
+}
 
 /**
  * Creates an UPDATE statement for the specified table.

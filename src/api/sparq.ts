@@ -7,8 +7,7 @@ import {
     NumberColumn,
     TextColumn,
 } from '~/api/column.ts'
-
-import { Delete, Insert, SelectBuilder, Update } from './query-builders.ts'
+import { Delete, Insert, Select, Update } from '~/api/query-builders.ts'
 
 type TableSchema = Record<string, Param>
 
@@ -26,14 +25,15 @@ type ColumnsProxy<T extends TableSchema> = {
     [K in keyof T]: ColumnTypeMapping<K & string, T[K]>
 }
 
-class Sparq<T extends TableSchema> {
+export class Sparq<T extends TableSchema> {
+    public readonly table: string
     private readonly columns: ColumnsProxy<T>
 
     constructor(
-        private readonly table: string,
+        table: string,
         schema: T,
     ) {
-        // Create columns dynamically from schema
+        this.table = table
         this.columns = {} as ColumnsProxy<T>
 
         for (const [name, value] of Object.entries(schema)) {
@@ -64,8 +64,8 @@ class Sparq<T extends TableSchema> {
      * Creates a SELECT query for this table.
      * @param columns - Columns to select (defaults to * if empty)
      */
-    select(...columns: NodeArg[]): SelectBuilder {
-        return new SelectBuilder(this.table, columns)
+    select(...columns: NodeArg[]): Select {
+        return new Select(this.table, columns)
     }
 
     /**

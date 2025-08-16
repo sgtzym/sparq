@@ -1,49 +1,94 @@
 # SPARQ
 
-A declarative and type-safe SQLite query builder for Deno 🦕 with zero dependencies.  
+![Build](https://github.com/sgtzym/sparq/actions/workflows/build.yml/badge.svg)
+[![JSR](https://jsr.io/badges/@sgtzym/sparq)](https://jsr.io/@sgtzym/sparq)
+[![JSR Score](https://jsr.io/badges/@sgtzym/sparq/score)](https://jsr.io/@sgtzym/sparq)
 
-Sparq makes use of the abstract-syntax-tree (AST) concept to generate a node-tree based on query input, then translates it to parameterized SQL syntax.
+> A declarative, AST-based and type-safe SQLite query builder for Deno 🦕 - with zero dependencies.
 
-API → AST → SQL syntax
+SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex, parameterized queries - including subqueries and CTEs - while preserving SQLite's full expressiveness.
 
-> [!WARNING]
-> This is a personal project for educational purposes - use at own risk!
+**Conversion:** Query composition (fluent API) → Abstract syntax tree (AST) → SQLite syntax + parameter list
 
-## Quick start
+## Features
+
+- **Complex query composition** via easy-to-use fluent API including JOINs, CTEs and subqueries
+- **Schema-aware column operations** with readable and type-safe methods
+- **Automatic parameter binding** with deduplication and SQL injection protection
+- **Auto-quoted identifiers** for qualified table and column names
+- **Conflict resolution** with Upsert and ON CONFLICT handling
+- **Zero runtime dependencies** - pure TypeScript implementation
+
+## Installation
+
+```bash
+deno add @sgtzym/sparq
+```
+
+## Usage
+
+1. Define table schemas with `sparq()`
+2. Build queries on set schemas
+3. Use the generated results to prepare statements with any SQLite driver that supports named parameters
+
+> [!TIP]
+> Columns are exposed via the `$` property.  
+> Assign them to local variables to simplify access, especially in JOINs and subqueries.
 
 ```ts
-import { sparq, col } from '@sgtzym/sparq'
-
-// 1. Define table data
-
 const users = sparq('users', {
     id: col.number(),
     name: col.text(),
-    email: col.text(),
-    age: col.number(),
-    score: col.number(),
     active: col.boolean(),
-    created: col.date(),
-    data: col.list(),
-    metadata: col.json()
+    created_at: col.date(),
 })
 
-// 2. Query table data
+const posts = sparq('posts', {
+    id: col.number(),
+    title: col.text(),
+    content: col.text(),
+    user_id: col.number(),
+    published_at: col.date(),
+    view_count: col.number(),
+})
 
-const { $ } = user
+const { $: u } = users
+const { $: p } = posts
 
-const query = user.select(
-  $.id,
-  $.name,
-  $.score.as('points'),
-).where(
-  $.age.ge(21),
-  $.name.like('Jane%'),
-  $.email.endsWith('@doe.com'),
-).orderBy(
-  $.score.desc(),
-).limit(10)
+const result = users
+    .select(
+        u.id,
+        u.name,
+        p.title,
+        p.view_count,
+        p.published_at.as('published'),
+    )
+    .join(posts).left(p.user_id.eq(u.id))
+    .where(
+        u.active.eq(true),
+        p.published_at.gt(new Date('2024-01-01')),
+    )
+    .orderBy(p.view_count.desc(), p.published_at.desc())
+    .limit(20)
 
-// Generated SQL and parameter list
-console.log(query.sql, query.params)
+console.log(result.sql, result.params)
+```
+
+### Result
+
+Generated SQL:
+
+```sql
+SELECT users.id, users.name, posts.title, posts.view_count, posts.published_at AS published
+FROM users
+LEFT JOIN posts ON posts.user_id = users.id
+WHERE users.active = :p1 AND posts.published_at > :p2
+ORDER BY posts.view_count DESC, posts.published_at DESC
+LIMIT :p3
+```
+
+Parameters:
+
+```ts
+[ 1, "2024-01-01T00:00:00.000Z", 20 ]
 ```

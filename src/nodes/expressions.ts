@@ -219,7 +219,7 @@ export const exists = (expr: NodeArg): Node =>
  * @returns A unary node
  */
 export const isNull = (expr: NodeArg): Node =>
-    new UnaryNode(raw(`${sql('IS')} ${sql('NULL')}`), toNode(expr), 'pfx')
+    new UnaryNode(raw(`${sql('IS')} ${sql('NULL')}`), toNode(expr), 'sfx')
 
 /**
  * Creates an IS NOT NULL check.
@@ -230,7 +230,7 @@ export const isNotNull = (expr: NodeArg): Node =>
     new UnaryNode(
         raw(`${sql('IS')} ${sql('NOT')} ${sql('NULL')}`),
         toNode(expr),
-        'pfx',
+        'sfx',
     )
 
 /**
