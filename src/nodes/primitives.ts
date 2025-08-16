@@ -4,7 +4,13 @@ import {
     type SqlString,
     toSqlParam,
 } from '~/core/sql.ts'
-import type { Node, Param, ParameterReg } from '~/core/node.ts'
+import {
+    type Node,
+    type NodeArg,
+    type Param,
+    type ParameterReg,
+    toNode,
+} from '~/core/node.ts'
 
 // ---------------------------------------------
 // Primitives
@@ -63,21 +69,21 @@ export const raw = (sql: string): Node => {
 
 /**
  * Creates a literal value.
- * @param value The literal value
+ * @param arg The literal value
  * @returns A literal node
  */
-export const val = (value: Param): Node => {
-    if (!isSqlParam(value)) {
-        throw new Error(`${value} is not a valid SQL value`)
+export const val = (arg: Param): Node => {
+    if (!isSqlParam(arg)) {
+        throw new Error(`${arg} is not a valid SQL value`)
     }
-    return new LiteralNode(value)
+    return new LiteralNode(arg)
 }
 
 /**
  * Creates a column/table identifier.
- * @param name The column/table name
+ * @param arg The column/table name
  * @returns An identifier node
  */
-export const id = (name: string): Node => {
-    return new IdentifierNode(name)
+export const id = (arg: NodeArg): Node => {
+    return typeof arg === 'string' ? new IdentifierNode(arg) : toNode(arg)
 }

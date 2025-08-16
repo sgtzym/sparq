@@ -260,12 +260,7 @@ export class UpsertNode implements Node {
  * @param tables - The tables to select from
  * @returns A FROM node
  */
-export const from = (...tables: NodeArg[]) =>
-    new FromNode(
-        tables.map((table) =>
-            typeof table === 'string' ? id(table) : toNode(table)
-        ),
-    )
+export const from = (...tables: NodeArg[]) => new FromNode(tables.map(id))
 
 /**
  * Creates a JOIN clause factory.
@@ -275,7 +270,7 @@ export const from = (...tables: NodeArg[]) =>
 const join = (type: string) => (table: NodeArg, condition?: NodeArg): Node =>
     new JoinNode(
         raw(type),
-        toNode(table),
+        id(table),
         condition ? toNode(condition) : undefined,
     )
 
@@ -309,10 +304,7 @@ export const joinLeftOuter = join(sql('LEFT OUTER'))
  * @returns A join node
  */
 export const joinCross = (table: NodeArg) =>
-    new JoinNode(
-        raw(sql('CROSS')),
-        typeof table === 'string' ? id(table) : toNode(table),
-    )
+    new JoinNode(raw(sql('CROSS')), id(table))
 
 /**
  * Creates a WHERE clause with filter conditions.
@@ -328,9 +320,7 @@ export const where = (...conditions: NodeArg[]) =>
  * @returns A GROUP BY node
  */
 export const groupBy = (...columns: NodeArg[]) =>
-    new GroupByNode(
-        columns.map((col) => (typeof col === 'string' ? id(col) : toNode(col))),
-    )
+    new GroupByNode(columns.map(id))
 
 /**
  * Creates a HAVING clause for filtering grouped results.
@@ -346,9 +336,7 @@ export const having = (...conditions: NodeArg[]) =>
  * @returns An ORDER BY node
  */
 export const orderBy = (...columns: NodeArg[]) =>
-    new OrderByNode(
-        columns.map((col) => (typeof col === 'string' ? id(col) : toNode(col))),
-    )
+    new OrderByNode(columns.map(id))
 
 /**
  * Creates a LIMIT clause for restricting result count.
@@ -370,7 +358,9 @@ export const offset = (count: NodeArg) => new OffsetNode(toNode(count))
  * @returns A RETURNING node
  */
 export const returning = (...columns: NodeArg[]) =>
-    new ReturningNode(columns.map(toNode))
+    new ReturningNode(
+        columns && columns.length > 0 ? columns.map(toNode) : raw('*'),
+    )
 
 /**
  * Creates a VALUES clause for explicit row data.
@@ -394,10 +384,7 @@ export const set = (...assignments: NodeArg[]) =>
  * @returns A function that creates join nodes
  */
 const conflict = (action: string) => (...targets: NodeArg[]) =>
-    new OnConflictNode(
-        raw(action),
-        targets.map((t) => typeof t === 'string' ? id(t) : toNode(t)),
-    )
+    new OnConflictNode(raw(action), targets.map(id))
 
 /**
  * Creates a ON CONFLICT clause for DO ABORT resolution.

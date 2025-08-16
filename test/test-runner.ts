@@ -12,7 +12,7 @@ interface TestCase {
 
 const normalize = (s: string) => s.replace(/\s+/g, ' ').trim()
 
-export function testSQL(name: string, tests: Array<TestCase>) {
+export function test(name: string, tests: Array<TestCase>) {
     Deno.test(name, async (t) => {
         for (const test of tests) {
             await t.step(test.name, () => {

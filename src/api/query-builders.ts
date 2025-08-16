@@ -33,6 +33,7 @@ import {
 import { _delete, _insert, _select, _update } from '~/nodes/statements.ts'
 import { cte, with_ } from '~/nodes/ctes.ts'
 import { AssignmentNode, valueList } from '~/nodes/values.ts'
+import { Sparq } from '~/api/sparq.ts'
 
 // ---------------------------------------------
 // Clause implementations
@@ -47,13 +48,15 @@ const joinImpl = function <T extends SqlQueryBuilder>(
     leftOuter: (condition?: NodeArg) => T
     cross: () => T
 } {
+    const _table: NodeArg = table instanceof Sparq ? table.table : table
+
     return {
         inner: (condition?: NodeArg): T =>
-            this.add(joinInner(table, condition)),
-        left: (condition?: NodeArg): T => this.add(joinLeft(table, condition)),
+            this.add(joinInner(_table, condition)),
+        left: (condition?: NodeArg): T => this.add(joinLeft(_table, condition)),
         leftOuter: (condition?: NodeArg): T =>
-            this.add(joinLeftOuter(table, condition)),
-        cross: (): T => this.add(joinCross(table)),
+            this.add(joinLeftOuter(_table, condition)),
+        cross: (): T => this.add(joinCross(_table)),
     }
 }
 
@@ -165,7 +168,7 @@ export abstract class SqlQueryBuilder {
     /**
      * Adds a common table expression.
      */
-    with(name: string, query: SelectBuilder, recursive?: boolean): this {
+    with(name: string, query: Select, recursive?: boolean): this {
         return this.add(with_(recursive, cte(name, query._parts)))
     }
 
@@ -180,7 +183,7 @@ export abstract class SqlQueryBuilder {
 // Top-level builders
 // ---------------------------------------------
 
-export class SelectBuilder extends SqlQueryBuilder implements NodeConvertible {
+export class Select extends SqlQueryBuilder implements NodeConvertible {
     constructor(
         private readonly table: string,
         private readonly columns?: NodeArg[],
