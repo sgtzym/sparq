@@ -1,5 +1,9 @@
 # SPARQ
 
+![Build](https://github.com/sgtzym/sparq/actions/workflows/build.yml/badge.svg)
+[![JSR](https://jsr.io/badges/@sgtzym/sparq)](https://jsr.io/@sgtzym/sparq)
+[![JSR Score](https://jsr.io/badges/@sgtzym/sparq/score)](https://jsr.io/@sgtzym/sparq)
+
 > A declarative, AST-based and type-safe SQLite query builder for Deno 🦕 - with zero dependencies.
 
 SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex, parameterized queries - including subqueries and CTEs - while preserving SQLite's full expressiveness.
