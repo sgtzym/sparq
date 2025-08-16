@@ -68,17 +68,23 @@ const result = users
     .limit(20)
 
 console.log(result.sql, result.params)
+```
 
-/**
- * Generated SQL:
- * 
- * SELECT users.id, users.name, posts.title, posts.view_count, posts.published_at AS published
- * FROM users
- * LEFT JOIN posts ON posts.user_id = users.id
- * WHERE users.active = :p1 AND posts.published_at > :p2
- * ORDER BY posts.view_count DESC, posts.published_at DESC
- * LIMIT :p3
- * 
- * Parameter list: [ 1, "2024-01-01T00:00:00.000Z", 20 ]
- */
+### Result
+
+Generated SQL:
+
+```sql
+SELECT users.id, users.name, posts.title, posts.view_count, posts.published_at AS published
+FROM users
+LEFT JOIN posts ON posts.user_id = users.id
+WHERE users.active = :p1 AND posts.published_at > :p2
+ORDER BY posts.view_count DESC, posts.published_at DESC
+LIMIT :p3
+```
+
+Parameter list:
+
+```ts
+[ 1, "2024-01-01T00:00:00.000Z", 20 ]
 ```
