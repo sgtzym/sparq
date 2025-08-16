@@ -12,8 +12,12 @@ test('SQLite INSERT', [
             .values(276, 'Daft Punk'),
         expected: {
             sql: `
-                INSERT INTO artists (artists.artistId, artists.name)
-                VALUES (:p1, :p2)
+                INSERT INTO artists (
+                    artists.artistId,
+                    artists.name
+                )
+                VALUES
+                    (:p1, :p2)
             `,
             params: [276, 'Daft Punk'],
         },
@@ -26,8 +30,14 @@ test('SQLite INSERT', [
             .values(349, 'Discovery', 276),
         expected: {
             sql: `
-                INSERT INTO albums (albums.albumId, albums.title, albums.artistId)
-                VALUES (:p1, :p2, :p3), (:p4, :p5, :p3)
+                INSERT INTO albums (
+                    albums.albumId,
+                    albums.title,
+                    albums.artistId
+                )
+                VALUES
+                    (:p1, :p2, :p3),
+                    (:p4, :p5, :p3)
             `,
             params: [348, 'Random Access Memories', 276, 349, 'Discovery'],
         },
@@ -59,11 +69,19 @@ test('SQLite INSERT', [
             ),
         expected: {
             sql: `
-                INSERT INTO tracks (tracks.trackId,
-                    tracks.name, tracks.albumId, tracks.mediaTypeId,
-                    tracks.genreId, tracks.composer, tracks.milliseconds,
-                    tracks.bytes, tracks.unitPrice)
-                VALUES (:p1, :p2, :p3, :p4, :p5, :p6, :p7, :p8, :p9)
+                INSERT INTO tracks (
+                    tracks.trackId,
+                    tracks.name,
+                    tracks.albumId,
+                    tracks.mediaTypeId,
+                    tracks.genreId,
+                    tracks.composer,
+                    tracks.milliseconds,
+                    tracks.bytes,
+                    tracks.unitPrice
+                )
+                VALUES
+                    (:p1, :p2, :p3, :p4, :p5, :p6, :p7, :p8, :p9)
             `,
             params: [
                 3504,
@@ -86,8 +104,12 @@ test('SQLite INSERT', [
             .conflict('artistId').nothing(),
         expected: {
             sql: `
-                INSERT INTO artists (artists.artistId, artists.name)
-                VALUES (:p1, :p2)
+                INSERT INTO artists (
+                    artists.artistId,
+                    artists.name
+                )
+                VALUES
+                    (:p1, :p2)
                 ON CONFLICT (artistId)
                 DO NOTHING
             `,
@@ -106,8 +128,13 @@ test('SQLite INSERT', [
         })(),
         expected: {
             sql: `
-                INSERT INTO albums (albums.albumId, albums.title, albums.artistId)
-                VALUES (:p1, :p2, :p1)
+                INSERT INTO albums (
+                    albums.albumId,
+                    albums.title,
+                    albums.artistId
+                )
+                VALUES
+                    (:p1, :p2, :p1)
                 ON CONFLICT (albumId)
                 DO UPDATE SET albums.title = :p3
             `,
@@ -126,9 +153,14 @@ test('SQLite INSERT', [
             .returning(r.artistId, r.name),
         expected: {
             sql: `
-                INSERT INTO artists (artists.name)
-                VALUES (:p1)
-                RETURNING artists.artistId, artists.name;
+                INSERT INTO artists (
+                    artists.name
+                )
+                VALUES
+                    (:p1)
+                RETURNING
+                    artists.artistId,
+                    artists.name;
             `,
             params: ['Radiohead'],
         },
@@ -150,10 +182,17 @@ test('SQLite INSERT', [
             .values('Track 3', 1, 2, 1, 240000, 9600000, 0.99),
         expected: {
             sql: `
-                INSERT INTO tracks (tracks.name,
-                    tracks.albumId, tracks.mediaTypeId, tracks.genreId,
-                    tracks.milliseconds, tracks.bytes, tracks.unitPrice)
-                VALUES (:p1, :p2, :p2, :p2, :p3, :p4, :p5),
+                INSERT INTO tracks (
+                    tracks.name,
+                    tracks.albumId,
+                    tracks.mediaTypeId,
+                    tracks.genreId,
+                    tracks.milliseconds,
+                    tracks.bytes,
+                    tracks.unitPrice
+                )
+                VALUES
+                    (:p1, :p2, :p2, :p2, :p3, :p4, :p5),
                     (:p6, :p2, :p2, :p2, :p3, :p4, :p5),
                     (:p7, :p2, :p8, :p2, :p9, :p10, :p5)
             `,

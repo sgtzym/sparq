@@ -11,7 +11,12 @@ interface TestCase {
     }
 }
 
-const normalize = (s: string) => s.replace(/\s+/g, ' ').trim()
+const normalize = (s: string) =>
+    s
+        .replace(/\s+/g, ' ')
+        .replace(/\( /g, '(')
+        .replace(/ \)/g, ')')
+        .trim()
 
 export function test(name: string, tests: Array<TestCase>) {
     Deno.test(name, async (t) => {
