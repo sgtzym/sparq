@@ -2,11 +2,9 @@
 
 > A declarative, AST-based and type-safe SQLite query builder for Deno 🦕 - with zero dependencies.
 
-SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex, parameterized queries - including subqueries and CTEs - while preserving SQLite's full expressivness.
+SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex, parameterized queries - including subqueries and CTEs - while preserving SQLite's full expressiveness.
 
-```
-🏗️ Query composition (fluent API) → 🌳 Abstract syntax tree (AST) → 📃 SQLite syntax
-```
+**Conversion:** Query composition (fluent API) → Abstract syntax tree (AST) → SQLite syntax + parameter list
 
 ## Features
 
@@ -24,6 +22,14 @@ deno add @sgtzym/sparq
 ```
 
 ## Usage
+
+1. Define table schemas with `sparq()`
+2. Build queries on set schemas
+3. Use the generated results to prepare statements with any SQLite driver that supports named parameters
+
+> [!TIP]
+> Column definitions are exposed via the `$` property.  
+> Assign them to local variables to simplify access, especially in JOINs and subqueries.
 
 ```ts
 const users = sparq('users', {
