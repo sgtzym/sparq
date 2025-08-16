@@ -1,3 +1,4 @@
+import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
 import {
     type Node,
@@ -7,7 +8,6 @@ import {
     toNode,
 } from '~/core/node.ts'
 import { id } from './primitives.ts'
-import { ArrayLike } from '../core/utils.ts'
 
 // ---------------------------------------------
 // Common table expressions (CTEs)

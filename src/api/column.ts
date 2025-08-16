@@ -4,7 +4,7 @@ import {
     type Param,
     toNode,
 } from '~/core/node.ts'
-import { id, val } from '~/nodes/primitives.ts'
+import { id } from '~/nodes/primitives.ts'
 import * as expr from '~/nodes/expressions.ts'
 import * as fn from '~/nodes/functions.ts'
 import { assign, valueList } from '~/nodes/values.ts'

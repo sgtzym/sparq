@@ -1,11 +1,12 @@
 import { assertEquals } from 'jsr:@std/assert'
 import type { SqlQueryBuilder } from '~/api/query-builders.ts'
+import { type ArrayLike, castArray } from '~/core/utils.ts'
 
 interface TestCase {
     name: string
     query: SqlQueryBuilder
     expected: {
-        sql: string
+        sql: ArrayLike<string>
         params?: readonly unknown[]
     }
 }
@@ -18,7 +19,7 @@ export function test(name: string, tests: Array<TestCase>) {
             await t.step(test.name, () => {
                 assertEquals(
                     normalize(test.query.sql),
-                    normalize(test.expected.sql),
+                    normalize(castArray<string>(test.expected.sql).join(' ')),
                     'SQL mismatch',
                 )
                 if (test.expected.params) {
