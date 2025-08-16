@@ -4,7 +4,7 @@
 
 SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex, parameterized queries - including subqueries and CTEs - while preserving SQLite's full expressivness.
 
-🏗️ Query composition (`fluent API`) -> 🌳 Abstract syntax tree (`AST`) -> 📃 SQLite syntax
+🏗️ Query composition (fluent API) → 🌳 Abstract syntax tree (AST) → 📃 SQLite syntax + parameter list
 
 ## Features
 
