@@ -1,15 +1,15 @@
 import {
-    isSqlParam,
+    isSqlDataType,
     needsQuoting,
     type SqlString,
-    toSqlParam,
+    toSqlDataType,
 } from '~/core/sql.ts'
 import {
-    type Node,
-    type NodeArg,
-    type Param,
     type ParameterReg,
-    toNode,
+    type SqlNode,
+    type SqlNodeValue,
+    type SqlParam,
+    toSqlNode,
 } from '~/core/node.ts'
 
 // ---------------------------------------------
@@ -21,7 +21,7 @@ import {
 /**
  * Represents a raw SQL string.
  */
-export class RawNode implements Node {
+export class RawNode implements SqlNode {
     constructor(private readonly sql: string) {}
 
     render(_params: ParameterReg): SqlString {
@@ -32,18 +32,18 @@ export class RawNode implements Node {
 /**
  * Represents a literal value with automatic parameterisation.
  */
-export class LiteralNode implements Node {
-    constructor(private readonly value: Param) {}
+export class LiteralNode implements SqlNode {
+    constructor(private readonly value: SqlParam) {}
 
     render(params: ParameterReg): SqlString {
-        return params.add(toSqlParam(this.value))
+        return params.add(toSqlDataType(this.value))
     }
 }
 
 /**
  * Represents an identifier (table/column name) with automatic quoting.
  */
-export class IdentifierNode implements Node {
+export class IdentifierNode implements SqlNode {
     constructor(private readonly name: string) {}
 
     render(_params: ParameterReg): SqlString {
@@ -63,7 +63,7 @@ export class IdentifierNode implements Node {
  * @param sql The raw SQL string
  * @returns A raw SQL node
  */
-export const raw = (sql: string): Node => {
+export const raw = (sql: string): SqlNode => {
     return new RawNode(sql)
 }
 
@@ -72,8 +72,8 @@ export const raw = (sql: string): Node => {
  * @param arg The literal value
  * @returns A literal node
  */
-export const val = (arg: Param): Node => {
-    if (!isSqlParam(arg)) {
+export const val = (arg: SqlParam): SqlNode => {
+    if (!isSqlDataType(arg)) {
         throw new Error(`${arg} is not a valid SQL value`)
     }
     return new LiteralNode(arg)
@@ -84,6 +84,6 @@ export const val = (arg: Param): Node => {
  * @param arg The column/table name
  * @returns An identifier node
  */
-export const id = (arg: NodeArg): Node => {
-    return typeof arg === 'string' ? new IdentifierNode(arg) : toNode(arg)
+export const id = (arg: SqlNodeValue): SqlNode => {
+    return typeof arg === 'string' ? new IdentifierNode(arg) : toSqlNode(arg)
 }

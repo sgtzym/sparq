@@ -1,19 +1,18 @@
 import {
-    type Node,
-    type NodeConvertible,
-    type Param,
-    toNode,
+    type ParameterReg,
+    SqlNode,
+    type SqlParam,
+    toSqlNode,
 } from '~/core/node.ts'
 import { id } from '~/nodes/primitives.ts'
 import * as expr from '~/nodes/expressions.ts'
 import * as fn from '~/nodes/functions.ts'
 import { assign, valueList } from '~/nodes/values.ts'
 
-type ColumnArg<TType extends Param = Param> =
-    | TType
+type ColumnValue<TType extends SqlParam = SqlParam> =
     | Column<string, TType>
-    | Node
-    | NodeConvertible
+    | SqlNode
+    | TType
 
 /**
  * Base column class with common SQL operations.
@@ -24,120 +23,134 @@ type ColumnArg<TType extends Param = Param> =
  * @template TName - The column name type
  * @template TType - The column arg type
  */
-export class Column<TName extends string = string, TType extends Param = Param>
-    implements NodeConvertible {
+export class Column<
+    TName extends string = string,
+    TType extends SqlParam = SqlParam,
+> extends SqlNode {
+    protected _node?: SqlNode // Store node for chaining
+
     constructor(
         private readonly _name: TName,
         private readonly _table?: string, // Opt. table ref.
         private readonly _type?: TType,
-    ) {}
+    ) {
+        super()
+    }
 
-    // Returns the qualified name if table is present, lazy init
-    get node(): Node {
-        return id(this._table ? `${this._table}.${this._name}` : this._name)
+    render(params: ParameterReg): string {
+        if (this._node) {
+            return this._node.render(params)
+        }
+        return this._table ? `${this._table}.${this._name}` : this._name
+    }
+
+    protected withNode(newNode: SqlNode): this {
+        const result = Object.create(Object.getPrototypeOf(this)) as this
+        result._node = newNode
+        return result
     }
 
     /**
      * Returns distinct args only.
      */
-    distinct(): Node {
-        return expr.distinct(this.node)
+    distinct(): SqlNode {
+        return expr.distinct(this)
     }
 
     /**
      * Returns all args.
      */
-    all(): Node {
-        return expr.all(this.node)
+    all(): SqlNode {
+        return expr.all(this)
     }
 
     /**
      * Equals (=).
      * @param arg - The comparison arg
      */
-    eq(arg: ColumnArg<TType>): Node {
-        return expr.eq(this.node, toNode(arg))
+    eq(arg: ColumnValue<TType>): SqlNode {
+        return expr.eq(this, toSqlNode(arg))
     }
 
     /**
      * Not equal to (!=).
      * @param arg - The comparison arg
      */
-    ne(arg: ColumnArg<TType>): Node {
-        return expr.ne(this.node, toNode(arg))
+    ne(arg: ColumnValue<TType>): SqlNode {
+        return expr.ne(this, toSqlNode(arg))
     }
 
     /**
      * Membership in set.
      * @param args - The array of args to test against
      */
-    in(args: TType[]): Node {
-        return expr.in_(this.node, valueList(...args))
+    in(args: TType[]): SqlNode {
+        return expr.in_(this, valueList(...args))
     }
 
     /**
      * Is null.
      */
-    isNull(): Node {
-        return expr.isNull(this.node)
+    isNull(): SqlNode {
+        return expr.isNull(this)
     }
 
     /**
      * Is not null.
      */
-    isNotNull(): Node {
-        return expr.isNotNull(this.node)
+    isNotNull(): SqlNode {
+        return expr.isNotNull(this)
     }
 
     /**
      * Creates an alias (AS).
      * @param asName - The alias name
      */
-    as(asName: ColumnArg<string>): Node {
-        return expr.alias(this.node, id(asName))
+    as(asName: ColumnValue<string>): SqlNode {
+        return expr.alias(this, id(asName))
     }
 
     /**
      * Assigns a arg to the column.
      * @param arg - The arg or expression to assign
      */
-    set(arg: ColumnArg<TType>): Node {
-        return assign(this.node, toNode(arg))
+    set(arg: ColumnValue<TType>): SqlNode {
+        return assign(this, toSqlNode(arg))
     }
 
     /**
      * Sorts in ascending order (ASC).
      */
-    asc(): Node {
-        return expr.asc(this.node)
+    asc(): SqlNode {
+        return expr.asc(this)
     }
 
     /**
      * Sorts in descending order (DESC).
      */
-    desc(): Node {
-        return expr.desc(this.node)
+    desc(): SqlNode {
+        return expr.desc(this)
     }
 
     /**
      * Counts rows (COUNT).
      */
-    count(): Node {
-        return fn.count(this.node)
+    count(): SqlNode {
+        return fn.count(this)
     }
 
     /**
      * Finds maximum arg (MAX).
      */
-    max(): Node {
-        return fn.max(this.node)
+    max(): SqlNode {
+        return fn.max(this)
     }
 
     /**
      * Finds minimum arg (MIN).
      */
-    min(): Node {
-        return fn.min(this.node)
+    min(): SqlNode {
+        return fn.min(this)
     }
 }
 
@@ -156,8 +169,8 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive. Uses % (any characters) and _ (single character).
      * @param pattern - The pattern to match
      */
-    like(pattern: ColumnArg<string>): Node {
-        return expr.like(this.node, toNode(pattern))
+    like(pattern: ColumnValue<string>): SqlNode {
+        return expr.like(this, toSqlNode(pattern))
     }
 
     /**
@@ -165,8 +178,8 @@ export class TextColumn<TName extends string = string>
      * Case-sensitive. Uses * (any characters), ? (single character), and [...] (character ranges).
      * @param pattern - The glob pattern to match
      */
-    glob(pattern: ColumnArg<string>): Node {
-        return expr.glob(this.node, toNode(pattern))
+    glob(pattern: ColumnValue<string>): SqlNode {
+        return expr.glob(this, toSqlNode(pattern))
     }
 
     /**
@@ -174,8 +187,8 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive match using LIKE operator.
      * @param prefix - The prefix to match
      */
-    startsWith(prefix: ColumnArg<string>): Node {
-        return expr.like(this.node, toNode(prefix + '%'))
+    startsWith(prefix: ColumnValue<string>): SqlNode {
+        return expr.like(this, toSqlNode(prefix + '%'))
     }
 
     /**
@@ -183,8 +196,8 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive match using LIKE operator.
      * @param suffix - The suffix to match
      */
-    endsWith(suffix: ColumnArg<string>): Node {
-        return expr.like(this.node, toNode('%' + suffix))
+    endsWith(suffix: ColumnValue<string>): SqlNode {
+        return expr.like(this, toSqlNode('%' + suffix))
     }
 
     /**
@@ -192,50 +205,50 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive match using LIKE operator.
      * @param substring - The substring to find
      */
-    contains(substring: ColumnArg<string>): Node {
-        return expr.like(this.node, toNode('%' + substring + '%'))
+    contains(substring: ColumnValue<string>): SqlNode {
+        return expr.like(this, toSqlNode('%' + substring + '%'))
     }
 
     /**
      * Converts to uppercase.
      */
-    upper(): Node {
-        return fn.upper(this.node)
+    upper(): SqlNode {
+        return fn.upper(this)
     }
 
     /**
      * Converts to lowercase.
      */
-    lower(): Node {
-        return fn.lower(this.node)
+    lower(): SqlNode {
+        return fn.lower(this)
     }
 
     /**
      * Returns the character count.
      */
-    length(): Node {
-        return fn.length(this.node)
+    length(): SqlNode {
+        return fn.length(this)
     }
 
     /**
      * Removes leading and trailing whitespace.
      */
-    trim(): Node {
-        return fn.trim(this.node)
+    trim(): SqlNode {
+        return fn.trim(this)
     }
 
     /**
      * Removes leading whitespace.
      */
-    ltrim(): Node {
-        return fn.ltrim(this.node)
+    ltrim(): SqlNode {
+        return fn.ltrim(this)
     }
 
     /**
      * Removes trailing whitespace.
      */
-    rtrim(): Node {
-        return fn.rtrim(this.node)
+    rtrim(): SqlNode {
+        return fn.rtrim(this)
     }
 
     /**
@@ -243,10 +256,13 @@ export class TextColumn<TName extends string = string>
      * @param start - The starting position
      * @param length - The number of characters to extract (optional)
      */
-    substr(start: ColumnArg<number> = 1, length?: ColumnArg<number>): Node {
+    substr(
+        start: ColumnValue<number> = 1,
+        length?: ColumnValue<number>,
+    ): SqlNode {
         return length !== undefined
-            ? fn.substr(this.node, toNode(start), toNode(length))
-            : fn.substr(this.node, toNode(start))
+            ? fn.substr(this, toSqlNode(start), toSqlNode(length))
+            : fn.substr(this, toSqlNode(start))
     }
 
     /**
@@ -254,8 +270,11 @@ export class TextColumn<TName extends string = string>
      * @param search - The substring to find
      * @param replacement - The replacement string
      */
-    replace(search: ColumnArg<number>, replacement: ColumnArg<number>): Node {
-        return fn.replace(this.node, toNode(search), toNode(replacement))
+    replace(
+        search: ColumnValue<number>,
+        replacement: ColumnValue<number>,
+    ): SqlNode {
+        return fn.replace(this, toSqlNode(search), toSqlNode(replacement))
     }
 
     /**
@@ -263,8 +282,8 @@ export class TextColumn<TName extends string = string>
      * Returns 0 if not found, or the index if found.
      * @param substring - The substring to find
      */
-    instr(substring: ColumnArg<string>): Node {
-        return fn.instr(this.node, toNode(substring))
+    instr(substring: ColumnValue<string>): SqlNode {
+        return fn.instr(this, toSqlNode(substring))
     }
 }
 
@@ -282,32 +301,32 @@ export class NumberColumn<TName extends string = string>
      * Greater than (>).
      * @param arg - The comparison arg
      */
-    gt(arg: ColumnArg<number>): Node {
-        return expr.gt(this.node, toNode(arg))
+    gt(arg: ColumnValue<number>): SqlNode {
+        return expr.gt(this, toSqlNode(arg))
     }
 
     /**
      * Less than (<).
      * @param arg - The comparison arg
      */
-    lt(arg: ColumnArg<number>): Node {
-        return expr.lt(this.node, toNode(arg))
+    lt(arg: ColumnValue<number>): SqlNode {
+        return expr.lt(this, toSqlNode(arg))
     }
 
     /**
      * Greater than or equal to (>=).
      * @param arg - The comparison arg
      */
-    ge(arg: ColumnArg<number>): Node {
-        return expr.ge(this.node, toNode(arg))
+    ge(arg: ColumnValue<number>): SqlNode {
+        return expr.ge(this, toSqlNode(arg))
     }
 
     /**
      * Less than or equal to (<=).
      * @param arg - The comparison arg
      */
-    le(arg: ColumnArg<number>): Node {
-        return expr.le(this.node, toNode(arg))
+    le(arg: ColumnValue<number>): SqlNode {
+        return expr.le(this, toSqlNode(arg))
     }
 
     /**
@@ -316,121 +335,121 @@ export class NumberColumn<TName extends string = string>
      * @param upper - The upper bound (inclusive)
      */
     between(
-        lower: ColumnArg<number>,
-        upper: ColumnArg<number>,
-    ): Node {
-        return expr.between(this.node, lower, upper)
+        lower: ColumnValue<number>,
+        upper: ColumnValue<number>,
+    ): SqlNode {
+        return expr.between(this, lower, upper)
     }
 
     /**
      * Adds arg (+).
      * @param arg - The arg to add
      */
-    add(arg: ColumnArg<number>): Node {
-        return expr.add(this.node, toNode(arg))
+    add(arg: ColumnValue<number>): SqlNode {
+        return expr.add(this, toSqlNode(arg))
     }
 
     /**
      * Subtracts arg (-).
      * @param arg - The arg to subtract
      */
-    sub(arg: ColumnArg<number>): Node {
-        return expr.sub(this.node, toNode(arg))
+    sub(arg: ColumnValue<number>): SqlNode {
+        return expr.sub(this, toSqlNode(arg))
     }
 
     /**
      * Multiplies by arg (*).
      * @param arg - The arg to multiply by
      */
-    mul(arg: ColumnArg<number>): Node {
-        return expr.mul(this.node, toNode(arg))
+    mul(arg: ColumnValue<number>): SqlNode {
+        return expr.mul(this, toSqlNode(arg))
     }
 
     /**
      * Divides by arg (/).
      * @param arg - The arg to divide by
      */
-    div(arg: ColumnArg<number>): Node {
-        return expr.div(this.node, toNode(arg))
+    div(arg: ColumnValue<number>): SqlNode {
+        return expr.div(this, toSqlNode(arg))
     }
 
     /**
      * Returns the absolute arg.
      */
-    abs(): Node {
-        return fn.abs(this.node)
+    abs(): SqlNode {
+        return fn.abs(this)
     }
 
     /**
      * Rounds to the specified number of decimal places.
      * @param decimals - The number of decimal places (optional)
      */
-    round(decimals?: ColumnArg<number>): Node {
+    round(decimals?: ColumnValue<number>): SqlNode {
         return decimals !== undefined
-            ? fn.round(this.node, toNode(decimals))
-            : fn.round(this.node)
+            ? fn.round(this, toSqlNode(decimals))
+            : fn.round(this)
     }
 
     /**
      * Rounds up to the nearest integer.
      */
-    ceil(): Node {
-        return fn.ceil(this.node)
+    ceil(): SqlNode {
+        return fn.ceil(this)
     }
 
     /**
      * Rounds down to the nearest integer.
      */
-    floor(): Node {
-        return fn.floor(this.node)
+    floor(): SqlNode {
+        return fn.floor(this)
     }
 
     /**
      * Returns the square root.
      */
-    sqrt(): Node {
-        return fn.sqrt(this.node)
+    sqrt(): SqlNode {
+        return fn.sqrt(this)
     }
 
     /**
      * Returns the remainder after division.
      * @param divisor - The divisor arg
      */
-    mod(divisor: ColumnArg<number>): Node {
-        return fn.mod(this.node, toNode(divisor))
+    mod(divisor: ColumnValue<number>): SqlNode {
+        return fn.mod(this, toSqlNode(divisor))
     }
 
     /**
      * Raises to the specified power.
      * @param exponent - The exponent arg
      */
-    pow(exponent: ColumnArg<number>): Node {
-        return fn.pow(this.node, toNode(exponent))
+    pow(exponent: ColumnValue<number>): SqlNode {
+        return fn.pow(this, toSqlNode(exponent))
     }
 
     /**
      * Calculates percentage of a total.
      * @param total - The total arg
      */
-    percent(total: ColumnArg<number>): Node {
+    percent(total: ColumnValue<number>): SqlNode {
         return expr.mul(
-            expr.div(this.node, toNode(total)),
-            toNode(100),
+            expr.div(this, toSqlNode(total)),
+            toSqlNode(100),
         )
     }
 
     /**
      * Calculates average (AVG).
      */
-    avg(): Node {
-        return fn.avg(this.node)
+    avg(): SqlNode {
+        return fn.avg(this)
     }
 
     /**
      * Calculates sum (SUM).
      */
-    sum(): Node {
-        return fn.sum(this.node)
+    sum(): SqlNode {
+        return fn.sum(this)
     }
 }
 
@@ -448,32 +467,32 @@ export class DateTimeColumn<TName extends string = string>
      * Greater than (>).
      * @param arg - The comparison arg
      */
-    gt(arg: ColumnArg<Date>): Node {
-        return expr.gt(this.node, toNode(arg))
+    gt(arg: ColumnValue<Date>): SqlNode {
+        return expr.gt(this, toSqlNode(arg))
     }
 
     /**
      * Less than (<).
      * @param arg - The comparison arg
      */
-    lt(arg: ColumnArg<Date>): Node {
-        return expr.lt(this.node, toNode(arg))
+    lt(arg: ColumnValue<Date>): SqlNode {
+        return expr.lt(this, toSqlNode(arg))
     }
 
     /**
      * Greater than or equal to (>=).
      * @param arg - The comparison arg
      */
-    ge(arg: ColumnArg<Date>): Node {
-        return expr.ge(this.node, toNode(arg))
+    ge(arg: ColumnValue<Date>): SqlNode {
+        return expr.ge(this, toSqlNode(arg))
     }
 
     /**
      * Less than or equal to (<=).
      * @param arg - The comparison arg
      */
-    le(arg: ColumnArg<Date>): Node {
-        return expr.le(this.node, toNode(arg))
+    le(arg: ColumnValue<Date>): SqlNode {
+        return expr.le(this, toSqlNode(arg))
     }
 
     /**
@@ -482,67 +501,67 @@ export class DateTimeColumn<TName extends string = string>
      * @param upper - The upper bound (inclusive)
      */
     between(
-        lower: ColumnArg<Date>,
-        upper: ColumnArg<Date>,
-    ): Node {
-        return expr.between(this.node, lower, upper)
+        lower: ColumnValue<Date>,
+        upper: ColumnValue<Date>,
+    ): SqlNode {
+        return expr.between(this, lower, upper)
     }
 
     /**
      * Converts to date.
      */
-    date(): Node {
-        return fn.date(this.node)
+    date(): SqlNode {
+        return fn.date(this)
     }
 
     /**
      * Converts to time.
      */
-    time(): Node {
-        return fn.time(this.node)
+    time(): SqlNode {
+        return fn.time(this)
     }
 
     /**
      * Converts to datetime format.
      */
-    dateTime(): Node {
-        return fn.dateTime(this.node)
+    dateTime(): SqlNode {
+        return fn.dateTime(this)
     }
 
     /**
      * Formats date/time using the specified format string.
      * @param format - The strftime format string
      */
-    strftime(format: ColumnArg<string>): Node {
-        return fn.strftime(toNode(format), this.node)
+    strftime(format: ColumnValue<string>): SqlNode {
+        return fn.strftime(toSqlNode(format), this)
     }
 
     /**
      * Converts to Julian day number.
      */
-    julianday(): Node {
-        return fn.julianday(this.node)
+    julianday(): SqlNode {
+        return fn.julianday(this)
     }
 
     /**
      * Extracts the year portion.
      */
-    year(): Node {
-        return fn.strftime(toNode('%Y'), this.node)
+    year(): SqlNode {
+        return fn.strftime(toSqlNode('%Y'), this)
     }
 
     /**
      * Extracts the month portion (01-12).
      */
-    month(): Node {
-        return fn.strftime(toNode('%m'), this.node)
+    month(): SqlNode {
+        return fn.strftime(toSqlNode('%m'), this)
     }
 
     /**
      * Extracts the day portion (01-31).
      */
-    day(): Node {
-        return fn.strftime(toNode('%d'), this.node)
+    day(): SqlNode {
+        return fn.strftime(toSqlNode('%d'), this)
     }
 }
 

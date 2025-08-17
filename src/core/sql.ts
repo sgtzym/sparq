@@ -6,7 +6,7 @@ export type SqlString = string
  * Union type of all SQL-compatible primitive values.
  * Represents values that can be safely parameterized.
  */
-export type SqlParam = null | number | bigint | string | Uint8Array
+export type SqlDataType = null | number | bigint | string | Uint8Array
 
 export type SqlIdentifier = string
 
@@ -34,7 +34,7 @@ export function isSqlKeyword(param: string): boolean {
  * @param {unknown} arg - Value to check
  * @returns {boolean} True if valid data type
  */
-export function isSqlParam(arg: unknown): arg is SqlParam {
+export function isSqlDataType(arg: unknown): arg is SqlDataType {
     return (
         arg === null ||
         typeof arg === 'number' ||
@@ -48,11 +48,11 @@ export function isSqlParam(arg: unknown): arg is SqlParam {
  * Parses a value to a valid SQL data type.
  *
  * @param {unknown} arg - Value to parse
- * @returns {SqlParam} The parsed value as SQL data type
+ * @returns {SqlDataType} The parsed value as SQL data type
  */
-export function toSqlParam(arg: unknown): SqlParam {
+export function toSqlDataType(arg: unknown): SqlDataType {
     switch (true) {
-        case isSqlParam(arg):
+        case isSqlDataType(arg):
             return arg
         case arg === undefined:
             return null

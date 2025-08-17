@@ -1,13 +1,13 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
 import {
-    type Node,
-    type NodeArg,
     type ParameterReg,
-    renderAll,
-    toNode,
+    renderSqlNodes,
+    type SqlNode,
+    type SqlNodeValue,
+    toSqlNode,
 } from '~/core/node.ts'
-import { id } from './primitives.ts'
+import { id } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Common table expressions (CTEs)
@@ -18,17 +18,19 @@ import { id } from './primitives.ts'
 /**
  * Represents a CTE for making queries more readable.
  */
-export class CteNode implements Node {
+export class CteNode implements SqlNode {
     readonly priority: number = -10
 
     constructor(
-        private readonly name: Node,
-        private readonly clauses: Node[],
+        private readonly name: SqlNode,
+        private readonly clauses: SqlNode[],
     ) {}
 
     render(params: ParameterReg): SqlString {
         const _name: SqlString = this.name.render(params)
-        const _clauses: SqlString = renderAll(this.clauses, params).join(' ')
+        const _clauses: SqlString = renderSqlNodes(this.clauses, params).join(
+            ' ',
+        )
 
         return sql(`${_name} AS (${_clauses})`)
     }
@@ -37,7 +39,7 @@ export class CteNode implements Node {
 /**
  * Represents the WITH modifier containing one or more CTEs
  */
-export class WithNode implements Node {
+export class WithNode implements SqlNode {
     readonly priority: number = -20
 
     constructor(
@@ -46,7 +48,7 @@ export class WithNode implements Node {
     ) {}
 
     render(params: ParameterReg): SqlString {
-        const _ctes: SqlString = renderAll(this.ctes, params).join(', ')
+        const _ctes: SqlString = renderSqlNodes(this.ctes, params).join(', ')
 
         return sql(this.recursive ? 'WITH RECURSIVE' : 'WITH', _ctes)
     }
@@ -58,10 +60,10 @@ export class WithNode implements Node {
  * Creates a CTE (WITH).
  * @param name The CTE's alias name
  * @param query The subquery for temp. results as list of nodes
- * @returns A CTE node
+ * @returns A CTE SqlNode
  */
-export const cte = (name: string, query: NodeArg[]): CteNode =>
-    new CteNode(id(name), query.map(toNode))
+export const cte = (name: string, query: SqlNodeValue[]): CteNode =>
+    new CteNode(id(name), query.map(toSqlNode))
 
 export const with_ = (recursive?: boolean, ...ctes: CteNode[]): WithNode =>
     new WithNode(ctes, recursive)

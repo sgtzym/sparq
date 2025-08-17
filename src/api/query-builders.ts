@@ -1,11 +1,10 @@
-import type { SqlParam, SqlString } from '~/core/sql.ts'
+import type { SqlDataType, SqlString } from '~/core/sql.ts'
 import {
-    type Node,
-    type NodeArg,
-    type NodeConvertible,
     ParameterReg,
-    renderAll,
-    renderAST,
+    renderSqlNodes,
+    sortSqlNodes,
+    SqlNode,
+    type SqlNodeValue,
 } from '~/core/node.ts'
 import {
     from,
@@ -41,20 +40,21 @@ import { Sparq } from '~/api/sparq.ts'
 
 const joinImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    table: NodeArg,
+    table: SqlNodeValue,
 ): {
-    inner: (condition?: NodeArg) => T
-    left: (condition?: NodeArg) => T
-    leftOuter: (condition?: NodeArg) => T
+    inner: (condition?: SqlNodeValue) => T
+    left: (condition?: SqlNodeValue) => T
+    leftOuter: (condition?: SqlNodeValue) => T
     cross: () => T
 } {
-    const _table: NodeArg = table instanceof Sparq ? table.table : table
+    const _table: SqlNodeValue = table instanceof Sparq ? table.table : table
 
     return {
-        inner: (condition?: NodeArg): T =>
+        inner: (condition?: SqlNodeValue): T =>
             this.add(joinInner(_table, condition)),
-        left: (condition?: NodeArg): T => this.add(joinLeft(_table, condition)),
-        leftOuter: (condition?: NodeArg): T =>
+        left: (condition?: SqlNodeValue): T =>
+            this.add(joinLeft(_table, condition)),
+        leftOuter: (condition?: SqlNodeValue): T =>
             this.add(joinLeftOuter(_table, condition)),
         cross: (): T => this.add(joinCross(_table)),
     }
@@ -62,55 +62,55 @@ const joinImpl = function <T extends SqlQueryBuilder>(
 
 const whereImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    ...conditions: NodeArg[]
+    ...conditions: SqlNodeValue[]
 ): T {
     return this.add(where(...conditions))
 }
 
 const groupByImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    ...columns: NodeArg[]
+    ...columns: SqlNodeValue[]
 ): T {
     return this.add(groupBy(...columns))
 }
 
 const havingImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    ...conditions: NodeArg[]
+    ...conditions: SqlNodeValue[]
 ): T {
     return this.add(having(...conditions))
 }
 
 const orderByImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    ...columns: NodeArg[]
+    ...columns: SqlNodeValue[]
 ): T {
     return this.add(orderBy(...columns))
 }
 
 const limitImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    count: NodeArg,
+    count: SqlNodeValue,
 ): T {
     return this.add(limit(count))
 }
 const offsetImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    count: NodeArg,
+    count: SqlNodeValue,
 ): T {
     return this.add(offset(count))
 }
 
 const returningImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    ...columns: NodeArg[]
+    ...columns: SqlNodeValue[]
 ): T {
     return this.add(returning(...columns))
 }
 
 const conflictImpl = function <T extends SqlQueryBuilder>(
     this: T,
-    ...targets: NodeArg[]
+    ...targets: SqlNodeValue[]
 ): {
     abort: () => T
     fail: () => T
@@ -118,7 +118,7 @@ const conflictImpl = function <T extends SqlQueryBuilder>(
     replace: () => T
     rollback: () => T
     nothing: () => T
-    upsert: (assignments: NodeArg[], ...conditions: NodeArg[]) => T
+    upsert: (assignments: SqlNodeValue[], ...conditions: SqlNodeValue[]) => T
 } {
     return {
         abort: (): T => this.add(onConflictAbort(...targets)),
@@ -127,7 +127,10 @@ const conflictImpl = function <T extends SqlQueryBuilder>(
         replace: (): T => this.add(onConflictReplace(...targets)),
         rollback: (): T => this.add(onConflictRollback(...targets)),
         nothing: (): T => this.add(onConflictNothing(...targets)),
-        upsert: (assignments: NodeArg[], ...conditions: NodeArg[]): T =>
+        upsert: (
+            assignments: SqlNodeValue[],
+            ...conditions: SqlNodeValue[]
+        ): T =>
             this.add(
                 onConflictUpdate(assignments, targets, conditions),
             ),
@@ -138,28 +141,38 @@ const conflictImpl = function <T extends SqlQueryBuilder>(
 // Base query builder
 // ---------------------------------------------
 
-export abstract class SqlQueryBuilder {
-    protected _parts: Node[] = []
+export abstract class SqlQueryBuilder extends SqlNode {
+    protected _parts: SqlNode[] = []
     protected _params?: ParameterReg
-    private _cache?: { sql: string; params: readonly SqlParam[] }
+    private _cache?: { sql: string; params: readonly SqlDataType[] }
+
+    constructor() {
+        super()
+    }
+
+    render(params: ParameterReg): string {
+        return sortSqlNodes(this._parts)
+            .map((part) => part.render(params))
+            .join(' ')
+    }
 
     get sql(): SqlString {
         if (!this._cache) this._render()
         return this._cache!.sql
     }
 
-    get params(): readonly SqlParam[] {
+    get params(): readonly SqlDataType[] {
         if (!this._cache) this._render()
         return this._cache!.params
     }
 
     private _render(): void {
         this._params = new ParameterReg()
-        const sql = renderAST(this._parts, this._params)
+        const sql = renderSqlNodes(this._parts, this._params, true).join(' ')
         this._cache = { sql, params: this._params.toArray() }
     }
 
-    protected add(part: Node): this {
+    protected add(part: SqlNode): this {
         this._parts.push(part)
         this._cache = undefined
         return this
@@ -183,10 +196,10 @@ export abstract class SqlQueryBuilder {
 // Top-level builders
 // ---------------------------------------------
 
-export class Select extends SqlQueryBuilder implements NodeConvertible {
+export class Select extends SqlQueryBuilder {
     constructor(
         private readonly table: string,
-        private readonly columns?: NodeArg[],
+        private readonly columns?: SqlNodeValue[],
     ) {
         super()
 
@@ -199,10 +212,10 @@ export class Select extends SqlQueryBuilder implements NodeConvertible {
     having = havingImpl
 
     // Supports subqueries based on context
-    get node(): Node {
+    get node(): SqlNode {
         return {
             render: (params: ParameterReg) =>
-                `(${renderAll(this._parts, params).join(' ')})`,
+                `(${renderSqlNodes(this._parts, params).join(' ')})`,
         }
     }
 }
@@ -212,14 +225,14 @@ export class Insert extends SqlQueryBuilder {
 
     constructor(
         private readonly table: string,
-        private readonly columns: NodeArg[],
+        private readonly columns: SqlNodeValue[],
     ) {
         super()
         this.add(_insert(this.table, this.columns))
         this.add(this._values)
     }
 
-    values(...args: NodeArg[]): this {
+    values(...args: SqlNodeValue[]): this {
         if (args.length !== this.columns.length) {
             throw new Error(
                 `Insert requires ${this.columns.length} values. Received ${args.length}.`,
@@ -236,11 +249,11 @@ export class Insert extends SqlQueryBuilder {
 }
 
 export class Update extends SqlQueryBuilder {
-    private readonly assignments: Node[] = []
+    private readonly assignments: SqlNode[] = []
 
     constructor(
         private readonly table: string,
-        assignments: NodeArg[],
+        assignments: SqlNodeValue[],
     ) {
         super()
 
