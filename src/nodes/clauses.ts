@@ -151,7 +151,7 @@ export class OffsetNode implements Node {
  * Represents a RETURNING clause for getting affected row data.
  */
 export class ReturningNode implements Node {
-    readonly priority = 90
+    readonly priority = 95
 
     constructor(private readonly columns?: ArrayLike<Node>) {}
 
@@ -167,6 +167,8 @@ export class ReturningNode implements Node {
  * Represents a VALUES clause for explicit row data.
  */
 export class ValuesNode implements Node {
+    readonly priority = 90
+
     private rows: Node[] = []
 
     addRow(valueList: Node): void {
@@ -215,7 +217,7 @@ export class OnConflictNode implements Node {
         return sql(
             'ON CONFLICT',
             _targets ? `(${_targets})` : '',
-            '\nDO',
+            'DO',
             _action,
         )
     }
@@ -246,9 +248,9 @@ export class UpsertNode implements Node {
         return sql(
             'ON CONFLICT',
             _targets ? `(${_targets})` : '',
-            '\nDO UPDATE SET',
+            'DO UPDATE SET',
             _assignments,
-            _conditions ? `\nWHERE ${_conditions}` : '',
+            _conditions ? `WHERE ${_conditions}` : '',
         )
     }
 }
@@ -359,7 +361,7 @@ export const offset = (count: NodeArg) => new OffsetNode(toNode(count))
  */
 export const returning = (...columns: NodeArg[]) =>
     new ReturningNode(
-        columns && columns.length > 0 ? columns.map(toNode) : raw('*'),
+        columns && columns.length > 0 ? columns.map(id) : raw('*'),
     )
 
 /**
@@ -424,7 +426,7 @@ export const onConflictUpdate = (
     targets?: NodeArg[],
     conditions?: NodeArg[],
 ) => {
-    const _targets: Node[] | undefined = targets?.map(toNode) ?? undefined
+    const _targets: Node[] | undefined = targets?.map(id) ?? undefined
     const _conditions: Node[] | undefined = conditions?.map(toNode) ?? undefined
 
     return new UpsertNode(

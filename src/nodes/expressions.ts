@@ -7,7 +7,7 @@ import {
     renderAll,
     toNode,
 } from '~/core/node.ts'
-import { raw } from '~/nodes/primitives.ts'
+import { id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Expressions
@@ -325,5 +325,5 @@ export const desc = sortDir(sql('DESC'))
  * @returns A binary node
  */
 export const alias = (expr: NodeArg, as: NodeArg): Node => {
-    return new BinaryNode(toNode(expr), raw(sql('AS')), toNode(as))
+    return new BinaryNode(toNode(expr), raw(sql('AS')), id(as))
 }

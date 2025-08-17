@@ -4,10 +4,16 @@ import {
     type Param,
     toNode,
 } from '~/core/node.ts'
-import { id, val } from '~/nodes/primitives.ts'
+import { id } from '~/nodes/primitives.ts'
 import * as expr from '~/nodes/expressions.ts'
 import * as fn from '~/nodes/functions.ts'
 import { assign, valueList } from '~/nodes/values.ts'
+
+type ColumnArg<TType extends Param = Param> =
+    | TType
+    | Column<string, TType>
+    | Node
+    | NodeConvertible
 
 /**
  * Base column class with common SQL operations.
@@ -16,7 +22,7 @@ import { assign, valueList } from '~/nodes/values.ts'
  * comparisons, null checks, aliasing, and basic aggregates.
  *
  * @template TName - The column name type
- * @template TType - The column value type
+ * @template TType - The column arg type
  */
 export class Column<TName extends string = string, TType extends Param = Param>
     implements NodeConvertible {
@@ -32,14 +38,14 @@ export class Column<TName extends string = string, TType extends Param = Param>
     }
 
     /**
-     * Returns distinct values only.
+     * Returns distinct args only.
      */
     distinct(): Node {
         return expr.distinct(this.node)
     }
 
     /**
-     * Returns all values.
+     * Returns all args.
      */
     all(): Node {
         return expr.all(this.node)
@@ -47,26 +53,26 @@ export class Column<TName extends string = string, TType extends Param = Param>
 
     /**
      * Equals (=).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    eq(value: TType | Column<string, TType> | Node): Node {
-        return expr.eq(this.node, toNode(value))
+    eq(arg: ColumnArg<TType>): Node {
+        return expr.eq(this.node, toNode(arg))
     }
 
     /**
      * Not equal to (!=).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    ne(value: TType | Column<string, TType> | Node): Node {
-        return expr.ne(this.node, toNode(value))
+    ne(arg: ColumnArg<TType>): Node {
+        return expr.ne(this.node, toNode(arg))
     }
 
     /**
      * Membership in set.
-     * @param values - The array of values to test against
+     * @param args - The array of args to test against
      */
-    in(values: TType[]): Node {
-        return expr.in_(this.node, valueList(...values))
+    in(args: TType[]): Node {
+        return expr.in_(this.node, valueList(...args))
     }
 
     /**
@@ -87,16 +93,16 @@ export class Column<TName extends string = string, TType extends Param = Param>
      * Creates an alias (AS).
      * @param asName - The alias name
      */
-    as(asName: string): Node {
+    as(asName: ColumnArg<string>): Node {
         return expr.alias(this.node, id(asName))
     }
 
     /**
-     * Assigns a value to the column.
-     * @param value - The value or expression to assign
+     * Assigns a arg to the column.
+     * @param arg - The arg or expression to assign
      */
-    set(value: TType | Node): Node {
-        return assign(this.node, toNode(value))
+    set(arg: ColumnArg<TType>): Node {
+        return assign(this.node, toNode(arg))
     }
 
     /**
@@ -121,14 +127,14 @@ export class Column<TName extends string = string, TType extends Param = Param>
     }
 
     /**
-     * Finds maximum value (MAX).
+     * Finds maximum arg (MAX).
      */
     max(): Node {
         return fn.max(this.node)
     }
 
     /**
-     * Finds minimum value (MIN).
+     * Finds minimum arg (MIN).
      */
     min(): Node {
         return fn.min(this.node)
@@ -150,8 +156,8 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive. Uses % (any characters) and _ (single character).
      * @param pattern - The pattern to match
      */
-    like(pattern: string): Node {
-        return expr.like(this.node, val(pattern))
+    like(pattern: ColumnArg<string>): Node {
+        return expr.like(this.node, toNode(pattern))
     }
 
     /**
@@ -159,8 +165,8 @@ export class TextColumn<TName extends string = string>
      * Case-sensitive. Uses * (any characters), ? (single character), and [...] (character ranges).
      * @param pattern - The glob pattern to match
      */
-    glob(pattern: string): Node {
-        return expr.glob(this.node, val(pattern))
+    glob(pattern: ColumnArg<string>): Node {
+        return expr.glob(this.node, toNode(pattern))
     }
 
     /**
@@ -168,8 +174,8 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive match using LIKE operator.
      * @param prefix - The prefix to match
      */
-    startsWith(prefix: string): Node {
-        return expr.like(this.node, val(prefix + '%'))
+    startsWith(prefix: ColumnArg<string>): Node {
+        return expr.like(this.node, toNode(prefix + '%'))
     }
 
     /**
@@ -177,8 +183,8 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive match using LIKE operator.
      * @param suffix - The suffix to match
      */
-    endsWith(suffix: string): Node {
-        return expr.like(this.node, val('%' + suffix))
+    endsWith(suffix: ColumnArg<string>): Node {
+        return expr.like(this.node, toNode('%' + suffix))
     }
 
     /**
@@ -186,8 +192,8 @@ export class TextColumn<TName extends string = string>
      * Case-insensitive match using LIKE operator.
      * @param substring - The substring to find
      */
-    contains(substring: string): Node {
-        return expr.like(this.node, val('%' + substring + '%'))
+    contains(substring: ColumnArg<string>): Node {
+        return expr.like(this.node, toNode('%' + substring + '%'))
     }
 
     /**
@@ -237,10 +243,10 @@ export class TextColumn<TName extends string = string>
      * @param start - The starting position
      * @param length - The number of characters to extract (optional)
      */
-    substr(start: number = 1, length?: number): Node {
+    substr(start: ColumnArg<number> = 1, length?: ColumnArg<number>): Node {
         return length !== undefined
-            ? fn.substr(this.node, val(start), val(length))
-            : fn.substr(this.node, val(start))
+            ? fn.substr(this.node, toNode(start), toNode(length))
+            : fn.substr(this.node, toNode(start))
     }
 
     /**
@@ -248,8 +254,8 @@ export class TextColumn<TName extends string = string>
      * @param search - The substring to find
      * @param replacement - The replacement string
      */
-    replace(search: string, replacement: string): Node {
-        return fn.replace(this.node, val(search), val(replacement))
+    replace(search: ColumnArg<number>, replacement: ColumnArg<number>): Node {
+        return fn.replace(this.node, toNode(search), toNode(replacement))
     }
 
     /**
@@ -257,8 +263,8 @@ export class TextColumn<TName extends string = string>
      * Returns 0 if not found, or the index if found.
      * @param substring - The substring to find
      */
-    instr(substring: string): Node {
-        return fn.instr(this.node, val(substring))
+    instr(substring: ColumnArg<string>): Node {
+        return fn.instr(this.node, toNode(substring))
     }
 }
 
@@ -274,34 +280,34 @@ export class NumberColumn<TName extends string = string>
     extends Column<TName, number> {
     /**
      * Greater than (>).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    gt(value: number | Column<string, number> | Node): Node {
-        return expr.gt(this.node, toNode(value))
+    gt(arg: ColumnArg<number>): Node {
+        return expr.gt(this.node, toNode(arg))
     }
 
     /**
      * Less than (<).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    lt(value: number | Column<string, number> | Node): Node {
-        return expr.lt(this.node, toNode(value))
+    lt(arg: ColumnArg<number>): Node {
+        return expr.lt(this.node, toNode(arg))
     }
 
     /**
      * Greater than or equal to (>=).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    ge(value: number | Column<string, number> | Node): Node {
-        return expr.ge(this.node, toNode(value))
+    ge(arg: ColumnArg<number>): Node {
+        return expr.ge(this.node, toNode(arg))
     }
 
     /**
      * Less than or equal to (<=).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    le(value: number | Column<string, number> | Node): Node {
-        return expr.le(this.node, toNode(value))
+    le(arg: ColumnArg<number>): Node {
+        return expr.le(this.node, toNode(arg))
     }
 
     /**
@@ -310,46 +316,46 @@ export class NumberColumn<TName extends string = string>
      * @param upper - The upper bound (inclusive)
      */
     between(
-        lower: number,
-        upper: number,
+        lower: ColumnArg<number>,
+        upper: ColumnArg<number>,
     ): Node {
         return expr.between(this.node, lower, upper)
     }
 
     /**
-     * Adds value (+).
-     * @param value - The value to add
+     * Adds arg (+).
+     * @param arg - The arg to add
      */
-    add(value: number): Node {
-        return expr.add(this.node, val(value))
+    add(arg: ColumnArg<number>): Node {
+        return expr.add(this.node, toNode(arg))
     }
 
     /**
-     * Subtracts value (-).
-     * @param value - The value to subtract
+     * Subtracts arg (-).
+     * @param arg - The arg to subtract
      */
-    sub(value: number): Node {
-        return expr.sub(this.node, val(value))
+    sub(arg: ColumnArg<number>): Node {
+        return expr.sub(this.node, toNode(arg))
     }
 
     /**
-     * Multiplies by value (*).
-     * @param value - The value to multiply by
+     * Multiplies by arg (*).
+     * @param arg - The arg to multiply by
      */
-    mul(value: number): Node {
-        return expr.mul(this.node, val(value))
+    mul(arg: ColumnArg<number>): Node {
+        return expr.mul(this.node, toNode(arg))
     }
 
     /**
-     * Divides by value (/).
-     * @param value - The value to divide by
+     * Divides by arg (/).
+     * @param arg - The arg to divide by
      */
-    div(value: number): Node {
-        return expr.div(this.node, val(value))
+    div(arg: ColumnArg<number>): Node {
+        return expr.div(this.node, toNode(arg))
     }
 
     /**
-     * Returns the absolute value.
+     * Returns the absolute arg.
      */
     abs(): Node {
         return fn.abs(this.node)
@@ -359,9 +365,9 @@ export class NumberColumn<TName extends string = string>
      * Rounds to the specified number of decimal places.
      * @param decimals - The number of decimal places (optional)
      */
-    round(decimals?: number): Node {
+    round(decimals?: ColumnArg<number>): Node {
         return decimals !== undefined
-            ? fn.round(this.node, val(decimals))
+            ? fn.round(this.node, toNode(decimals))
             : fn.round(this.node)
     }
 
@@ -388,28 +394,28 @@ export class NumberColumn<TName extends string = string>
 
     /**
      * Returns the remainder after division.
-     * @param divisor - The divisor value
+     * @param divisor - The divisor arg
      */
-    mod(divisor: number): Node {
-        return fn.mod(this.node, val(divisor))
+    mod(divisor: ColumnArg<number>): Node {
+        return fn.mod(this.node, toNode(divisor))
     }
 
     /**
      * Raises to the specified power.
-     * @param exponent - The exponent value
+     * @param exponent - The exponent arg
      */
-    pow(exponent: number): Node {
-        return fn.pow(this.node, val(exponent))
+    pow(exponent: ColumnArg<number>): Node {
+        return fn.pow(this.node, toNode(exponent))
     }
 
     /**
      * Calculates percentage of a total.
-     * @param total - The total value
+     * @param total - The total arg
      */
-    percent(total: number): Node {
+    percent(total: ColumnArg<number>): Node {
         return expr.mul(
-            expr.div(this.node, val(total)),
-            val(100),
+            expr.div(this.node, toNode(total)),
+            toNode(100),
         )
     }
 
@@ -440,34 +446,34 @@ export class DateTimeColumn<TName extends string = string>
     extends Column<TName, Date | string> {
     /**
      * Greater than (>).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    gt(value: Date | string | Column<string, Date | string> | Node): Node {
-        return expr.gt(this.node, toNode(value))
+    gt(arg: ColumnArg<Date>): Node {
+        return expr.gt(this.node, toNode(arg))
     }
 
     /**
      * Less than (<).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    lt(value: Date | string | Column<string, Date | string> | Node): Node {
-        return expr.lt(this.node, toNode(value))
+    lt(arg: ColumnArg<Date>): Node {
+        return expr.lt(this.node, toNode(arg))
     }
 
     /**
      * Greater than or equal to (>=).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    ge(value: Date | string | Column<string, Date | string> | Node): Node {
-        return expr.ge(this.node, toNode(value))
+    ge(arg: ColumnArg<Date>): Node {
+        return expr.ge(this.node, toNode(arg))
     }
 
     /**
      * Less than or equal to (<=).
-     * @param value - The comparison value
+     * @param arg - The comparison arg
      */
-    le(value: Date | string | Column<string, Date | string> | Node): Node {
-        return expr.le(this.node, toNode(value))
+    le(arg: ColumnArg<Date>): Node {
+        return expr.le(this.node, toNode(arg))
     }
 
     /**
@@ -476,8 +482,8 @@ export class DateTimeColumn<TName extends string = string>
      * @param upper - The upper bound (inclusive)
      */
     between(
-        lower: Date | string,
-        upper: Date | string,
+        lower: ColumnArg<Date>,
+        upper: ColumnArg<Date>,
     ): Node {
         return expr.between(this.node, lower, upper)
     }
@@ -507,8 +513,8 @@ export class DateTimeColumn<TName extends string = string>
      * Formats date/time using the specified format string.
      * @param format - The strftime format string
      */
-    strftime(format: string): Node {
-        return fn.strftime(val(format), this.node)
+    strftime(format: ColumnArg<string>): Node {
+        return fn.strftime(toNode(format), this.node)
     }
 
     /**
@@ -522,21 +528,21 @@ export class DateTimeColumn<TName extends string = string>
      * Extracts the year portion.
      */
     year(): Node {
-        return fn.strftime(val('%Y'), this.node)
+        return fn.strftime(toNode('%Y'), this.node)
     }
 
     /**
      * Extracts the month portion (01-12).
      */
     month(): Node {
-        return fn.strftime(val('%m'), this.node)
+        return fn.strftime(toNode('%m'), this.node)
     }
 
     /**
      * Extracts the day portion (01-31).
      */
     day(): Node {
-        return fn.strftime(val('%d'), this.node)
+        return fn.strftime(toNode('%d'), this.node)
     }
 }
 
@@ -550,7 +556,7 @@ export class JsonColumn<TName extends string = string>
 }
 
 /** SQL parameter data types */
-export const col = {
+export const sqlTypes = {
     number: (): number => 0,
     text: (): string => '',
     boolean: (): boolean => true,

@@ -29,7 +29,7 @@ deno add @sgtzym/sparq
 
 1. Define table schemas with `sparq()`
 2. Build queries on set schemas
-3. Use the generated results to prepare statements with any SQLite driver that supports named parameters
+3. Use `sql` and `params` for prepared statements with any SQLite driver that supports named parameters
 
 > [!TIP]
 > Columns are exposed via the `$` property.  
@@ -55,7 +55,7 @@ const posts = sparq('posts', {
 const { $: u } = users
 const { $: p } = posts
 
-const result = users
+const my = users
     .select(
         u.id,
         u.name,
@@ -71,12 +71,10 @@ const result = users
     .orderBy(p.view_count.desc(), p.published_at.desc())
     .limit(20)
 
-console.log(result.sql, result.params)
+console.log(my.sql, my.params)
 ```
 
-### Result
-
-Generated SQL:
+**Generated SQL**:
 
 ```sql
 SELECT users.id, users.name, posts.title, posts.view_count, posts.published_at AS published
@@ -85,10 +83,6 @@ LEFT JOIN posts ON posts.user_id = users.id
 WHERE users.active = :p1 AND posts.published_at > :p2
 ORDER BY posts.view_count DESC, posts.published_at DESC
 LIMIT :p3
-```
 
-Parameters:
-
-```ts
-[ 1, "2024-01-01T00:00:00.000Z", 20 ]
+-- Parameters: [ 1, "2024-01-01T00:00:00.000Z", 20 ]
 ```

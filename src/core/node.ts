@@ -156,7 +156,7 @@ export function renderAST(
     nodes: ArrayLike<Node>,
     params: ParameterReg,
 ): string {
-    return renderAll([...sortAST(castArray(nodes))], params).join('\n')
+    return renderAll([...sortAST(castArray(nodes))], params).join(' ')
 }
 
 // ---------------------------------------------
