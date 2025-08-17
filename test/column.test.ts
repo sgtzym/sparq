@@ -1,6 +1,7 @@
 import { test } from '~~/test-runner.ts'
 import { albums, artists, tracks } from '~~/test-data.ts'
 import { alias, div } from '~/nodes/expressions.ts'
+import { count } from '~/nodes/functions.ts'
 
 const { $: r } = artists
 const { $: l } = albums
@@ -94,8 +95,8 @@ test('Column Operations', [
                 alias(t.milliseconds.sum(), 'total_time'),
                 alias(t.milliseconds.avg(), 'avg_duration'),
                 alias(t.unitPrice.max(), 'max_price'),
-                alias(t.unitPrice.min(), 'mín_price'),
-                alias(div(t.bytes.sum(), 1073741824), 'total_gb')
+                alias(t.unitPrice.min(), 'min_price'),
+                alias(div(t.bytes.sum(), 1073741824), 'total_gb'),
             )
             .where(t.unitPrice.gt(0)),
         expected: {
@@ -115,4 +116,72 @@ test('Column Operations', [
             params: [1073741824, 0],
         },
     },
+    {
+        name: 'with date operations',
+        query: albums
+            .select(
+                alias(l.releaseDate.year(), 'release_year'),
+                alias(l.releaseDate.month(), 'release_month'),
+                alias(l.releaseDate.day(), 'release_day'),
+                alias(l.releaseDate.strftime('%Y-%m-%d'), 'formatted_date'),
+                alias(l.releaseDate.strftime('%W'), 'week_number'),
+            )
+            .where(l.albumId.eq(1)),
+        expected: {
+            sql: `
+                SELECT
+                    STRFTIME(:p1, albums.releaseDate) AS release_year,
+                    STRFTIME(:p2, albums.releaseDate) AS release_month,
+                    STRFTIME(:p3, albums.releaseDate) AS release_day,
+                    STRFTIME(:p4, albums.releaseDate) AS formatted_date,
+                    STRFTIME(:p5, albums.releaseDate) AS week_number
+                FROM
+                    albums
+                WHERE
+                    albums.albumId = :p6
+            `,
+            params: ['%Y', '%m', '%d', '%Y-%m-%d', '%W', 1],
+        },
+    },
+    {
+        name: 'with date comparisons',
+        query: albums
+            .select(l.title)
+            .where(
+                l.releaseDate.gt(new Date('2000-01-01')),
+                l.releaseDate.between(
+                    new Date('2000-01-01'),
+                    new Date('2020-12-31'),
+                ),
+            ),
+        expected: {
+            sql: `
+                SELECT
+                    albums.title
+                FROM
+                    albums
+                WHERE
+                    albums.releaseDate > :p1 AND
+                    albums.releaseDate BETWEEN :p1 AND :p2
+            `,
+            params: ['2000-01-01T00:00:00.000Z', '2020-12-31T00:00:00.000Z'],
+        },
+    },
+    {
+        name: 'with DISTINCT values',
+        query: tracks
+            .select(
+                alias(t.composer.distinct(), 'unique_composers'),
+                alias(count(t.unitPrice.distinct()), 'price_variations'),
+            ),
+        expected: {
+            sql: `
+                SELECT
+                    DISTINCT tracks.composer AS unique_composers,
+                    COUNT(DISTINCT tracks.unitPrice) AS price_variations
+                FROM
+                    tracks
+            `,
+        },
+    }
 ])

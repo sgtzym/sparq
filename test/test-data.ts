@@ -10,6 +10,7 @@ export const albums = sparq('albums', {
     albumId: sqlTypes.number(),
     title: sqlTypes.text(),
     artistId: sqlTypes.number(),
+    releaseDate: sqlTypes.date(),
 })
 
 export const tracks = sparq('tracks', {
