@@ -28,7 +28,7 @@ test('DELETE Operations', [
             .delete()
             .where(
                 t.albumId.eq(1),
-                t.milliseconds.lt(180000)
+                t.milliseconds.lt(180000),
             ),
         expected: {
             sql: `
@@ -48,8 +48,8 @@ test('DELETE Operations', [
                 or(
                     l.title.like('%Demo%'),
                     l.title.like('%Test%'),
-                    l.artistId.isNull()
-                )
+                    l.artistId.isNull(),
+                ),
             ),
         expected: {
             sql: `
@@ -97,5 +97,5 @@ test('DELETE Operations', [
             `,
             params: ['Test%'],
         },
-    }
+    },
 ])

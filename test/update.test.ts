@@ -29,7 +29,7 @@ test('SQLite UPDATE', [
         query: tracks
             .update([
                 t.unitPrice.set(1.29),
-                t.composer.set('Lennon/McCartney')
+                t.composer.set('Lennon/McCartney'),
             ])
             .where(t.trackId.eq(1)),
         expected: {
@@ -50,7 +50,7 @@ test('SQLite UPDATE', [
         query: tracks
             .update([
                 t.unitPrice.set(t.unitPrice.mul(1.1)),
-                t.milliseconds.set(t.milliseconds.add(1000))
+                t.milliseconds.set(t.milliseconds.add(1000)),
             ])
             .where(t.albumId.eq(1)),
         expected: {
@@ -74,8 +74,8 @@ test('SQLite UPDATE', [
                 t.unitPrice.gt(1.99),
                 or(
                     t.genreId.eq(1),
-                    t.genreId.eq(2)
-                )
+                    t.genreId.eq(2),
+                ),
             ),
         expected: {
             sql: `
@@ -108,5 +108,5 @@ test('SQLite UPDATE', [
             `,
             params: [1],
         },
-    }
+    },
 ])
