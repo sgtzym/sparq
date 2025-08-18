@@ -1,5 +1,6 @@
 import type { SqlDataType, SqlString } from '~/core/sql.ts'
-
+import { ParameterReg } from '~/core/param-registry.ts'
+import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
 import {
     from,
     groupBy,
@@ -23,17 +24,10 @@ import {
     values,
     where,
 } from '~/nodes/clauses.ts'
-import { _delete, _insert, _select, _update } from '~/nodes/statements.ts'
 import { cte, with_ } from '~/nodes/ctes.ts'
+import { _delete, _insert, _select, _update } from '~/nodes/statements.ts'
 import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import { Sparq } from '~/api/sparq.ts'
-import {
-    renderSqlNodes,
-    sortSqlNodes,
-    SqlNode,
-    SqlNodeValue,
-} from '../core/sql-node.ts'
-import { ParameterReg } from '../core/param-registry.ts'
 
 // ---------------------------------------------
 // Clause implementations
@@ -145,7 +139,7 @@ const conflictImpl = function <T extends SqlQueryBuilder>(
 export abstract class SqlQueryBuilder extends SqlNode {
     protected _parts: SqlNode[] = []
     protected _params?: ParameterReg
-    private _cache?: { sql: string; params: readonly SqlDataType[] }
+    protected _cache?: { sql: string; params: readonly SqlDataType[] }
 
     constructor() {
         super()
@@ -206,6 +200,16 @@ export class Select extends SqlQueryBuilder {
     join = joinImpl
     groupBy = groupByImpl
     having = havingImpl
+
+    /**
+     * Override render to add parentheses when used as a subquery.
+     * This is detected by checking if a ParameterReg is passed in.
+     */
+    override render(params?: ParameterReg): SqlString {
+        return params
+            ? `(${renderSqlNodes(this._parts, params).join(' ')})`
+            : super.render()
+    }
 }
 
 export class Insert extends SqlQueryBuilder {
