@@ -1,7 +1,5 @@
 import { test } from '~~/test-runner.ts'
 import { albums, artists, tracks } from '~~/test-data.ts'
-import { alias, div } from '~/nodes/expressions.ts'
-import { count } from '~/nodes/functions.ts'
 
 const { $: r } = artists
 const { $: l } = albums
@@ -37,11 +35,11 @@ test('Column Operations', [
         name: 'with text transformations',
         query: tracks
             .select(
-                alias(t.name.upper(), 'TRACK_NAME'),
-                alias(t.name.lower(), 'track_name'),
-                alias(t.name.length(), 'name_length'),
-                alias(t.composer.trim(), 'composer_clean'),
-                alias(t.name.substr(1, 20), 'preview'),
+                t.name.upper().as('TRACK_NAME'),
+                t.name.lower().as('track_name'),
+                t.name.length().as('name_length'),
+                t.composer.trim().as('composer_clean'),
+                t.name.substr(1, 20).as('preview'),
             )
             .limit(1),
         expected: {
@@ -63,12 +61,12 @@ test('Column Operations', [
         name: 'with math functions',
         query: tracks
             .select(
-                alias(t.unitPrice.abs(), 'absolute'),
-                alias(t.bytes.sqrt(), 'bytes_sqrt'),
-                alias(t.milliseconds.mod(1000), 'millis_remainder'),
-                alias(t.unitPrice.pow(2), 'price_squared'),
-                alias(t.unitPrice.ceil(), 'price_ceil'),
-                alias(t.unitPrice.floor(), 'price_floor'),
+                t.unitPrice.abs().as('absolute'),
+                t.bytes.sqrt().as('bytes_sqrt'),
+                t.milliseconds.mod(1000).as('millis_remainder'),
+                t.unitPrice.pow(2).as('price_squared'),
+                t.unitPrice.ceil().as('price_ceil'),
+                t.unitPrice.floor().as('price_floor'),
             )
             .limit(1),
         expected: {
@@ -91,12 +89,12 @@ test('Column Operations', [
         name: 'with aggregation functions',
         query: tracks
             .select(
-                alias(t.trackId.count(), 'total_tracks'),
-                alias(t.milliseconds.sum(), 'total_time'),
-                alias(t.milliseconds.avg(), 'avg_duration'),
-                alias(t.unitPrice.max(), 'max_price'),
-                alias(t.unitPrice.min(), 'min_price'),
-                alias(div(t.bytes.sum(), 1073741824), 'total_gb'),
+                t.trackId.count().as('total_tracks'),
+                t.milliseconds.sum().as('total_time'),
+                t.milliseconds.avg().as('avg_duration'),
+                t.unitPrice.max().as('max_price'),
+                t.unitPrice.min().as('min_price'),
+                t.bytes.sum().div(1073741824).as('total_gb'),
             )
             .where(t.unitPrice.gt(0)),
         expected: {
@@ -120,11 +118,11 @@ test('Column Operations', [
         name: 'with date operations',
         query: albums
             .select(
-                alias(l.releaseDate.year(), 'release_year'),
-                alias(l.releaseDate.month(), 'release_month'),
-                alias(l.releaseDate.day(), 'release_day'),
-                alias(l.releaseDate.strftime('%Y-%m-%d'), 'formatted_date'),
-                alias(l.releaseDate.strftime('%W'), 'week_number'),
+                l.releaseDate.year().as('release_year'),
+                l.releaseDate.month().as('release_month'),
+                l.releaseDate.day().as('release_day'),
+                l.releaseDate.strftime('%Y-%m-%d').as('formatted_date'),
+                l.releaseDate.strftime('%W').as('week_number'),
             )
             .where(l.albumId.eq(1)),
         expected: {
@@ -171,8 +169,8 @@ test('Column Operations', [
         name: 'with DISTINCT values',
         query: tracks
             .select(
-                alias(t.composer.distinct(), 'unique_composers'),
-                alias(count(t.unitPrice.distinct()), 'price_variations'),
+                t.composer.distinct().as('unique_composers'),
+                t.unitPrice.distinct().count().as('price_variations')
             ),
         expected: {
             sql: `
@@ -183,5 +181,5 @@ test('Column Operations', [
                     tracks
             `,
         },
-    }
+    },
 ])

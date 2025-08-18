@@ -1,12 +1,8 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import type { SqlString } from '~/core/sql.ts'
-import {
-    type Node,
-    type NodeArg,
-    type ParameterReg,
-    renderAll,
-    toNode,
-} from '~/core/node.ts'
+import type { ParameterReg } from '~/core/param-registry.ts'
+import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
+import { expr, id } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Values & Assignments
@@ -17,11 +13,13 @@ import {
 /**
  * Represents a column assignment for data modification.
  */
-export class AssignmentNode implements Node {
+export class AssignmentNode extends SqlNode {
     constructor(
-        private readonly column: Node,
-        private readonly value: Node,
-    ) {}
+        private readonly column: SqlNode,
+        private readonly value: SqlNode,
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const col: string = this.column.render(params)
@@ -34,11 +32,13 @@ export class AssignmentNode implements Node {
 /**
  * Represents a value list / single row for data creation.
  */
-export class ValueListNode implements Node {
-    constructor(private readonly values: ArrayLike<Node>) {}
+export class ValueListNode extends SqlNode {
+    constructor(private readonly values: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const values: string = renderAll(this.values, params).join(', ')
+        const values: string = renderSqlNodes(this.values, params).join(', ')
 
         return `(${values})`
     }
@@ -52,8 +52,8 @@ export class ValueListNode implements Node {
  * @param value The value to assign
  * @returns An assignment node
  */
-export const assign = (column: NodeArg, value: NodeArg): Node => {
-    return new AssignmentNode(toNode(column), toNode(value))
+export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
+    return new AssignmentNode(id(column), expr(value))
 }
 
 /**
@@ -61,6 +61,6 @@ export const assign = (column: NodeArg, value: NodeArg): Node => {
  * @param values The values to include in the list
  * @returns A value list node
  */
-export const valueList = (...values: NodeArg[]): Node => {
-    return new ValueListNode(values.map(toNode))
+export const valueList = (...values: SqlNodeValue[]): SqlNode => {
+    return new ValueListNode(values.map(expr))
 }

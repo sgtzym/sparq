@@ -1,81 +1,86 @@
 import { SQL_KEYWORDS, type SqlSnippet } from '~/core/sql-constants.ts'
 
-export type SqlString = string
-
 /**
  * Union type of all SQL-compatible primitive values.
  * Represents values that can be safely parameterized.
  */
-export type SqlParam = null | number | bigint | string | Uint8Array
+export type SqlDataType = null | number | bigint | string | Uint8Array
 
 export type SqlIdentifier = string
+export type SqlString = string
 
 const SQL_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
 
 /**
  * Checks if a value needs quoting.
  *
- * @param {unknown} param - Value to check
+ * @value value - Value to check
  * @returns {boolean} True if needs quoting
  */
-export function needsQuoting(param: string): boolean {
-    if (typeof param !== 'string') return false
+export function needsQuoting(value: string): boolean {
+    if (typeof value !== 'string') return false
 
-    return !SQL_NAME_PATTERN.test(param) || isSqlKeyword(param)
+    return !SQL_NAME_PATTERN.test(value) || isSqlKeyword(value)
 }
 
-export function isSqlKeyword(param: string): boolean {
-    return param.toUpperCase() in SQL_KEYWORDS
+/**
+ * Checks if a value is a reserved SQL keyword.
+ *
+ * @value value - Value to check
+ * @returns True if is reserved keyword
+ */
+export function isSqlKeyword(value: string): boolean {
+    return value.toUpperCase() in SQL_KEYWORDS
 }
 
 /**
  * Checks if a value is a valid SQL data type.
  *
- * @param {unknown} arg - Value to check
+ * @param {unknown} value - Value to check
  * @returns {boolean} True if valid data type
  */
-export function isSqlParam(arg: unknown): arg is SqlParam {
+export function isSqlDataType(value: unknown): value is SqlDataType {
     return (
-        arg === null ||
-        typeof arg === 'number' ||
-        typeof arg === 'bigint' ||
-        typeof arg === 'string' ||
-        arg instanceof Uint8Array
+        value === null ||
+        typeof value === 'number' ||
+        typeof value === 'bigint' ||
+        typeof value === 'string' ||
+        value instanceof Uint8Array
     )
 }
 
 /**
  * Parses a value to a valid SQL data type.
  *
- * @param {unknown} arg - Value to parse
- * @returns {SqlParam} The parsed value as SQL data type
+ * @param {unknown} value - Value to parse
+ * @returns {SqlDataType} The parsed value as SQL data type
  */
-export function toSqlParam(arg: unknown): SqlParam {
+export function toSqlDataType(value: unknown): SqlDataType {
     switch (true) {
-        case isSqlParam(arg):
-            return arg
-        case arg === undefined:
+        case isSqlDataType(value):
+            return value
+        case value === undefined:
             return null
-        case typeof arg === 'boolean':
-            return arg ? 1 : 0
-        case arg instanceof Date:
-            return arg.toISOString()
-        case Array.isArray(arg) || typeof arg === 'object':
+        case typeof value === 'boolean':
+            return value ? 1 : 0
+        case value instanceof Date:
+            return value.toISOString()
+        case Array.isArray(value) || typeof value === 'object':
             try {
-                return JSON.stringify(arg)
+                return JSON.stringify(value)
             } catch (error) {
                 throw new TypeError(`Unable to serialize value: ${error}`)
             }
         default:
-            throw new TypeError(`Unsupported literal type: ${arg}`)
+            throw new TypeError(`Unsupported literal type: ${value}`)
     }
 }
 
 /**
  * Creates a syntax snippet based on valid SQLite keywords and string inputs.
- * @param snippets - The SQL keywords/strings to use
+ * @param parts - The SQL keywords/strings to use
  * @returns A joined SQLite string
  */
-export function sql(...snippets: SqlSnippet[]): string {
-    return String(snippets.filter(Boolean).join(' '))
+export function sql(...parts: SqlSnippet[]): string {
+    return String(parts.filter(Boolean).join(' '))
 }

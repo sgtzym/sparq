@@ -1,13 +1,8 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
-import {
-    type Node,
-    type NodeArg,
-    type ParameterReg,
-    renderAll,
-    toNode,
-} from '~/core/node.ts'
-import { id, raw } from '~/nodes/primitives.ts'
+import type { ParameterReg } from '~/core/param-registry.ts'
+import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
+import { expr, id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Clauses
@@ -18,13 +13,17 @@ import { id, raw } from '~/nodes/primitives.ts'
 /**
  * Represents a FROM clause with table references.
  */
-export class FromNode implements Node {
-    readonly priority: number = 10
+export class FromNode extends SqlNode {
+    override readonly priority: number = 1
 
-    constructor(private readonly tables: ArrayLike<Node>) {}
+    constructor(private readonly tables: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const _tables: SqlString = renderAll(this.tables, params).join(', ')
+        const _tables: SqlString = renderSqlNodes(this.tables, params).join(
+            ', ',
+        )
 
         return sql('FROM', _tables)
     }
@@ -33,14 +32,16 @@ export class FromNode implements Node {
 /**
  * Represents a JOIN clause with optional conditions.
  */
-export class JoinNode implements Node {
-    readonly priority: number = 20
+export class JoinNode extends SqlNode {
+    override readonly priority: number = 2
 
     constructor(
-        private readonly joinType: Node,
-        private readonly table: Node,
-        private readonly condition?: Node,
-    ) {}
+        private readonly joinType: SqlNode,
+        private readonly table: SqlNode,
+        private readonly condition?: SqlNode,
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const _type: SqlString = this.joinType.render(params)
@@ -54,17 +55,38 @@ export class JoinNode implements Node {
 }
 
 /**
- * Represents a WHERE clause for filtering rows.
+ * Represents a SET clause for UPDATE operations.
  */
-export class WhereNode implements Node {
-    readonly priority: number = 30
+export class SetNode extends SqlNode {
+    override readonly priority: number = 2
 
-    constructor(private readonly conditions: ArrayLike<Node>) {}
+    constructor(private readonly assignments: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const _conditions: SqlString = renderAll(this.conditions, params).join(
-            ` ${sql('AND')} `,
-        )
+        const _assignments: SqlString = renderSqlNodes(this.assignments, params)
+            .join(', ')
+
+        return sql('SET', _assignments)
+    }
+}
+
+/**
+ * Represents a WHERE clause for filtering rows.
+ */
+export class WhereNode extends SqlNode {
+    override readonly priority: number = 3
+
+    constructor(private readonly conditions: ArrayLike<SqlNode>) {
+        super()
+    }
+
+    render(params: ParameterReg): SqlString {
+        const _conditions: SqlString = renderSqlNodes(this.conditions, params)
+            .join(
+                ` ${sql('AND')} `,
+            )
 
         return sql('WHERE', _conditions)
     }
@@ -73,13 +95,15 @@ export class WhereNode implements Node {
 /**
  * Represents a GROUP BY clause for result aggregation.
  */
-export class GroupByNode implements Node {
-    readonly priority: number = 40
+export class GroupByNode extends SqlNode {
+    override readonly priority: number = 4
 
-    constructor(private readonly expr: ArrayLike<Node>) {}
+    constructor(private readonly expr: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const _expr: SqlString = renderAll(this.expr, params).join(', ')
+        const _expr: SqlString = renderSqlNodes(this.expr, params).join(', ')
 
         return sql('GROUP BY', _expr)
     }
@@ -88,15 +112,18 @@ export class GroupByNode implements Node {
 /**
  * Represents a HAVING clause for filtering grouped results.
  */
-export class HavingNode implements Node {
-    readonly priority: number = 50
+export class HavingNode extends SqlNode {
+    override readonly priority: number = 5
 
-    constructor(private readonly conditions: ArrayLike<Node>) {}
+    constructor(private readonly conditions: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const _conditions: SqlString = renderAll(this.conditions, params).join(
-            ` ${sql('AND')} `,
-        )
+        const _conditions: SqlString = renderSqlNodes(this.conditions, params)
+            .join(
+                ` ${sql('AND')} `,
+            )
 
         return sql('HAVING', _conditions)
     }
@@ -105,13 +132,15 @@ export class HavingNode implements Node {
 /**
  * Represents an ORDER BY clause for sorting results.
  */
-export class OrderByNode implements Node {
-    readonly priority: number = 60
+export class OrderByNode extends SqlNode {
+    override readonly priority: number = 6
 
-    constructor(private readonly expr: ArrayLike<Node>) {}
+    constructor(private readonly expr: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const _expr: SqlString = renderAll(this.expr, params).join(', ')
+        const _expr: SqlString = renderSqlNodes(this.expr, params).join(', ')
 
         return sql('ORDER BY', _expr)
     }
@@ -120,10 +149,12 @@ export class OrderByNode implements Node {
 /**
  * Represents a LIMIT clause for restricting result count.
  */
-export class LimitNode implements Node {
-    readonly priority: number = 70
+export class LimitNode extends SqlNode {
+    override readonly priority: number = 7
 
-    constructor(private readonly count: Node) {}
+    constructor(private readonly count: SqlNode) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const _count: SqlString = this.count.render(params)
@@ -135,10 +166,12 @@ export class LimitNode implements Node {
 /**
  * Represents an OFFSET clause for result pagination.
  */
-export class OffsetNode implements Node {
-    readonly priority: number = 80
+export class OffsetNode extends SqlNode {
+    override readonly priority: number = 8
 
-    constructor(private readonly count: Node) {}
+    constructor(private readonly count: SqlNode) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const _count: SqlString = this.count.render(params)
@@ -148,70 +181,64 @@ export class OffsetNode implements Node {
 }
 
 /**
- * Represents a RETURNING clause for getting affected row data.
- */
-export class ReturningNode implements Node {
-    readonly priority = 95
-
-    constructor(private readonly columns?: ArrayLike<Node>) {}
-
-    render(params: ParameterReg): SqlString {
-        const _columns: SqlString = this.columns
-            ? renderAll(this.columns, params).join(', ')
-            : '*'
-        return `${sql('RETURNING', _columns)};`
-    }
-}
-
-/**
  * Represents a VALUES clause for explicit row data.
  */
-export class ValuesNode implements Node {
-    readonly priority = 90
+export class ValuesNode extends SqlNode {
+    override readonly priority = 9
 
-    private rows: Node[] = []
+    private rows: SqlNode[] = []
 
-    addRow(valueList: Node): void {
+    constructor() {
+        super()
+    }
+
+    addRow(valueList: SqlNode): void {
         this.rows.push(valueList)
     }
 
     render(params: ParameterReg): SqlString {
-        const _rows: SqlString = renderAll(this.rows, params).join(', ')
+        const _rows: SqlString = renderSqlNodes(this.rows, params).join(', ')
 
         return sql('VALUES', _rows)
     }
 }
 
 /**
- * Represents a SET clause for UPDATE operations.
+ * Represents a RETURNING clause for getting affected row data.
  */
-export class SetNode implements Node {
-    readonly priority: number = 5
+export class ReturningNode extends SqlNode {
+    override readonly priority = 10
 
-    constructor(private readonly assignments: ArrayLike<Node>) {}
+    constructor(private readonly columns?: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const _assignments: SqlString = renderAll(this.assignments, params)
-            .join(', ')
-
-        return sql('SET', _assignments)
+        const _columns: SqlString = this.columns
+            ? renderSqlNodes(this.columns, params).join(', ')
+            : '*'
+        return `${sql('RETURNING', _columns)};`
     }
 }
 
 /**
  * Represents a ON CONFLICT clause for INSERT / UPDATE statements.
  */
-export class OnConflictNode implements Node {
+export class OnConflictNode extends SqlNode {
+    override priority: number = 11
+
     constructor(
-        private readonly action: Node,
-        private readonly targets?: ArrayLike<Node>,
-    ) {}
+        private readonly action: SqlNode,
+        private readonly targets?: ArrayLike<SqlNode>,
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const _action: SqlString = this.action.render(params)
 
         const _targets: SqlString | undefined = this.targets
-            ? renderAll(this.targets, params).join(', ')
+            ? renderSqlNodes(this.targets, params).join(', ')
             : undefined
 
         return sql(
@@ -226,23 +253,27 @@ export class OnConflictNode implements Node {
 /**
  * Represents an UPSERT clause for INSERT / UPDATE statements.
  */
-export class UpsertNode implements Node {
+export class UpsertNode extends SqlNode {
+    override priority: number = 11
+
     constructor(
-        private readonly assignments: ArrayLike<Node>,
-        private readonly targets?: ArrayLike<Node>,
-        private readonly conditions?: ArrayLike<Node>,
-    ) {}
+        private readonly assignments: ArrayLike<SqlNode>,
+        private readonly targets?: ArrayLike<SqlNode>,
+        private readonly conditions?: ArrayLike<SqlNode>,
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
-        const _assignments: SqlString = renderAll(this.assignments, params)
+        const _assignments: SqlString = renderSqlNodes(this.assignments, params)
             .join(', ')
 
         const _targets: SqlString | undefined = this.targets
-            ? renderAll(this.targets, params).join(', ')
+            ? renderSqlNodes(this.targets, params).join(', ')
             : undefined
 
         const _conditions: SqlString | undefined = this.conditions
-            ? renderAll(this.conditions, params).join(` ${sql('AND')} `)
+            ? renderSqlNodes(this.conditions, params).join(` ${sql('AND')} `)
             : undefined
 
         return sql(
@@ -260,27 +291,29 @@ export class UpsertNode implements Node {
 /**
  * Creates a FROM clause with table references.
  * @param tables - The tables to select from
- * @returns A FROM node
+ * @returns A FROM SqlNode
  */
-export const from = (...tables: NodeArg[]) => new FromNode(tables.map(id))
+export const from = (...tables: SqlNodeValue[]) => new FromNode(tables.map(id))
 
 /**
  * Creates a JOIN clause factory.
  * @param type - The join type string
  * @returns A function that creates join nodes
  */
-const join = (type: string) => (table: NodeArg, condition?: NodeArg): Node =>
-    new JoinNode(
-        raw(type),
-        id(table),
-        condition ? toNode(condition) : undefined,
-    )
+const join =
+    (type: string) =>
+    (table: SqlNodeValue, condition?: SqlNodeValue): SqlNode =>
+        new JoinNode(
+            raw(type),
+            id(table),
+            condition ? expr(condition) : undefined,
+        )
 
 /**
  * Creates an INNER JOIN clause.
  * @param table - The table to join
  * @param condition The optional join condition
- * @returns A join node
+ * @returns A join SqlNode
  */
 export const joinInner = join(sql('INNER'))
 
@@ -288,7 +321,7 @@ export const joinInner = join(sql('INNER'))
  * Creates a LEFT JOIN clause.
  * @param table - The table to join
  * @param condition - The optional join condition
- * @returns A join node
+ * @returns A join SqlNode
  */
 export const joinLeft = join(sql('LEFT'))
 
@@ -296,70 +329,70 @@ export const joinLeft = join(sql('LEFT'))
  * Creates a LEFT OUTER JOIN clause.
  * @param table - The table to join
  * @param condition - The optional join condition
- * @returns A join node
+ * @returns A join SqlNode
  */
 export const joinLeftOuter = join(sql('LEFT OUTER'))
 
 /**
  * Creates a CROSS JOIN clause.
  * @param table - The table to join
- * @returns A join node
+ * @returns A join SqlNode
  */
-export const joinCross = (table: NodeArg) =>
+export const joinCross = (table: SqlNodeValue) =>
     new JoinNode(raw(sql('CROSS')), id(table))
 
 /**
  * Creates a WHERE clause with filter conditions.
  * @param conditions - The conditions to filter by
- * @returns A WHERE node
+ * @returns A WHERE SqlNode
  */
-export const where = (...conditions: NodeArg[]) =>
-    new WhereNode(conditions.map(toNode))
+export const where = (...conditions: SqlNodeValue[]) =>
+    new WhereNode(conditions.map(expr))
 
 /**
  * Creates a GROUP BY clause for result aggregation.
  * @param columns - The columns to group by
- * @returns A GROUP BY node
+ * @returns A GROUP BY SqlNode
  */
-export const groupBy = (...columns: NodeArg[]) =>
+export const groupBy = (...columns: SqlNodeValue[]) =>
     new GroupByNode(columns.map(id))
 
 /**
  * Creates a HAVING clause for filtering grouped results.
  * @param conditions - The conditions to filter grouped results by
- * @returns A HAVING node
+ * @returns A HAVING SqlNode
  */
-export const having = (...conditions: NodeArg[]) =>
-    new HavingNode(conditions.map(toNode))
+export const having = (...conditions: SqlNodeValue[]) =>
+    new HavingNode(conditions.map(expr))
 
 /**
  * Creates an ORDER BY clause for sorting results.
  * @param columns - The columns to sort by
- * @returns An ORDER BY node
+ * @returns An ORDER BY SqlNode
  */
-export const orderBy = (...columns: NodeArg[]) =>
+export const orderBy = (...columns: SqlNodeValue[]) =>
     new OrderByNode(columns.map(id))
 
 /**
  * Creates a LIMIT clause for restricting result count.
  * @param count - The maximum number of results
- * @returns A LIMIT node
+ * @returns A LIMIT SqlNode
  */
-export const limit = (count: NodeArg) => new LimitNode(toNode(count))
+export const limit = (count: SqlNodeValue) => new LimitNode(expr(count))
 
 /**
  * Creates an OFFSET clause for result pagination.
  * @param count - The number of results to skip
- * @returns An OFFSET node
+ * @returns An OFFSET SqlNode
  */
-export const offset = (count: NodeArg) => new OffsetNode(toNode(count))
+export const offset = (count: SqlNodeValue) => new OffsetNode(expr(count))
 
 /**
  * Creates a RETURNING clause for getting affected row data.
  * @param columns - The columns to return
- * @returns A RETURNING node
+ * @returns A RETURNING SqlNode
  */
-export const returning = (...columns: NodeArg[]) =>
+export const returning = (...columns: SqlNodeValue[]) =>
     new ReturningNode(
         columns && columns.length > 0 ? columns.map(id) : raw('*'),
     )
@@ -367,17 +400,17 @@ export const returning = (...columns: NodeArg[]) =>
 /**
  * Creates a VALUES clause for explicit row data.
  * @param rows - The rows of data
- * @returns A VALUES node
+ * @returns A VALUES SqlNode
  */
 export const values = () => new ValuesNode()
 
 /**
  * Creates a SET clause for UPDATE statements.
  * @param assignments - The column assignments
- * @returns A SET node
+ * @returns A SET SqlNode
  */
-export const set = (...assignments: NodeArg[]) =>
-    new SetNode(assignments.map(toNode))
+export const set = (...assignments: SqlNodeValue[]) =>
+    new SetNode(assignments.map(expr))
 
 /**
  * Creates a ON CONFLICT clause factory.
@@ -385,7 +418,7 @@ export const set = (...assignments: NodeArg[]) =>
  * @param target - The conflict target (columns)
  * @returns A function that creates join nodes
  */
-const conflict = (action: string) => (...targets: NodeArg[]) =>
+const conflict = (action: string) => (...targets: SqlNodeValue[]) =>
     new OnConflictNode(raw(action), targets.map(id))
 
 /**
@@ -422,15 +455,16 @@ export const onConflictNothing = conflict(sql('NOTHING'))
  * Creates a ON CONFLICT clause for UPSERT resolution.
  */
 export const onConflictUpdate = (
-    assignments: NodeArg[],
-    targets?: NodeArg[],
-    conditions?: NodeArg[],
+    assignments: SqlNodeValue[],
+    targets?: SqlNodeValue[],
+    conditions?: SqlNodeValue[],
 ) => {
-    const _targets: Node[] | undefined = targets?.map(id) ?? undefined
-    const _conditions: Node[] | undefined = conditions?.map(toNode) ?? undefined
+    const _targets: SqlNode[] | undefined = targets?.map(id) ?? undefined
+    const _conditions: SqlNode[] | undefined = conditions?.map(expr) ??
+        undefined
 
     return new UpsertNode(
-        assignments.map(toNode),
+        assignments.map(expr),
         _targets,
         _conditions,
     )

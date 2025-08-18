@@ -1,4 +1,4 @@
-import type { NodeArg, Param } from '~/core/node.ts'
+import type { SqlNodeValue, SqlParam } from '~/core/sql-node.ts'
 import {
     BooleanColumn,
     type Column,
@@ -9,9 +9,9 @@ import {
 } from '~/api/column.ts'
 import { Delete, Insert, Select, Update } from '~/api/query-builders.ts'
 
-type TableSchema = Record<string, Param>
+type TableSchema = Record<string, SqlParam>
 
-type ColumnTypeMapping<K extends string, T extends Param> = T extends number
+type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number
     ? NumberColumn<K>
     : T extends string ? TextColumn<K>
     : T extends Date ? DateTimeColumn<K>
@@ -37,7 +37,7 @@ export class Sparq<T extends TableSchema> {
         this.columns = {} as ColumnsProxy<T>
 
         for (const [name, value] of Object.entries(schema)) {
-            let column: Column<string, Param>
+            let column: Column<string, SqlParam>
 
             if (typeof value === 'number') {
                 column = new NumberColumn(name, table)
@@ -64,7 +64,7 @@ export class Sparq<T extends TableSchema> {
      * Creates a SELECT query for this table.
      * @param columns - Columns to select (defaults to * if empty)
      */
-    select(...columns: NodeArg[]): Select {
+    select(...columns: SqlNodeValue[]): Select {
         return new Select(this.table, columns)
     }
 
@@ -72,20 +72,22 @@ export class Sparq<T extends TableSchema> {
      * Creates an INSERT query for this table.
      * @param columns - Columns to insert values into
      */
-    insert(...columns: (keyof T | Column<string, Param> | NodeArg)[]): Insert {
+    insert(
+        ...columns: (keyof T | Column<string, SqlParam> | SqlNodeValue)[]
+    ): Insert {
         const cols = columns.map((col) =>
             typeof col === 'string' && col in this.columns
                 ? this.columns[col as keyof T]
                 : col
         )
-        return new Insert(this.table, cols as NodeArg[])
+        return new Insert(this.table, cols as SqlNodeValue[])
     }
 
     /**
      * Creates an UPDATE query for this table.
      * @param assignments - Column assignments (can be object or array of nodes)
      */
-    update(assignments: Partial<T> | NodeArg[]): Update {
+    update(assignments: Partial<T> | SqlNodeValue[]): Update {
         const assigns = Array.isArray(assignments)
             ? assignments
             : Object.entries(assignments).map(([col, val]) =>
