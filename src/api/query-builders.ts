@@ -1,11 +1,5 @@
 import type { SqlDataType, SqlString } from '~/core/sql.ts'
-import {
-    ParameterReg,
-    renderSqlNodes,
-    sortSqlNodes,
-    SqlNode,
-    type SqlNodeValue,
-} from '~/core/node.ts'
+
 import {
     from,
     groupBy,
@@ -33,6 +27,13 @@ import { _delete, _insert, _select, _update } from '~/nodes/statements.ts'
 import { cte, with_ } from '~/nodes/ctes.ts'
 import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import { Sparq } from '~/api/sparq.ts'
+import {
+    renderSqlNodes,
+    sortSqlNodes,
+    SqlNode,
+    SqlNodeValue,
+} from '../core/sql-node.ts'
+import { ParameterReg } from '../core/param-registry.ts'
 
 // ---------------------------------------------
 // Clause implementations

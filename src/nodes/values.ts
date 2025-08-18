@@ -1,12 +1,8 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import type { SqlString } from '~/core/sql.ts'
-import {
-    type ParameterReg,
-    renderSqlNodes,
-    type SqlNode,
-    type SqlNodeValue,
-    toSqlNode,
-} from '~/core/node.ts'
+import type { ParameterReg } from '~/core/param-registry.ts'
+import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
+import { expr, id } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Values & Assignments
@@ -17,11 +13,13 @@ import {
 /**
  * Represents a column assignment for data modification.
  */
-export class AssignmentNode implements SqlNode {
+export class AssignmentNode extends SqlNode {
     constructor(
         private readonly column: SqlNode,
         private readonly value: SqlNode,
-    ) {}
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const col: string = this.column.render(params)
@@ -34,8 +32,10 @@ export class AssignmentNode implements SqlNode {
 /**
  * Represents a value list / single row for data creation.
  */
-export class ValueListNode implements SqlNode {
-    constructor(private readonly values: ArrayLike<SqlNode>) {}
+export class ValueListNode extends SqlNode {
+    constructor(private readonly values: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const values: string = renderSqlNodes(this.values, params).join(', ')
@@ -53,7 +53,7 @@ export class ValueListNode implements SqlNode {
  * @returns An assignment node
  */
 export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
-    return new AssignmentNode(toSqlNode(column), toSqlNode(value))
+    return new AssignmentNode(id(column), expr(value))
 }
 
 /**
@@ -62,5 +62,5 @@ export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
  * @returns A value list node
  */
 export const valueList = (...values: SqlNodeValue[]): SqlNode => {
-    return new ValueListNode(values.map(toSqlNode))
+    return new ValueListNode(values.map(expr))
 }

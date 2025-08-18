@@ -1,13 +1,8 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
-import {
-    type ParameterReg,
-    renderSqlNodes,
-    type SqlNode,
-    type SqlNodeValue,
-    toSqlNode,
-} from '~/core/node.ts'
-import { id, raw } from '~/nodes/primitives.ts'
+import type { ParameterReg } from '~/core/param-registry.ts'
+import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
+import { expr, id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Statements
@@ -18,10 +13,10 @@ import { id, raw } from '~/nodes/primitives.ts'
 /**
  * Represents a SELECT statement with optional column specification.
  */
-export class SelectNode implements SqlNode {
-    readonly priority: number = 0
-
-    constructor(private readonly columns: ArrayLike<SqlNode>) {}
+export class SelectNode extends SqlNode {
+    constructor(private readonly columns: ArrayLike<SqlNode>) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const _columns: SqlString = renderSqlNodes(this.columns, params).join(
@@ -35,13 +30,13 @@ export class SelectNode implements SqlNode {
 /**
  * Represents an INSERT statement for adding new rows.
  */
-export class InsertNode implements SqlNode {
-    readonly priority: number = 0
-
+export class InsertNode extends SqlNode {
     constructor(
         private readonly table: SqlNode,
         private readonly columns: ArrayLike<SqlNode>,
-    ) {}
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const table: string = this.table.render(params)
@@ -54,10 +49,10 @@ export class InsertNode implements SqlNode {
 /**
  * Represents an UPDATE statement for modifying existing rows.
  */
-export class UpdateNode implements SqlNode {
-    readonly priority: number = 0
-
-    constructor(private readonly table: SqlNode) {}
+export class UpdateNode extends SqlNode {
+    constructor(private readonly table: SqlNode) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const table: string = this.table.render(params)
@@ -69,8 +64,10 @@ export class UpdateNode implements SqlNode {
 /**
  * Represents a DELETE statement for removing rows.
  */
-export class DeleteNode implements SqlNode {
-    readonly priority: number = 0
+export class DeleteNode extends SqlNode {
+    constructor() {
+        super()
+    }
 
     render(_params: ParameterReg): SqlString {
         return sql('DELETE')
@@ -108,7 +105,7 @@ export const _update = (table: string): SqlNode => new UpdateNode(id(table))
  * @returns An INSERT SqlNode
  */
 export const _insert = (table: string, columns: SqlNodeValue[]): SqlNode =>
-    new InsertNode(id(table), columns.map(toSqlNode))
+    new InsertNode(id(table), columns.map(expr))
 
 /**
  * Creates a DELETE statement.

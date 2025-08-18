@@ -1,13 +1,8 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
-import {
-    type ParameterReg,
-    renderSqlNodes,
-    type SqlNode,
-    type SqlNodeValue,
-    toSqlNode,
-} from '~/core/node.ts'
-import { id, raw } from '~/nodes/primitives.ts'
+import type { ParameterReg } from '~/core/param-registry.ts'
+import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
+import { expr, id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Expressions
@@ -18,12 +13,14 @@ import { id, raw } from '~/nodes/primitives.ts'
 /**
  * Represents a unary operation with configurable positioning (A x).
  */
-export class UnaryNode implements SqlNode {
+export class UnaryNode extends SqlNode {
     constructor(
         private readonly operator: SqlNode,
         private readonly expr?: SqlNode,
         private readonly position: 'pfx' | 'sfx' = 'sfx',
-    ) {}
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const op: string = this.operator.render(params)
@@ -38,12 +35,14 @@ export class UnaryNode implements SqlNode {
 /**
  * Represents a binary operation (A x B).
  */
-export class BinaryNode implements SqlNode {
+export class BinaryNode extends SqlNode {
     constructor(
         private readonly left: SqlNode,
         private readonly operator: SqlNode,
         private readonly right: SqlNode,
-    ) {}
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const left: string = this.left.render(params)
@@ -57,12 +56,14 @@ export class BinaryNode implements SqlNode {
 /**
  * Represents a conjunction operation (A and/or B).
  */
-export class ConjunctionNode implements SqlNode {
+export class ConjunctionNode extends SqlNode {
     constructor(
         private readonly operator: SqlNode,
         private readonly conditions: ArrayLike<SqlNode>,
         private readonly grouped: boolean = false,
-    ) {}
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const op: string = this.operator.render(params)
@@ -84,7 +85,7 @@ export class ConjunctionNode implements SqlNode {
  */
 const conjunction =
     (op: string, grouped = false) => (...conditions: SqlNodeValue[]): SqlNode =>
-        new ConjunctionNode(raw(op), conditions.map(toSqlNode), grouped)
+        new ConjunctionNode(raw(op), conditions.map(expr), grouped)
 
 /**
  * Creates a logical AND operation with parentheses.
@@ -107,7 +108,7 @@ export const or = conjunction(sql('OR'), true)
  */
 const comparison =
     (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
-        new BinaryNode(toSqlNode(left), raw(op), toSqlNode(right))
+        new BinaryNode(expr(left), raw(op), expr(right))
 
 /**
  * Creates an equality comparison (=).
@@ -194,11 +195,11 @@ export const between = (
     upper: SqlNodeValue,
 ): SqlNode =>
     new BinaryNode(
-        toSqlNode(test),
+        expr(test),
         raw(sql('BETWEEN')),
         new ConjunctionNode(raw(sql('AND')), [
-            toSqlNode(lower),
-            toSqlNode(upper),
+            expr(lower),
+            expr(upper),
         ]),
     )
 
@@ -207,34 +208,34 @@ export const between = (
  * @param operand - The expression to negate
  * @returns A unary node
  */
-export const not = (expr: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(sql('NOT')), toSqlNode(expr), 'pfx')
+export const not = (value: SqlNodeValue): SqlNode =>
+    new UnaryNode(raw(sql('NOT')), expr(value), 'pfx')
 
 /**
  * Creates an EXISTS subquery check.
  * @param operand - The subquery to check
  * @returns A unary node
  */
-export const exists = (expr: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(sql('EXISTS')), toSqlNode(expr), 'pfx')
+export const exists = (value: SqlNodeValue): SqlNode =>
+    new UnaryNode(raw(sql('EXISTS')), expr(value), 'pfx')
 
 /**
  * Creates an IS NULL check.
  * @param operand - The expression to test
  * @returns A unary node
  */
-export const isNull = (expr: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(`${sql('IS')} ${sql('NULL')}`), toSqlNode(expr), 'sfx')
+export const isNull = (value: SqlNodeValue): SqlNode =>
+    new UnaryNode(raw(`${sql('IS')} ${sql('NULL')}`), expr(value), 'sfx')
 
 /**
  * Creates an IS NOT NULL check.
  * @param operand - The expression to test
  * @returns A unary node
  */
-export const isNotNull = (expr: SqlNodeValue): SqlNode =>
+export const isNotNull = (value: SqlNodeValue): SqlNode =>
     new UnaryNode(
         raw(`${sql('IS')} ${sql('NOT')} ${sql('NULL')}`),
-        toSqlNode(expr),
+        expr(value),
         'sfx',
     )
 
@@ -245,7 +246,7 @@ export const isNotNull = (expr: SqlNodeValue): SqlNode =>
  */
 const arithmetic =
     (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
-        new BinaryNode(toSqlNode(left), raw(op), toSqlNode(right))
+        new BinaryNode(expr(left), raw(op), expr(right))
 
 /**
  * Creates an addition operation (+).
@@ -284,8 +285,8 @@ export const div = arithmetic('/')
  * @param q - The quantifier string
  * @returns A function that creates unary nodes
  */
-const quantifier = (q: string) => (expr?: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(q), toSqlNode(expr), 'pfx')
+const quantifier = (q: string) => (value?: SqlNodeValue): SqlNode =>
+    new UnaryNode(raw(q), expr(value), 'pfx')
 
 /**
  * Creates a DISTINCT modifier for removing duplicates.
@@ -306,8 +307,8 @@ export const all = quantifier(sql('ALL'))
  * @param dir - The sorting direction string
  * @returns A function that creates unary nodes
  */
-const sortDir = (dir: string) => (expr: SqlNodeValue): SqlNode => {
-    return new UnaryNode(raw(dir), toSqlNode(expr))
+const sortDir = (dir: string) => (value: SqlNodeValue): SqlNode => {
+    return new UnaryNode(raw(dir), expr(value))
 }
 
 /**
@@ -330,6 +331,6 @@ export const desc = sortDir(sql('DESC'))
  * @param as - The alias name
  * @returns A binary node
  */
-export const alias = (expr: SqlNodeValue, as: SqlNodeValue): SqlNode => {
-    return new BinaryNode(toSqlNode(expr), raw(sql('AS')), id(as))
+export const alias = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
+    return new BinaryNode(expr(value), raw(sql('AS')), id(as))
 }

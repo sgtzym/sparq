@@ -1,39 +1,37 @@
-import { sparq } from '@sgtzym/sparq'
-import { col } from '~/api/column.ts'
+import { sparq } from '~/api/sparq.ts'
+import { SQL_DATA_TYPES } from '~/api/column.ts'
+import { alias } from '~/nodes/expressions.ts'
 
-const user = sparq('users', {
-    id: col.number(),
-    name: col.text(),
-    email: col.text(),
-    age: col.number(),
-    score: col.number(),
-    active: col.boolean(),
-    created: col.date(),
-    data: col.list(),
-    metadata: col.json()
+export const artists = sparq('artists', {
+    artistId: SQL_DATA_TYPES.number(),
+    name: SQL_DATA_TYPES.text(),
 })
 
-// 2. Query table data
 
-const { $ } = user
+export const tracks = sparq('tracks', {
+  trackId: SQL_DATA_TYPES.number(),
+  name: SQL_DATA_TYPES.text(),
+  albumId: SQL_DATA_TYPES.number(),
+  mediaTypeId: SQL_DATA_TYPES.number(),
+  genreId: SQL_DATA_TYPES.number(),
+  composer: SQL_DATA_TYPES.text(),
+  milliseconds: SQL_DATA_TYPES.number(),
+  bytes: SQL_DATA_TYPES.number(),
+  unitPrice: SQL_DATA_TYPES.number(),
+})
 
-const query = user.select(
-  $.id,
-  $.name,
-  $.score.as('points'),
-).where(
-  $.age.ge(21),
-  $.name.like('Jane%'),
-  $.email.endsWith('@doe.com'),
-).orderBy(
-  $.score.desc(),
-).limit(10)
+export const albums = sparq('albums', {
+    albumId: SQL_DATA_TYPES.number(),
+    title: SQL_DATA_TYPES.text(),
+    artistId: SQL_DATA_TYPES.number(),
+    releaseDate: SQL_DATA_TYPES.date(),
+})
 
-console.log(query.sql, query.params)
+const { $: a } = albums
 
-
-const query2 = user.update(
-  [$.id.set(123)]
+const test = albums.select(
+  a.albumId.as('album'),
+  alias('asdf', 'a')
 )
 
-console.log(query2.sql, query2.params)
+console.log(test.sql, test.params)

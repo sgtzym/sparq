@@ -1,6 +1,4 @@
-import { type ArrayLike, castArray } from '~/core/utils.ts'
-import { type SqlDataType, type SqlString, toSqlDataType } from '~/core/sql.ts'
-import { LiteralNode } from '~/nodes/primitives.ts'
+import type { SqlDataType } from '~/core/sql.ts'
 
 // ---------------------------------------------
 // Parameter registry
@@ -99,66 +97,4 @@ export class ParameterReg {
     get index(): number {
         return this.#index
     }
-}
-
-// ---------------------------------------------
-// Node basics
-// ---------------------------------------------
-
-export abstract class SqlNode {
-    readonly priority?: number
-    abstract render(params: ParameterReg): SqlString
-}
-
-/** Node type guard */
-export function isSqlNode(arg: any): arg is SqlNode {
-    return arg && typeof arg.render === 'function'
-}
-
-export type SqlParam =
-    | SqlDataType
-    | boolean
-    | Date
-    | Record<string, any>
-    | undefined
-
-export type SqlNodeValue = SqlNode | SqlParam
-
-/** Converts values to Nodes */
-export function toSqlNode(value: SqlNodeValue): SqlNode {
-    if (value instanceof SqlNode) return value
-    return new LiteralNode(toSqlDataType(value))
-}
-
-// ---------------------------------------------
-// Sorting and rendering
-// ---------------------------------------------
-
-/**
- * Sorts nodes based on their priority.
- */
-export function sortSqlNodes(nodes: SqlNode[]): readonly SqlNode[] {
-    return [...nodes].sort((a, b) => {
-        const aPriority = a.priority ?? Number.MAX_SAFE_INTEGER
-        const bPriority = b.priority ?? Number.MAX_SAFE_INTEGER
-
-        return aPriority - bPriority
-    })
-}
-
-/**
- * Renders multiple nodes at once.
- * @param nodes - The nodes to render
- * @param params - The parameter list
- * @param sort  - If set, sorts nodes based on their priority
- * @returns A list of rendered SQL strings
- */
-export function renderSqlNodes(
-    nodes: ArrayLike<SqlNode>,
-    params: ParameterReg,
-    sort: boolean = false,
-): string[] {
-    return sort
-        ? [...sortSqlNodes(castArray(nodes))].map((n) => n.render(params))
-        : castArray(nodes).map((n) => n.render(params))
 }

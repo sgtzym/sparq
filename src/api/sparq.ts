@@ -1,4 +1,4 @@
-import type { SqlNodeValue, SqlParam } from '~/core/node.ts'
+import type { SqlNodeValue, SqlParam } from '~/core/sql-node.ts'
 import {
     BooleanColumn,
     type Column,

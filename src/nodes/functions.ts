@@ -1,13 +1,8 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
-import {
-    type ParameterReg,
-    renderSqlNodes,
-    type SqlNode,
-    type SqlNodeValue,
-    toSqlNode,
-} from '~/core/node.ts'
-import { raw } from '~/nodes/primitives.ts'
+import type { ParameterReg } from '~/core/param-registry.ts'
+import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
+import { expr, id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
 // Functions
@@ -18,11 +13,13 @@ import { raw } from '~/nodes/primitives.ts'
 /**
  * Represents an aggregate function with optional expression.
  */
-export class FnNode implements SqlNode {
+export class FnNode extends SqlNode {
     constructor(
         private readonly name: SqlNode,
         private readonly expr: ArrayLike<SqlNode>,
-    ) {}
+    ) {
+        super()
+    }
 
     render(params: ParameterReg): SqlString {
         const _name: string = this.name.render(params)
@@ -41,7 +38,7 @@ export class FnNode implements SqlNode {
  * @returns A function that creates fn nodes
  */
 const fn = (name: string) => (...args: SqlNodeValue[]) =>
-    new FnNode(raw(name), args.map(toSqlNode))
+    new FnNode(raw(name), args.map(expr))
 
 /**
  * Creates an aggregate function factory.
@@ -50,7 +47,7 @@ const fn = (name: string) => (...args: SqlNodeValue[]) =>
  * @returns A function that creates aggregate nodes
  */
 const aggregate = (name: string) => (column?: SqlNodeValue) =>
-    new FnNode(raw(name), column ? toSqlNode(column) : raw('*'))
+    new FnNode(raw(name), column ? id(column) : raw('*'))
 
 // Aggregate functions (can use *)
 export const avg = aggregate(sql('AVG'))
