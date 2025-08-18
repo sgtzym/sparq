@@ -24,7 +24,7 @@ export class Column<
     TName extends string = string,
     TType extends SqlParam = SqlParam,
 > extends SqlNode {
-    protected _node?: SqlNode // Store node for chaining
+    protected _node?: SqlNode // Store expr/node for chaining
 
     constructor(
         public _name: TName,
@@ -34,7 +34,11 @@ export class Column<
         super()
     }
 
-    render(_params: ParameterReg): string {
+    render(params: ParameterReg): string {
+        if (this._node) {
+            return this._node.render(params)
+        }
+
         const identifier = this._table
             ? `${this._table}.${this._name}`
             : this._name
@@ -45,17 +49,32 @@ export class Column<
     }
 
     /**
+     * Creates a new column instance wrapping the given node.
+     * Preserves the column's metadata for chaining.
+     */
+    protected wrap<T extends Column<TName, TType>>(node: SqlNode): T {
+        const Constructor = this.constructor as new (
+            name: TName,
+            table?: string,
+            type?: TType,
+        ) => T
+        const wrapped = new Constructor(this._name, this._table, this._type)
+        wrapped._node = node
+        return wrapped
+    }
+
+    /**
      * Returns distinct args only.
      */
-    distinct(): SqlNode {
-        return ex.distinct(this)
+    distinct(): this {
+        return this.wrap(ex.distinct(this))
     }
 
     /**
      * Returns all args.
      */
-    all(): SqlNode {
-        return ex.all(this)
+    all(): this {
+        return this.wrap(ex.all(this))
     }
 
     /**
@@ -129,22 +148,22 @@ export class Column<
     /**
      * Counts rows (COUNT).
      */
-    count(): SqlNode {
-        return fn.count(this)
+    count(): this {
+        return this.wrap(fn.count(this))
     }
 
     /**
      * Finds maximum arg (MAX).
      */
-    max(): SqlNode {
-        return fn.max(this)
+    max(): this {
+        return this.wrap(fn.max(this))
     }
 
     /**
      * Finds minimum arg (MIN).
      */
-    min(): SqlNode {
-        return fn.min(this)
+    min(): this {
+        return this.wrap(fn.min(this))
     }
 }
 
@@ -206,43 +225,43 @@ export class TextColumn<TName extends string = string>
     /**
      * Converts to uppercase.
      */
-    upper(): SqlNode {
-        return fn.upper(this)
+    upper(): this {
+        return this.wrap(fn.upper(this))
     }
 
     /**
      * Converts to lowercase.
      */
-    lower(): SqlNode {
-        return fn.lower(this)
+    lower(): this {
+        return this.wrap(fn.lower(this))
     }
 
     /**
      * Returns the character count.
      */
-    length(): SqlNode {
-        return fn.length(this)
+    length(): this {
+        return this.wrap(fn.length(this))
     }
 
     /**
      * Removes leading and trailing whitespace.
      */
-    trim(): SqlNode {
-        return fn.trim(this)
+    trim(): this {
+        return this.wrap(fn.trim(this))
     }
 
     /**
      * Removes leading whitespace.
      */
-    ltrim(): SqlNode {
-        return fn.ltrim(this)
+    ltrim(): this {
+        return this.wrap(fn.ltrim(this))
     }
 
     /**
      * Removes trailing whitespace.
      */
-    rtrim(): SqlNode {
-        return fn.rtrim(this)
+    rtrim(): this {
+        return this.wrap(fn.rtrim(this))
     }
 
     /**
@@ -253,11 +272,11 @@ export class TextColumn<TName extends string = string>
     substr(
         start: ColumnValue<number> = 1,
         length?: ColumnValue<number>,
-    ): SqlNode {
+    ): this {
         const node: SqlNode = length !== undefined
             ? fn.substr(this, expr(start), expr(length))
             : fn.substr(this, expr(start))
-        return node
+        return this.wrap(node)
     }
 
     /**
@@ -268,8 +287,8 @@ export class TextColumn<TName extends string = string>
     replace(
         search: ColumnValue<number>,
         replacement: ColumnValue<number>,
-    ): SqlNode {
-        return fn.replace(this, expr(search), expr(replacement))
+    ): this {
+        return this.wrap(fn.replace(this, expr(search), expr(replacement)))
     }
 
     /**
@@ -340,112 +359,112 @@ export class NumberColumn<TName extends string = string>
      * Adds arg (+).
      * @param arg - The arg to add
      */
-    add(arg: ColumnValue<number>): SqlNode {
-        return ex.add(this, expr(arg))
+    add(arg: ColumnValue<number>): this {
+        return this.wrap(ex.add(this, expr(arg)))
     }
 
     /**
      * Subtracts arg (-).
      * @param arg - The arg to subtract
      */
-    sub(arg: ColumnValue<number>): SqlNode {
-        return ex.sub(this, expr(arg))
+    sub(arg: ColumnValue<number>): this {
+        return this.wrap(ex.sub(this, expr(arg)))
     }
 
     /**
      * Multiplies by arg (*).
      * @param arg - The arg to multiply by
      */
-    mul(arg: ColumnValue<number>): SqlNode {
-        return ex.mul(this, expr(arg))
+    mul(arg: ColumnValue<number>): this {
+        return this.wrap(ex.mul(this, expr(arg)))
     }
 
     /**
      * Divides by arg (/).
      * @param arg - The arg to divide by
      */
-    div(arg: ColumnValue<number>): SqlNode {
-        return ex.div(this, expr(arg))
+    div(arg: ColumnValue<number>): this {
+        return this.wrap(ex.div(this, expr(arg)))
     }
 
     /**
      * Returns the absolute arg.
      */
-    abs(): SqlNode {
-        return fn.abs(this)
+    abs(): this {
+        return this.wrap(fn.abs(this))
     }
 
     /**
      * Rounds to the specified number of decimal places.
      * @param decimals - The number of decimal places (optional)
      */
-    round(decimals?: ColumnValue<number>): SqlNode {
+    round(decimals?: ColumnValue<number>): this {
         const node: SqlNode = decimals !== undefined
             ? fn.round(this, expr(decimals))
             : fn.round(this)
-        return node
+        return this.wrap(node)
     }
 
     /**
      * Rounds up to the nearest integer.
      */
-    ceil(): SqlNode {
-        return fn.ceil(this)
+    ceil(): this {
+        return this.wrap(fn.ceil(this))
     }
 
     /**
      * Rounds down to the nearest integer.
      */
-    floor(): SqlNode {
-        return fn.floor(this)
+    floor(): this {
+        return this.wrap(fn.floor(this))
     }
 
     /**
      * Returns the square root.
      */
-    sqrt(): SqlNode {
-        return fn.sqrt(this)
+    sqrt(): this {
+        return this.wrap(fn.sqrt(this))
     }
 
     /**
      * Returns the remainder after division.
      * @param divisor - The divisor arg
      */
-    mod(divisor: ColumnValue<number>): SqlNode {
-        return fn.mod(this, expr(divisor))
+    mod(divisor: ColumnValue<number>): this {
+        return this.wrap(fn.mod(this, expr(divisor)))
     }
 
     /**
      * Raises to the specified power.
      * @param exponent - The exponent arg
      */
-    pow(exponent: ColumnValue<number>): SqlNode {
-        return fn.pow(this, expr(exponent))
+    pow(exponent: ColumnValue<number>): this {
+        return this.wrap(fn.pow(this, expr(exponent)))
     }
 
     /**
      * Calculates percentage of a total.
      * @param total - The total arg
      */
-    percent(total: ColumnValue<number>): SqlNode {
-        return ex.mul(
+    percent(total: ColumnValue<number>): this {
+        return this.wrap(ex.mul(
             ex.div(this, expr(total)),
             expr(100),
-        )
+        ))
     }
 
     /**
      * Calculates average (AVG).
      */
-    avg(): SqlNode {
-        return fn.avg(this)
+    avg(): this {
+        return this.wrap(fn.avg(this))
     }
 
     /**
      * Calculates sum (SUM).
      */
-    sum(): SqlNode {
-        return fn.sum(this)
+    sum(): this {
+        return this.wrap(fn.sum(this))
     }
 }
 
@@ -506,58 +525,58 @@ export class DateTimeColumn<TName extends string = string>
     /**
      * Converts to date.
      */
-    date(): SqlNode {
-        return fn.date(this)
+    date(): this {
+        return this.wrap(fn.date(this))
     }
 
     /**
      * Converts to time.
      */
-    time(): SqlNode {
-        return fn.time(this)
+    time(): this {
+        return this.wrap(fn.time(this))
     }
 
     /**
      * Converts to datetime format.
      */
-    dateTime(): SqlNode {
-        return fn.dateTime(this)
+    dateTime(): this {
+        return this.wrap(fn.dateTime(this))
     }
 
     /**
      * Formats date/time using the specified format string.
      * @param format - The strftime format string
      */
-    strftime(format: ColumnValue<string>): SqlNode {
-        return fn.strftime(expr(format), this)
+    strftime(format: ColumnValue<string>): this {
+        return this.wrap(fn.strftime(expr(format), this))
     }
 
     /**
      * Converts to Julian day number.
      */
-    julianday(): SqlNode {
-        return fn.julianday(this)
+    julianday(): this {
+        return this.wrap(fn.julianday(this))
     }
 
     /**
      * Extracts the year portion.
      */
-    year(): SqlNode {
-        return fn.strftime(expr('%Y'), this)
+    year(): this {
+        return this.wrap(fn.strftime(expr('%Y'), this))
     }
 
     /**
      * Extracts the month portion (01-12).
      */
-    month(): SqlNode {
-        return fn.strftime(expr('%m'), this)
+    month(): this {
+        return this.wrap(fn.strftime(expr('%m'), this))
     }
 
     /**
      * Extracts the day portion (01-31).
      */
-    day(): SqlNode {
-        return fn.strftime(expr('%d'), this)
+    day(): this {
+        return this.wrap(fn.strftime(expr('%d'), this))
     }
 }
 
