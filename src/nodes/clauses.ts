@@ -184,7 +184,9 @@ export class ReturningNode extends SqlNode {
  * Represents a VALUES clause for explicit row data.
  */
 export class ValuesNode extends SqlNode {
-    override readonly priority = 90
+
+    override readonly priority = -1
+    
     private rows: SqlNode[] = []
 
     constructor() {
@@ -224,6 +226,8 @@ export class SetNode extends SqlNode {
  * Represents a ON CONFLICT clause for INSERT / UPDATE statements.
  */
 export class OnConflictNode extends SqlNode {
+    override priority: number = 10
+
     constructor(
         private readonly action: SqlNode,
         private readonly targets?: ArrayLike<SqlNode>,

@@ -151,26 +151,12 @@ export abstract class SqlQueryBuilder extends SqlNode {
         super()
     }
 
-    render(params: ParameterReg): string {
-        return sortSqlNodes(this._parts)
-            .map((part) => part.render(params))
-            .join(' ')
-    }
-
-    get sql(): SqlString {
-        if (!this._cache) this._render()
-        return this._cache!.sql
-    }
-
-    get params(): readonly SqlDataType[] {
-        if (!this._cache) this._render()
-        return this._cache!.params
-    }
-
-    private _render(): void {
+    render(): SqlString {
         this._params = new ParameterReg()
-        const sql = renderSqlNodes(this._parts, this._params, true).join(' ')
+        const sql: SqlString = renderSqlNodes(this._parts, this._params, true)
+            .join(' ')
         this._cache = { sql, params: this._params.toArray() }
+        return sql
     }
 
     protected add(part: SqlNode): this {
@@ -179,8 +165,17 @@ export abstract class SqlQueryBuilder extends SqlNode {
         return this
     }
 
+    get sql(): SqlString {
+        return this._cache ? this._cache.sql : this.render()
+    }
+
+    get params(): readonly SqlDataType[] {
+        if (!this._cache) this.render()
+        return this._cache!.params
+    }
+
     /**
-     * Adds a common table expression.
+     * Adds a common table expression. (prefixs statements)
      */
     with(name: string, query: Select, recursive?: boolean): this {
         return this.add(with_(recursive, cte(name, query._parts)))
@@ -211,14 +206,6 @@ export class Select extends SqlQueryBuilder {
     join = joinImpl
     groupBy = groupByImpl
     having = havingImpl
-
-    // Supports subqueries based on context
-    get node(): SqlNode {
-        return {
-            render: (params: ParameterReg) =>
-                `(${renderSqlNodes(this._parts, params).join(' ')})`,
-        }
-    }
 }
 
 export class Insert extends SqlQueryBuilder {

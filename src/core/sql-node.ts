@@ -30,7 +30,8 @@ export abstract class SqlNode {
 
 /** Node type guard */
 export function isSqlNode(value: any): value is SqlNode {
-    return value instanceof SqlNode ? true : typeof value.render === 'function'
+    return value &&
+        (value instanceof SqlNode || typeof value.render === 'function')
 }
 
 export type SqlNodeValue = SqlNode | SqlParam

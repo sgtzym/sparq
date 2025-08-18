@@ -33,6 +33,7 @@ export class AssignmentNode extends SqlNode {
  * Represents a value list / single row for data creation.
  */
 export class ValueListNode extends SqlNode {
+
     constructor(private readonly values: ArrayLike<SqlNode>) {
         super()
     }
