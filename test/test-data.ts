@@ -1,26 +1,26 @@
 import { sparq } from '~/api/sparq.ts'
-import { SQL_DATA_TYPES } from '~/api/column.ts'
+import { SqlType } from '~/api/column.ts'
 
 export const artists = sparq('artists', {
-    artistId: SQL_DATA_TYPES.number(),
-    name: SQL_DATA_TYPES.text(),
+    artistId: SqlType.number(),
+    name: SqlType.text(),
 })
 
 export const albums = sparq('albums', {
-    albumId: SQL_DATA_TYPES.number(),
-    title: SQL_DATA_TYPES.text(),
-    artistId: SQL_DATA_TYPES.number(),
-    releaseDate: SQL_DATA_TYPES.date(),
+    albumId: SqlType.number(),
+    title: SqlType.text(),
+    artistId: SqlType.number(),
+    releaseDate: SqlType.date(),
 })
 
 export const tracks = sparq('tracks', {
-    trackId: SQL_DATA_TYPES.number(),
-    name: SQL_DATA_TYPES.text(),
-    albumId: SQL_DATA_TYPES.number(),
-    mediaTypeId: SQL_DATA_TYPES.number(),
-    genreId: SQL_DATA_TYPES.number(),
-    composer: SQL_DATA_TYPES.text(),
-    milliseconds: SQL_DATA_TYPES.number(),
-    bytes: SQL_DATA_TYPES.number(),
-    unitPrice: SQL_DATA_TYPES.number(),
+    trackId: SqlType.number(),
+    name: SqlType.text(),
+    albumId: SqlType.number(),
+    mediaTypeId: SqlType.number(),
+    genreId: SqlType.number(),
+    composer: SqlType.text(),
+    milliseconds: SqlType.number(),
+    bytes: SqlType.number(),
+    unitPrice: SqlType.number(),
 })

@@ -4,17 +4,23 @@
 [![JSR](https://jsr.io/badges/@sgtzym/sparq)](https://jsr.io/@sgtzym/sparq)
 [![JSR Score](https://jsr.io/badges/@sgtzym/sparq/score)](https://jsr.io/@sgtzym/sparq)
 
-> A declarative, AST-based and type-safe SQLite query builder for Deno 🦕 - with zero dependencies.
+> A declarative, AST-based and type-safe SQLite query builder for Deno 🦕 - with
+> zero dependencies.
 
-SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex, parameterized queries - including subqueries and CTEs - while preserving SQLite's full expressiveness.
+SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex,
+parameterized queries - including subqueries and CTEs - while preserving
+SQLite's full expressiveness.
 
-**Conversion:** Query composition (fluent API) → Abstract syntax tree (AST) → SQLite syntax + parameter list
+**Conversion:** Query composition (fluent API) → Abstract syntax tree (AST) →
+SQLite syntax + parameter list
 
 ## Features
 
-- **Complex query composition** via easy-to-use fluent API including JOINs, CTEs and subqueries
+- **Complex query composition** via easy-to-use fluent API including JOINs, CTEs
+  and subqueries
 - **Schema-aware column operations** with readable and type-safe methods
-- **Automatic parameter binding** with deduplication and SQL injection protection
+- **Automatic parameter binding** with deduplication and SQL injection
+  protection
 - **Auto-quoted identifiers** for qualified table and column names
 - **Conflict resolution** with Upsert and ON CONFLICT handling
 - **Zero runtime dependencies** - pure TypeScript implementation
@@ -29,47 +35,34 @@ deno add @sgtzym/sparq
 
 1. Define table schemas with `sparq()`
 2. Build queries on set schemas
-3. Use `sql` and `params` for prepared statements with any SQLite driver that supports named parameters
+3. Use `sql` and `params` for prepared statements with any SQLite driver that
+   supports named parameters
 
 > [!TIP]
-> Columns are exposed via the `$` property.  
-> Assign them to local variables to simplify access, especially in JOINs and subqueries.
+> Columns are exposed via the `$` property.\
+> Assign them to local variables to simplify access, especially in JOINs and
+> subqueries.
 
 ```ts
-const users = sparq('users', {
-    id: col.number(),
-    name: col.text(),
-    active: col.boolean(),
-    created_at: col.date(),
+const artists = sparq('artists', {
+    artistId: SqlType.number(),
+    name: SqlType.text(),
 })
 
-const posts = sparq('posts', {
-    id: col.number(),
-    title: col.text(),
-    content: col.text(),
-    user_id: col.number(),
-    published_at: col.date(),
-    view_count: col.number(),
+const albums = sparq('albums', {
+    albumId: SqlType.number(),
+    title: SqlType.text(),
+    artistId: SqlType.number(),
+    releaseDate: SqlType.date(),
 })
 
-const { $: u } = users
-const { $: p } = posts
+const { $: r } = artists
+const { $: l } = albums
 
-const my = users
-    .select(
-        u.id,
-        u.name,
-        p.title,
-        p.view_count,
-        p.published_at.as('published'),
-    )
-    .join(posts).left(p.user_id.eq(u.id))
-    .where(
-        u.active.eq(true),
-        p.published_at.gt(new Date('2024-01-01')),
-    )
-    .orderBy(p.view_count.desc(), p.published_at.desc())
-    .limit(20)
+const my = albums
+    .select(l.title, r.name.as('artist'))
+    .join(artists).inner(r.artistId.eq(l.artistId))
+    .where(r.name.like('The%')),
 
 console.log(my.sql, my.params)
 ```
@@ -77,12 +70,13 @@ console.log(my.sql, my.params)
 **Generated SQL**:
 
 ```sql
-SELECT users.id, users.name, posts.title, posts.view_count, posts.published_at AS published
-FROM users
-LEFT JOIN posts ON posts.user_id = users.id
-WHERE users.active = :p1 AND posts.published_at > :p2
-ORDER BY posts.view_count DESC, posts.published_at DESC
-LIMIT :p3
+SELECT
+    albums.title,
+    artists.name AS artist
+FROM
+    albums INNER JOIN artists ON artists.artistId = albums.artistId
+WHERE
+    artists.name LIKE :p1
 
--- Parameters: [ 1, "2024-01-01T00:00:00.000Z", 20 ]
+-- Parameters: [ 'The%' ]
 ```

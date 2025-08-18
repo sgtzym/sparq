@@ -678,7 +678,7 @@ export class JsonColumn<TName extends string = string>
 }
 
 /** SQL parameter data types */
-export const SQL_DATA_TYPES = {
+export const SqlType = {
     number: (): number => 0,
     text: (): string => '',
     boolean: (): boolean => true,
