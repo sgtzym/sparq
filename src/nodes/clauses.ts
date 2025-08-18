@@ -14,7 +14,7 @@ import { expr, id, raw } from '~/nodes/primitives.ts'
  * Represents a FROM clause with table references.
  */
 export class FromNode extends SqlNode {
-    override readonly priority: number = 1
+    override readonly _priority: number = 1
 
     constructor(private readonly tables: ArrayLike<SqlNode>) {
         super()
@@ -33,7 +33,7 @@ export class FromNode extends SqlNode {
  * Represents a JOIN clause with optional conditions.
  */
 export class JoinNode extends SqlNode {
-    override readonly priority: number = 2
+    override readonly _priority: number = 2
 
     constructor(
         private readonly joinType: SqlNode,
@@ -58,7 +58,7 @@ export class JoinNode extends SqlNode {
  * Represents a SET clause for UPDATE operations.
  */
 export class SetNode extends SqlNode {
-    override readonly priority: number = 2
+    override readonly _priority: number = 2
 
     constructor(private readonly assignments: ArrayLike<SqlNode>) {
         super()
@@ -76,7 +76,7 @@ export class SetNode extends SqlNode {
  * Represents a WHERE clause for filtering rows.
  */
 export class WhereNode extends SqlNode {
-    override readonly priority: number = 3
+    override readonly _priority: number = 3
 
     constructor(private readonly conditions: ArrayLike<SqlNode>) {
         super()
@@ -96,7 +96,7 @@ export class WhereNode extends SqlNode {
  * Represents a GROUP BY clause for result aggregation.
  */
 export class GroupByNode extends SqlNode {
-    override readonly priority: number = 4
+    override readonly _priority: number = 4
 
     constructor(private readonly expr: ArrayLike<SqlNode>) {
         super()
@@ -113,7 +113,7 @@ export class GroupByNode extends SqlNode {
  * Represents a HAVING clause for filtering grouped results.
  */
 export class HavingNode extends SqlNode {
-    override readonly priority: number = 5
+    override readonly _priority: number = 5
 
     constructor(private readonly conditions: ArrayLike<SqlNode>) {
         super()
@@ -133,7 +133,7 @@ export class HavingNode extends SqlNode {
  * Represents an ORDER BY clause for sorting results.
  */
 export class OrderByNode extends SqlNode {
-    override readonly priority: number = 6
+    override readonly _priority: number = 6
 
     constructor(private readonly expr: ArrayLike<SqlNode>) {
         super()
@@ -150,7 +150,7 @@ export class OrderByNode extends SqlNode {
  * Represents a LIMIT clause for restricting result count.
  */
 export class LimitNode extends SqlNode {
-    override readonly priority: number = 7
+    override readonly _priority: number = 7
 
     constructor(private readonly count: SqlNode) {
         super()
@@ -167,7 +167,7 @@ export class LimitNode extends SqlNode {
  * Represents an OFFSET clause for result pagination.
  */
 export class OffsetNode extends SqlNode {
-    override readonly priority: number = 8
+    override readonly _priority: number = 8
 
     constructor(private readonly count: SqlNode) {
         super()
@@ -184,7 +184,7 @@ export class OffsetNode extends SqlNode {
  * Represents a VALUES clause for explicit row data.
  */
 export class ValuesNode extends SqlNode {
-    override readonly priority = 9
+    override readonly _priority = 9
 
     private rows: SqlNode[] = []
 
@@ -207,7 +207,7 @@ export class ValuesNode extends SqlNode {
  * Represents a RETURNING clause for getting affected row data.
  */
 export class ReturningNode extends SqlNode {
-    override readonly priority = 10
+    override readonly _priority = 10
 
     constructor(private readonly columns?: ArrayLike<SqlNode>) {
         super()
@@ -225,7 +225,7 @@ export class ReturningNode extends SqlNode {
  * Represents a ON CONFLICT clause for INSERT / UPDATE statements.
  */
 export class OnConflictNode extends SqlNode {
-    override priority: number = 11
+    override _priority: number = 11
 
     constructor(
         private readonly action: SqlNode,
@@ -254,7 +254,7 @@ export class OnConflictNode extends SqlNode {
  * Represents an UPSERT clause for INSERT / UPDATE statements.
  */
 export class UpsertNode extends SqlNode {
-    override priority: number = 11
+    override _priority: number = 11
 
     constructor(
         private readonly assignments: ArrayLike<SqlNode>,

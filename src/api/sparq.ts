@@ -3,6 +3,12 @@ import {
     BooleanColumn,
     type Column,
     DateTimeColumn,
+    type IBooleanColumn,
+    type IColumn,
+    type IDateTimeColumn,
+    type IJsonColumn,
+    type INumberColumn,
+    type ITextColumn,
     JsonColumn,
     NumberColumn,
     TextColumn,
@@ -12,14 +18,14 @@ import { Delete, Insert, Select, Update } from '~/api/query-builders.ts'
 type TableSchema = Record<string, SqlParam>
 
 type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number
-    ? NumberColumn<K>
-    : T extends string ? TextColumn<K>
-    : T extends Date ? DateTimeColumn<K>
-    : T extends boolean ? BooleanColumn<K>
-    : T extends Record<string, any> ? JsonColumn<K>
-    : T extends Uint8Array ? Column<K, T>
-    : T extends null ? Column<K, T>
-    : Column<K, T>
+    ? INumberColumn<K>
+    : T extends string ? ITextColumn<K>
+    : T extends Date ? IDateTimeColumn<K>
+    : T extends boolean ? IBooleanColumn<K>
+    : T extends Record<string, any> ? IJsonColumn<K>
+    : T extends Uint8Array ? IColumn<K, T>
+    : T extends null ? IColumn<K, T>
+    : IColumn<K, T>
 
 type ColumnsProxy<T extends TableSchema> = {
     [K in keyof T]: ColumnTypeMapping<K & string, T[K]>

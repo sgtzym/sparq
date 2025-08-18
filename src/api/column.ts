@@ -6,10 +6,93 @@ import * as ex from '~/nodes/expressions.ts'
 import * as fn from '~/nodes/functions.ts'
 import { assign, valueList } from '~/nodes/values.ts'
 
-type ColumnValue<TType extends SqlParam = SqlParam> =
-    | Column<string, TType>
-    | SqlNode
-    | TType
+type ColumnValue<TType extends SqlParam = SqlParam> = any
+
+export interface IColumn<
+    TName extends string = string,
+    TType extends SqlParam = SqlParam,
+> {
+    distinct(): this
+    all(): this
+    eq(arg: ColumnValue<TType>): SqlNode
+    ne(arg: ColumnValue<TType>): SqlNode
+    in(args: TType[]): SqlNode
+    isNull(): SqlNode
+    isNotNull(): SqlNode
+    as(asName: ColumnValue<string>): SqlNode
+    set(arg: ColumnValue<TType>): SqlNode
+    asc(): SqlNode
+    desc(): SqlNode
+    count(): this
+    max(): this
+    min(): this
+}
+
+export interface INumberColumn<TName extends string = string>
+    extends IColumn<TName, number> {
+    gt(arg: ColumnValue<number>): SqlNode
+    lt(arg: ColumnValue<number>): SqlNode
+    ge(arg: ColumnValue<number>): SqlNode
+    le(arg: ColumnValue<number>): SqlNode
+    between(lower: ColumnValue<number>, upper: ColumnValue<number>): SqlNode
+    add(arg: ColumnValue<number>): this
+    sub(arg: ColumnValue<number>): this
+    mul(arg: ColumnValue<number>): this
+    div(arg: ColumnValue<number>): this
+    abs(): this
+    round(decimals?: ColumnValue<number>): this
+    ceil(): this
+    floor(): this
+    sqrt(): this
+    mod(divisor: ColumnValue<number>): this
+    pow(exponent: ColumnValue<number>): this
+    percent(total: ColumnValue<number>): this
+    avg(): this
+    sum(): this
+}
+
+export interface ITextColumn<TName extends string = string>
+    extends IColumn<TName, string> {
+    like(pattern: ColumnValue<string>): SqlNode
+    glob(pattern: ColumnValue<string>): SqlNode
+    startsWith(prefix: ColumnValue<string>): SqlNode
+    endsWith(suffix: ColumnValue<string>): SqlNode
+    contains(substring: ColumnValue<string>): SqlNode
+    upper(): this
+    lower(): this
+    length(): this
+    trim(): this
+    ltrim(): this
+    rtrim(): this
+    substr(start?: ColumnValue<number>, length?: ColumnValue<number>): this
+    replace(search: ColumnValue<number>, replacement: ColumnValue<number>): this
+    instr(substring: ColumnValue<string>): SqlNode
+}
+
+export interface IDateTimeColumn<TName extends string = string>
+    extends IColumn<TName, Date | string> {
+    gt(arg: ColumnValue<Date>): SqlNode
+    lt(arg: ColumnValue<Date>): SqlNode
+    ge(arg: ColumnValue<Date>): SqlNode
+    le(arg: ColumnValue<Date>): SqlNode
+    between(lower: ColumnValue<Date>, upper: ColumnValue<Date>): SqlNode
+    date(): this
+    time(): this
+    dateTime(): this
+    strftime(format: ColumnValue<string>): this
+    julianday(): this
+    year(): this
+    month(): this
+    day(): this
+}
+
+export interface IBooleanColumn<TName extends string = string>
+    extends IColumn<TName, boolean> {
+}
+
+export interface IJsonColumn<TName extends string = string>
+    extends IColumn<TName, Record<string, any>> {
+}
 
 /**
  * Base column class with common SQL operations.
@@ -23,13 +106,13 @@ type ColumnValue<TType extends SqlParam = SqlParam> =
 export class Column<
     TName extends string = string,
     TType extends SqlParam = SqlParam,
-> extends SqlNode {
+> extends SqlNode implements IColumn<TName, TType> {
     protected _node?: SqlNode // Store expr/node for chaining
 
     constructor(
-        public _name: TName,
-        public _table?: string, // Opt. table ref.
-        public _type?: TType,
+        protected readonly _name: TName,
+        protected readonly _table?: string, // Opt. table ref.
+        protected readonly _type?: TType,
     ) {
         super()
     }
@@ -176,7 +259,8 @@ export class Column<
  * @template TName - The column name type
  */
 export class TextColumn<TName extends string = string>
-    extends Column<TName, string> {
+    extends Column<TName, string>
+    implements ITextColumn<TName> {
     /**
      * Matches pattern using wildcards.
      * Case-insensitive. Uses % (any characters) and _ (single character).
@@ -310,7 +394,8 @@ export class TextColumn<TName extends string = string>
  * @template TName - The column name type
  */
 export class NumberColumn<TName extends string = string>
-    extends Column<TName, number> {
+    extends Column<TName, number>
+    implements INumberColumn<TName> {
     /**
      * Greater than (>).
      * @param arg - The comparison arg
@@ -477,7 +562,8 @@ export class NumberColumn<TName extends string = string>
  * @template TName - The column name type
  */
 export class DateTimeColumn<TName extends string = string>
-    extends Column<TName, Date | string> {
+    extends Column<TName, Date | string>
+    implements IDateTimeColumn<TName> {
     /**
      * Greater than (>).
      * @param arg - The comparison arg
@@ -581,11 +667,13 @@ export class DateTimeColumn<TName extends string = string>
 }
 
 export class BooleanColumn<TName extends string = string>
-    extends Column<TName, boolean> {
+    extends Column<TName, boolean>
+    implements IBooleanColumn<TName> {
 }
 
 export class JsonColumn<TName extends string = string>
-    extends Column<TName, Record<string, any>> {
+    extends Column<TName, Record<string, any>>
+    implements IJsonColumn<TName> {
     // TODO(#sgtzym): Implement JSON handling - future feature!
 }
 

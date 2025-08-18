@@ -35,7 +35,7 @@ export class CteNode extends SqlNode {
  * Represents the WITH modifier containing one or more CTEs
  */
 export class WithNode extends SqlNode {
-    override readonly priority: number = -1
+    override readonly _priority: number = -1
 
     constructor(
         private readonly ctes: ArrayLike<CteNode>,

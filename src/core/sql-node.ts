@@ -24,7 +24,12 @@ export function isSqlParam(value: unknown): value is SqlParam {
 
 /** Base SQL node class */
 export abstract class SqlNode {
-    readonly priority: number = -1
+    protected readonly _priority: number = -1
+
+    get priority(): number {
+        return this._priority
+    }
+
     abstract render(params: ParameterReg): SqlString
 }
 

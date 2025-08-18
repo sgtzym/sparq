@@ -1,7 +1,6 @@
 import { test } from '~~/test-runner.ts'
-import { albums, artists, tracks } from '~~/test-data.ts'
+import { albums, tracks } from '~~/test-data.ts'
 
-const { $: r } = artists
 const { $: l } = albums
 const { $: t } = tracks
 
