@@ -1,7 +1,12 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
 import type { ParameterReg } from '~/core/param-registry.ts'
-import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
+import {
+    isSqlNode,
+    renderSqlNodes,
+    SqlNode,
+    type SqlNodeValue,
+} from '~/core/sql-node.ts'
 import { expr, id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
@@ -14,6 +19,8 @@ import { expr, id, raw } from '~/nodes/primitives.ts'
  * Represents a SELECT statement with optional column specification.
  */
 export class SelectNode extends SqlNode {
+    override priority: number = 0
+
     constructor(private readonly columns: ArrayLike<SqlNode>) {
         super()
     }
@@ -31,6 +38,8 @@ export class SelectNode extends SqlNode {
  * Represents an INSERT statement for adding new rows.
  */
 export class InsertNode extends SqlNode {
+    override priority: number = 0
+
     constructor(
         private readonly table: SqlNode,
         private readonly columns: ArrayLike<SqlNode>,
@@ -50,6 +59,8 @@ export class InsertNode extends SqlNode {
  * Represents an UPDATE statement for modifying existing rows.
  */
 export class UpdateNode extends SqlNode {
+    override priority: number = 0
+
     constructor(private readonly table: SqlNode) {
         super()
     }
@@ -65,6 +76,8 @@ export class UpdateNode extends SqlNode {
  * Represents a DELETE statement for removing rows.
  */
 export class DeleteNode extends SqlNode {
+    override priority: number = 0
+
     constructor() {
         super()
     }
@@ -86,7 +99,9 @@ export const _select = (columns?: SqlNodeValue[]): SqlNode => {
         return new SelectNode(raw('*'))
     }
 
-    const _columns: SqlNode[] = columns.map(id)
+    const _columns: SqlNode[] = columns.map((col) =>
+        isSqlNode(col) ? col : id(col)
+    )
 
     return new SelectNode(_columns)
 }

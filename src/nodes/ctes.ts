@@ -14,8 +14,6 @@ import { expr, id } from '~/nodes/primitives.ts'
  * Represents a CTE for making queries more readable.
  */
 export class CteNode extends SqlNode {
-    override readonly priority: number = -10
-
     constructor(
         private readonly name: SqlNode,
         private readonly clauses: SqlNode[],
@@ -37,7 +35,7 @@ export class CteNode extends SqlNode {
  * Represents the WITH modifier containing one or more CTEs
  */
 export class WithNode extends SqlNode {
-    override readonly priority: number = -20
+    override readonly priority: number = -1
 
     constructor(
         private readonly ctes: ArrayLike<CteNode>,

@@ -47,7 +47,7 @@ const fn = (name: string) => (...args: SqlNodeValue[]) =>
  * @returns A function that creates aggregate nodes
  */
 const aggregate = (name: string) => (column?: SqlNodeValue) =>
-    new FnNode(raw(name), column ? id(column) : raw('*'))
+    new FnNode(raw(name), column ? expr(column) : raw('*'))
 
 // Aggregate functions (can use *)
 export const avg = aggregate(sql('AVG'))
