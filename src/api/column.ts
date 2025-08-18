@@ -8,6 +8,7 @@ import { id } from '~/nodes/primitives.ts'
 import * as expr from '~/nodes/expressions.ts'
 import * as fn from '~/nodes/functions.ts'
 import { assign, valueList } from '~/nodes/values.ts'
+import { needsQuoting } from '../core/sql.ts'
 
 type ColumnValue<TType extends SqlParam = SqlParam> =
     | Column<string, TType>
@@ -30,24 +31,21 @@ export class Column<
     protected _node?: SqlNode // Store node for chaining
 
     constructor(
-        private readonly _name: TName,
-        private readonly _table?: string, // Opt. table ref.
-        private readonly _type?: TType,
+        public _name: TName,
+        public _table?: string, // Opt. table ref.
+        public _type?: TType,
     ) {
         super()
     }
 
-    render(params: ParameterReg): string {
-        if (this._node) {
-            return this._node.render(params)
-        }
-        return this._table ? `${this._table}.${this._name}` : this._name
-    }
+    render(_params: ParameterReg): string {
+        const identifier = this._table
+            ? `${this._table}.${this._name}`
+            : this._name
 
-    protected withNode(newNode: SqlNode): this {
-        const result = Object.create(Object.getPrototypeOf(this)) as this
-        result._node = newNode
-        return result
+        return identifier.split('.')
+            .map((p) => needsQuoting(p) ? `"${p}"` : p)
+            .join('.')
     }
 
     /**
@@ -260,9 +258,10 @@ export class TextColumn<TName extends string = string>
         start: ColumnValue<number> = 1,
         length?: ColumnValue<number>,
     ): SqlNode {
-        return length !== undefined
+        const node: SqlNode = length !== undefined
             ? fn.substr(this, toSqlNode(start), toSqlNode(length))
             : fn.substr(this, toSqlNode(start))
+        return node
     }
 
     /**
@@ -385,9 +384,10 @@ export class NumberColumn<TName extends string = string>
      * @param decimals - The number of decimal places (optional)
      */
     round(decimals?: ColumnValue<number>): SqlNode {
-        return decimals !== undefined
+        const node: SqlNode = decimals !== undefined
             ? fn.round(this, toSqlNode(decimals))
             : fn.round(this)
+        return node
     }
 
     /**
@@ -575,11 +575,11 @@ export class JsonColumn<TName extends string = string>
 }
 
 /** SQL parameter data types */
-export const sqlTypes = {
+export const SQL_DATA_TYPES = {
     number: (): number => 0,
     text: (): string => '',
     boolean: (): boolean => true,
     date: (): Date => new Date(),
     list: (): Uint8Array | null => null,
     json: (): Record<string, any> | undefined => undefined,
-}
+} as const
