@@ -1,7 +1,15 @@
+/**
+ * Comprehensive collection of SQL keywords and function names.
+ * Used internally for identifier quoting and syntax validation.
+ * Based on SQL-92 standard and SQLite core functions.
+ *
+ * @see {@link https://www.sqlite.org/lang_keywords.html} SQLite Keywords
+ * @see {@link https://sqlite.org/lang_corefunc.html} SQLite Core Functions
+ */
 export const SQL_KEYWORDS = {
     /**
-     * Reserved SQL keywords based on SQL-92 standard
-     * {@link https://www.sqlite.org/lang_keywords.html}
+     * Reserved SQL keywords based on SQL-92 standard.
+     * These identifiers must be quoted when used as column or table names.
      */
     ABORT: Symbol('ABORT'),
     ACTION: Symbol('ACTION'),
@@ -52,6 +60,7 @@ export const SQL_KEYWORDS = {
     ESCAPE: Symbol('ESCAPE'),
     EXCEPT: Symbol('EXCEPT'),
     EXCLUDE: Symbol('EXCLUDE'),
+    EXCLUDED: Symbol('EXCLUDED'),
     EXCLUSIVE: Symbol('EXCLUSIVE'),
     EXISTS: Symbol('EXISTS'),
     EXPLAIN: Symbol('EXPLAIN'),
@@ -153,15 +162,18 @@ export const SQL_KEYWORDS = {
     WITHOUT: Symbol('WITHOUT'),
 
     /**
-     * Built-in SQL core functions
-     * {@link https://sqlite.org/lang_corefunc.html}
+     * Built-in SQL core functions available in SQLite.
+     * These function names are also reserved and require quoting as identifiers.
      */
+
+    // Aggregate functions
     AVG: Symbol('AVG'),
     COUNT: Symbol('COUNT'),
     MAX: Symbol('MAX'),
     MIN: Symbol('MIN'),
     SUM: Symbol('SUM'),
 
+    // String functions
     UPPER: Symbol('UPPER'),
     LOWER: Symbol('LOWER'),
     LENGTH: Symbol('LENGTH'),
@@ -171,12 +183,14 @@ export const SQL_KEYWORDS = {
     SUBSTR: Symbol('SUBSTR'),
     INSTR: Symbol('INSTR'),
 
+    // Date/time functions
     DATE: Symbol('DATE'),
     TIME: Symbol('TIME'),
     DATETIME: Symbol('DATETIME'),
     STRFTIME: Symbol('STRFTIME'),
     JULIANDAY: Symbol('JULIANDAY'),
 
+    // Math functions
     ABS: Symbol('ABS'),
     ROUND: Symbol('ROUND'),
     CEIL: Symbol('CEIL'),
@@ -187,5 +201,14 @@ export const SQL_KEYWORDS = {
     RANDOM: Symbol('RANDOM'),
 } as const
 
-// (string & {}) prevents from collapsing into plain string (for auto-completion)
+/**
+ * Union type for SQL snippets that can be keywords or custom strings.
+ * The (string & {}) pattern preserves IntelliSense while allowing any string.
+ *
+ * @example
+ * ```ts
+ * const snippet: SqlSnippet = 'SELECT'  // Keyword
+ * const custom: SqlSnippet = 'my_table' // Custom identifier
+ * ```
+ */
 export type SqlSnippet = keyof typeof SQL_KEYWORDS | (string & {})

@@ -11,7 +11,8 @@ import { expr, id } from '~/nodes/primitives.ts'
 // -> 🔷 Nodes
 
 /**
- * Represents a column assignment for data modification.
+ * Represents a column assignment for UPDATE operations.
+ * Used to specify which column gets which value during data modification.
  */
 export class AssignmentNode extends SqlNode {
     constructor(
@@ -30,7 +31,8 @@ export class AssignmentNode extends SqlNode {
 }
 
 /**
- * Represents a value list / single row for data creation.
+ * Represents a parenthesized list of values for INSERT or IN operations.
+ * Used to group multiple values together in SQL statements.
  */
 export class ValueListNode extends SqlNode {
     constructor(private readonly values: ArrayLike<SqlNode>) {
@@ -48,9 +50,23 @@ export class ValueListNode extends SqlNode {
 
 /**
  * Creates a column assignment for UPDATE operations.
- * @param column The column to assign to
- * @param value The value to assign
- * @returns An assignment node
+ * Use this to specify how columns should be updated with new values.
+ *
+ * @param column - The column to assign to
+ * @param value - The value to assign
+ * @returns An assignment node for UPDATE SET clauses
+ *
+ * @example
+ * ```ts
+ * assign('name', 'John')
+ * // name = 'John'
+ *
+ * assign(user.email, 'new@example.com')
+ * // user.email = 'new@example.com'
+ *
+ * assign(product.price, mul(product.price, 1.1))
+ * // product.price = product.price * 1.1
+ * ```
  */
 export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
     return new AssignmentNode(id(column), expr(value))
@@ -58,8 +74,26 @@ export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
 
 /**
  * Creates a parenthesized list of values.
- * @param values The values to include in the list
- * @returns A value list node
+ * Use this for INSERT VALUES clauses or IN comparisons.
+ *
+ * @param values - The values to include in the list
+ * @returns A value list node for INSERT VALUES or IN clauses
+ *
+ * @example
+ * ```ts
+ * valueList('John', 25, 'admin')
+ * // ('John', 25, 'admin')
+ *
+ * valueList(1, 2, 3, 4, 5)
+ * // (1, 2, 3, 4, 5)
+ *
+ * // Usage in INSERT
+ * users.insert('name', 'age', 'role')
+ *   .values('John', 25, 'admin')  // Uses valueList internally
+ *
+ * // Usage in IN clause
+ * users.select().where(user.id.in(valueList(1, 2, 3)))
+ * ```
  */
 export const valueList = (...values: SqlNodeValue[]): SqlNode => {
     return new ValueListNode(values.map(expr))
