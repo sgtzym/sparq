@@ -78,6 +78,27 @@ export class ConjunctionNode extends SqlNode {
 // -> 🏭 Factories
 
 /**
+ * Creates a unary expression factory.
+ * @param op - The unary operator
+ * @param pos - The operator position (pre- or suffix)
+ * @returns A function that creates unary nodes
+ */
+const unary =
+    (op: string, pos: 'pfx' | 'sfx' = 'sfx') =>
+    (value: SqlNodeValue): SqlNode => {
+        return new UnaryNode(raw(op), expr(value), pos)
+    }
+
+/**
+ * Creates a binary expression factory.
+ * @param {string} op - The binary operator
+ * @returns A function that creates binary nodes
+ */
+const binary =
+    (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
+        new BinaryNode(expr(left), raw(op), expr(right))
+
+/**
  * Creates a conjunction operator factory with optional grouping.
  * @param op - The conjunction operator string
  * @param grouped - Whether to wrap in parentheses
@@ -86,6 +107,8 @@ export class ConjunctionNode extends SqlNode {
 const conjunction =
     (op: string, grouped = false) => (...conditions: SqlNodeValue[]): SqlNode =>
         new ConjunctionNode(raw(op), conditions.map(expr), grouped)
+
+// -> Logical operators
 
 /**
  * Creates a logical AND operation with parentheses.
@@ -102,13 +125,13 @@ export const and = conjunction(sql('AND'), true)
 export const or = conjunction(sql('OR'), true)
 
 /**
- * Creates a comparison expression factory.
- * @param {string} op - The comparison operator
- * @returns A factory function for comparison nodes
+ * Creates a NOT logical negation.
+ * @param operand - The expression to negate
+ * @returns A unary node
  */
-const comparison =
-    (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
-        new BinaryNode(expr(left), raw(op), expr(right))
+export const not = unary(sql('NOT'), 'pfx')
+
+// -> Comparison operators
 
 /**
  * Creates an equality comparison (=).
@@ -116,7 +139,7 @@ const comparison =
  * @param right - The right-hand expression
  * @returns A comparison node
  */
-export const eq = comparison('=')
+export const eq = binary('=')
 
 /**
  * Creates a not-equal comparison (!=).
@@ -124,7 +147,7 @@ export const eq = comparison('=')
  * @param right - The right-hand expression
  * @returns A comparison node
  */
-export const ne = comparison('!=')
+export const ne = binary('!=')
 
 /**
  * Creates a greater-than comparison (>).
@@ -132,7 +155,7 @@ export const ne = comparison('!=')
  * @param right - The right-hand expression
  * @returns A comparison node
  */
-export const gt = comparison('>')
+export const gt = binary('>')
 
 /**
  * Creates a less-than comparison (<).
@@ -140,7 +163,7 @@ export const gt = comparison('>')
  * @param right - The right-hand expression
  * @returns A comparison node
  */
-export const lt = comparison('<')
+export const lt = binary('<')
 
 /**
  * Creates a greater-than-or-equal comparison (>=).
@@ -148,7 +171,7 @@ export const lt = comparison('<')
  * @param right - The right-hand expression
  * @returns A comparison node
  */
-export const ge = comparison('>=')
+export const ge = binary('>=')
 
 /**
  * Creates a less-than-or-equal comparison (<=).
@@ -156,7 +179,9 @@ export const ge = comparison('>=')
  * @param right - The right-hand expression
  * @returns A comparison node
  */
-export const le = comparison('<=')
+export const le = binary('<=')
+
+// -> Pattern matching
 
 /**
  * Creates a LIKE pattern matching comparison.
@@ -164,7 +189,7 @@ export const le = comparison('<=')
  * @param right - The pattern to match against
  * @returns A comparison node
  */
-export const like = comparison(sql('LIKE'))
+export const like = binary(sql('LIKE'))
 
 /**
  * Creates a GLOB pattern matching comparison.
@@ -172,7 +197,7 @@ export const like = comparison(sql('LIKE'))
  * @param right - The pattern to match against
  * @returns A comparison node
  */
-export const glob = comparison(sql('GLOB'))
+export const glob = binary(sql('GLOB'))
 
 /**
  * Creates an IN membership comparison.
@@ -180,7 +205,83 @@ export const glob = comparison(sql('GLOB'))
  * @param right - The list of values to test against
  * @returns A comparison node
  */
-export const in_ = comparison(sql('IN'))
+export const in_ = binary(sql('IN'))
+
+// -> Arithmetic operators
+
+/**
+ * Creates an addition operation (+).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const add = binary('+')
+
+/**
+ * Creates a subtraction operation (-).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const sub = binary('-')
+
+/**
+ * Creates a multiplication operation (*).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const mul = binary('*')
+
+/**
+ * Creates a division operation (/).
+ * @param left - The left operand
+ * @param right - The right operand
+ * @returns A binary node
+ */
+export const div = binary('/')
+
+// -> Modifiers
+
+/**
+ * Creates a DISTINCT modifier for removing duplicates.
+ * @param expr - The optional expression to apply DISTINCT to
+ * @returns A unary node
+ */
+export const distinct = unary(sql('DISTINCT'), 'pfx')
+
+/**
+ * Creates an ALL quantifier (opposite of DISTINCT).
+ * @param expr - The optional expression to apply ALL to
+ * @returns A unary node
+ */
+export const all = unary(sql('ALL'), 'pfx')
+
+/**
+ * Creates an ascending sort order (ASC).
+ * @param expr - The expression to sort by
+ * @returns A unary node
+ */
+export const asc = unary(sql('ASC'))
+
+/**
+ * Creates a descending sort order (DESC).
+ * @param expr - The expression to sort by
+ * @returns A unary node
+ */
+export const desc = unary(sql('DESC'))
+
+// -> Special operations
+
+/**
+ * Creates a column or expression alias using AS.
+ * @param expr - The expression to alias
+ * @param as - The alias name
+ * @returns A binary node
+ */
+export const alias = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
+    return new BinaryNode(expr(value), raw(sql('AS')), id(as))
+}
 
 /**
  * Creates a BETWEEN range comparison.
@@ -204,133 +305,22 @@ export const between = (
     )
 
 /**
- * Creates a NOT logical negation.
- * @param operand - The expression to negate
- * @returns A unary node
- */
-export const not = (value: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(sql('NOT')), expr(value), 'pfx')
-
-/**
  * Creates an EXISTS subquery check.
  * @param operand - The subquery to check
  * @returns A unary node
  */
-export const exists = (value: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(sql('EXISTS')), expr(value), 'pfx')
+export const exists = unary(sql('EXISTS'), 'pfx')
 
 /**
  * Creates an IS NULL check.
  * @param operand - The expression to test
  * @returns A unary node
  */
-export const isNull = (value: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(`${sql('IS')} ${sql('NULL')}`), expr(value), 'sfx')
+export const isNull = unary(sql('IS NULL'), 'sfx')
 
 /**
  * Creates an IS NOT NULL check.
  * @param operand - The expression to test
  * @returns A unary node
  */
-export const isNotNull = (value: SqlNodeValue): SqlNode =>
-    new UnaryNode(
-        raw(`${sql('IS')} ${sql('NOT')} ${sql('NULL')}`),
-        expr(value),
-        'sfx',
-    )
-
-/**
- * Creates an arithmetic operator factory.
- * @param op - The arithmetic operator string
- * @returns A function that creates binary nodes
- */
-const arithmetic =
-    (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
-        new BinaryNode(expr(left), raw(op), expr(right))
-
-/**
- * Creates an addition operation (+).
- * @param left - The left operand
- * @param right - The right operand
- * @returns A binary node
- */
-export const add = arithmetic('+')
-
-/**
- * Creates a subtraction operation (-).
- * @param left - The left operand
- * @param right - The right operand
- * @returns A binary node
- */
-export const sub = arithmetic('-')
-
-/**
- * Creates a multiplication operation (*).
- * @param left - The left operand
- * @param right - The right operand
- * @returns A binary node
- */
-export const mul = arithmetic('*')
-
-/**
- * Creates a division operation (/).
- * @param left - The left operand
- * @param right - The right operand
- * @returns A binary node
- */
-export const div = arithmetic('/')
-
-/**
- * Creates a set quantifier factory.
- * @param q - The quantifier string
- * @returns A function that creates unary nodes
- */
-const quantifier = (q: string) => (value?: SqlNodeValue): SqlNode =>
-    new UnaryNode(raw(q), expr(value), 'pfx')
-
-/**
- * Creates a DISTINCT modifier for removing duplicates.
- * @param expr - The optional expression to apply DISTINCT to
- * @returns A unary node
- */
-export const distinct = quantifier(sql('DISTINCT'))
-
-/**
- * Creates an ALL quantifier (opposite of DISTINCT).
- * @param expr - The optional expression to apply ALL to
- * @returns A unary node
- */
-export const all = quantifier(sql('ALL'))
-
-/**
- * Creates a sorting direction factory.
- * @param dir - The sorting direction string
- * @returns A function that creates unary nodes
- */
-const sortDir = (dir: string) => (value: SqlNodeValue): SqlNode => {
-    return new UnaryNode(raw(dir), expr(value))
-}
-
-/**
- * Creates an ascending sort order (ASC).
- * @param expr - The expression to sort by
- * @returns A unary node
- */
-export const asc = sortDir(sql('ASC'))
-
-/**
- * Creates a descending sort order (DESC).
- * @param expr - The expression to sort by
- * @returns A unary node
- */
-export const desc = sortDir(sql('DESC'))
-
-/**
- * Creates a column or expression alias using AS.
- * @param expr - The expression to alias
- * @param as - The alias name
- * @returns A binary node
- */
-export const alias = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
-    return new BinaryNode(expr(value), raw(sql('AS')), id(as))
-}
+export const isNotNull = unary(sql('IS NOT NULL'), 'sfx')

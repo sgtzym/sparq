@@ -82,5 +82,8 @@ export function toSqlDataType(value: unknown): SqlDataType {
  * @returns A joined SQLite string
  */
 export function sql(...parts: SqlSnippet[]): string {
-    return String(parts.filter(Boolean).join(' '))
+    return parts
+        .flatMap((p) => typeof p === 'string' ? p.split(' ') : p)
+        .filter(Boolean)
+        .join(' ')
 }
