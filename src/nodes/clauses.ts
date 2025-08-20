@@ -11,7 +11,8 @@ import { expr, id, raw } from '~/nodes/primitives.ts'
 // -> 🔷 Nodes
 
 /**
- * Represents a FROM clause with table references.
+ * Represents a FROM clause that specifies which tables to query.
+ * Essential for SELECT, UPDATE, and DELETE operations.
  */
 export class FromNode extends SqlNode {
     override readonly _priority: number = 1
@@ -30,7 +31,8 @@ export class FromNode extends SqlNode {
 }
 
 /**
- * Represents a JOIN clause with optional conditions.
+ * Represents a JOIN clause for combining data from multiple tables.
+ * Enables relational queries across related tables.
  */
 export class JoinNode extends SqlNode {
     override readonly _priority: number = 2
@@ -56,6 +58,7 @@ export class JoinNode extends SqlNode {
 
 /**
  * Represents a SET clause for UPDATE operations.
+ * Specifies which columns to update and their new values.
  */
 export class SetNode extends SqlNode {
     override readonly _priority: number = 2
@@ -74,6 +77,7 @@ export class SetNode extends SqlNode {
 
 /**
  * Represents a WHERE clause for filtering rows.
+ * The primary mechanism for specifying query conditions.
  */
 export class WhereNode extends SqlNode {
     override readonly _priority: number = 3
@@ -93,7 +97,8 @@ export class WhereNode extends SqlNode {
 }
 
 /**
- * Represents a GROUP BY clause for result aggregation.
+ * Represents a GROUP BY clause for aggregating results.
+ * Groups rows together for aggregate function calculations.
  */
 export class GroupByNode extends SqlNode {
     override readonly _priority: number = 4
@@ -111,6 +116,7 @@ export class GroupByNode extends SqlNode {
 
 /**
  * Represents a HAVING clause for filtering grouped results.
+ * Like WHERE, but operates on grouped data after aggregation.
  */
 export class HavingNode extends SqlNode {
     override readonly _priority: number = 5
@@ -131,6 +137,7 @@ export class HavingNode extends SqlNode {
 
 /**
  * Represents an ORDER BY clause for sorting results.
+ * Controls the order in which rows are returned.
  */
 export class OrderByNode extends SqlNode {
     override readonly _priority: number = 6
@@ -148,6 +155,7 @@ export class OrderByNode extends SqlNode {
 
 /**
  * Represents a LIMIT clause for restricting result count.
+ * Controls the maximum number of rows returned.
  */
 export class LimitNode extends SqlNode {
     override readonly _priority: number = 7
@@ -164,7 +172,8 @@ export class LimitNode extends SqlNode {
 }
 
 /**
- * Represents an OFFSET clause for result pagination.
+ * Represents an OFFSET clause for skipping rows in pagination.
+ * Used with LIMIT to implement pagination.
  */
 export class OffsetNode extends SqlNode {
     override readonly _priority: number = 8
@@ -181,7 +190,8 @@ export class OffsetNode extends SqlNode {
 }
 
 /**
- * Represents a VALUES clause for explicit row data.
+ * Represents a VALUES clause for specifying explicit row data.
+ * Contains the actual data to be inserted into tables.
  */
 export class ValuesNode extends SqlNode {
     override readonly _priority = 9
@@ -192,6 +202,20 @@ export class ValuesNode extends SqlNode {
         super()
     }
 
+    /**
+     * Adds a row of values to the VALUES clause.
+     * Call this multiple times to insert multiple rows at once.
+     *
+     * @param valueList - A value list node containing the row data
+     *
+     * @example
+     * ```ts
+     * const valuesNode = new ValuesNode()
+     * valuesNode.addRow(valueList('John', 25))
+     * valuesNode.addRow(valueList('Jane', 30))
+     * // VALUES ('John', 25), ('Jane', 30)
+     * ```
+     */
     addRow(valueList: SqlNode): void {
         this.rows.push(valueList)
     }
@@ -204,7 +228,8 @@ export class ValuesNode extends SqlNode {
 }
 
 /**
- * Represents a RETURNING clause for getting affected row data.
+ * Represents a RETURNING clause for getting data from modified rows.
+ * Returns specified columns from rows affected by INSERT, UPDATE, or DELETE.
  */
 export class ReturningNode extends SqlNode {
     override readonly _priority = 10
@@ -222,7 +247,8 @@ export class ReturningNode extends SqlNode {
 }
 
 /**
- * Represents a ON CONFLICT clause for INSERT / UPDATE statements.
+ * Represents an ON CONFLICT clause for handling constraint violations.
+ * Specifies what to do when INSERT operations encounter conflicts.
  */
 export class OnConflictNode extends SqlNode {
     override _priority: number = 11
@@ -251,7 +277,8 @@ export class OnConflictNode extends SqlNode {
 }
 
 /**
- * Represents an UPSERT clause for INSERT / UPDATE statements.
+ * Represents an UPSERT clause for INSERT with UPDATE on conflict.
+ * Combines INSERT and UPDATE operations for conflict resolution.
  */
 export class UpsertNode extends SqlNode {
     override _priority: number = 11
@@ -289,9 +316,18 @@ export class UpsertNode extends SqlNode {
 // -> 🏭 Factories
 
 /**
- * Creates a FROM clause with table references.
- * @param tables - The tables to select from
- * @returns A FROM SqlNode
+ * Creates a FROM clause specifying which tables to query.
+ * Use this to indicate the source tables for your data.
+ *
+ * @param tables - The table names to select from
+ * @returns A FROM clause node
+ *
+ * @example
+ * ```ts
+ * from('users')                    // FROM users
+ * from('users', 'profiles')        // FROM users, profiles
+ * from(users.table, orders.table)  // FROM users, orders
+ * ```
  */
 export const from = (...tables: SqlNodeValue[]) => new FromNode(tables.map(id))
 
@@ -300,6 +336,7 @@ export const from = (...tables: SqlNodeValue[]) => new FromNode(tables.map(id))
  * @param type - The join type string
  * @returns A function that creates join nodes
  */
+
 const join =
     (type: string) =>
     (table: SqlNodeValue, condition?: SqlNodeValue): SqlNode =>
@@ -310,87 +347,209 @@ const join =
         )
 
 /**
- * Creates an INNER JOIN clause.
+ * Creates an INNER JOIN clause to combine tables on matching rows.
+ * Use this to get only rows that have matches in both tables.
+ *
  * @param table - The table to join
- * @param condition The optional join condition
- * @returns A join SqlNode
+ * @param condition - The join condition (optional)
+ * @returns An INNER JOIN clause node
+ *
+ * @example
+ * ```ts
+ * joinInner('profiles', user.id.eq(profile.userId))
+ * // INNER JOIN profiles ON user.id = profile.userId
+ *
+ * joinInner('orders')  // INNER JOIN orders (condition added later)
+ * ```
  */
 export const joinInner = join(sql('INNER'))
 
 /**
- * Creates a LEFT JOIN clause.
+ * Creates a LEFT JOIN clause to include all rows from the left table.
+ * Use this to get all rows from the first table, with matching rows from the second.
+ *
  * @param table - The table to join
- * @param condition - The optional join condition
- * @returns A join SqlNode
+ * @param condition - The join condition (optional)
+ * @returns A LEFT JOIN clause node
+ *
+ * @example
+ * ```ts
+ * joinLeft('orders', user.id.eq(order.userId))
+ * // LEFT JOIN orders ON user.id = order.userId
+ *
+ * // Get all users, including those without orders
+ * users.select().join(orders).left(user.id.eq(order.userId))
+ * ```
  */
 export const joinLeft = join(sql('LEFT'))
 
 /**
- * Creates a LEFT OUTER JOIN clause.
+ * Creates a LEFT OUTER JOIN clause (same as LEFT JOIN).
+ * Alternative syntax for LEFT JOIN operations.
+ *
  * @param table - The table to join
- * @param condition - The optional join condition
- * @returns A join SqlNode
+ * @param condition - The join condition (optional)
+ * @returns A LEFT OUTER JOIN clause node
+ *
+ * @example
+ * ```ts
+ * joinLeftOuter('comments', post.id.eq(comment.postId))
+ * // LEFT OUTER JOIN comments ON post.id = comment.postId
+ * ```
  */
 export const joinLeftOuter = join(sql('LEFT OUTER'))
 
 /**
- * Creates a CROSS JOIN clause.
- * @param table - The table to join
- * @returns A join SqlNode
+ * Creates a CROSS JOIN clause for Cartesian product of tables.
+ * Use this to get all possible combinations of rows from both tables.
+ *
+ * @param table - The table to cross join
+ * @returns A CROSS JOIN clause node
+ *
+ * @example
+ * ```ts
+ * joinCross('categories')
+ * // CROSS JOIN categories
+ *
+ * // Get all combinations of users and roles
+ * users.select().join(roles).cross()
+ * ```
  */
 export const joinCross = (table: SqlNodeValue) =>
     new JoinNode(raw(sql('CROSS')), id(table))
 
 /**
- * Creates a WHERE clause with filter conditions.
- * @param conditions - The conditions to filter by
- * @returns A WHERE SqlNode
+ * Creates a WHERE clause for filtering rows based on conditions.
+ * Use this to specify which rows should be included in your results.
+ *
+ * @param conditions - The conditions that must be true
+ * @returns A WHERE clause node
+ *
+ * @example
+ * ```ts
+ * where(user.active.eq(true), user.age.gt(18))
+ * // WHERE user.active = true AND user.age > 18
+ *
+ * where(or(user.role.eq('admin'), user.role.eq('moderator')))
+ * // WHERE (user.role = 'admin' OR user.role = 'moderator')
+ * ```
  */
 export const where = (...conditions: SqlNodeValue[]) =>
     new WhereNode(conditions.map(expr))
 
 /**
- * Creates a GROUP BY clause for result aggregation.
+ * Creates a GROUP BY clause for aggregating results by columns.
+ * Use this to group rows together for aggregate calculations.
+ *
  * @param columns - The columns to group by
- * @returns A GROUP BY SqlNode
+ * @returns A GROUP BY clause node
+ *
+ * @example
+ * ```ts
+ * groupBy(user.department, user.role)
+ * // GROUP BY user.department, user.role
+ *
+ * // Count users by department
+ * users.select(user.department, count())
+ *   .groupBy(user.department)
+ * ```
  */
 export const groupBy = (...columns: SqlNodeValue[]) =>
     new GroupByNode(columns.map(id))
 
 /**
  * Creates a HAVING clause for filtering grouped results.
- * @param conditions - The conditions to filter grouped results by
- * @returns A HAVING SqlNode
+ * Use this to filter groups after aggregation (like WHERE for groups).
+ *
+ * @param conditions - The conditions to filter grouped results
+ * @returns A HAVING clause node
+ *
+ * @example
+ * ```ts
+ * having(count(user.id).gt(5))
+ * // HAVING COUNT(user.id) > 5
+ *
+ * // Find departments with more than 10 employees
+ * users.select(user.department, count())
+ *   .groupBy(user.department)
+ *   .having(count().gt(10))
+ * ```
  */
 export const having = (...conditions: SqlNodeValue[]) =>
     new HavingNode(conditions.map(expr))
 
 /**
- * Creates an ORDER BY clause for sorting results.
+ * Creates an ORDER BY clause for sorting query results.
+ * Use this to control the order in which rows are returned.
+ *
  * @param columns - The columns to sort by
- * @returns An ORDER BY SqlNode
+ * @returns An ORDER BY clause node
+ *
+ * @example
+ * ```ts
+ * orderBy(user.name.asc(), user.createdAt.desc())
+ * // ORDER BY user.name ASC, user.createdAt DESC
+ *
+ * orderBy(user.lastName, user.firstName)
+ * // ORDER BY user.lastName, user.firstName (default ASC)
+ * ```
  */
 export const orderBy = (...columns: SqlNodeValue[]) =>
     new OrderByNode(columns.map(id))
 
 /**
- * Creates a LIMIT clause for restricting result count.
- * @param count - The maximum number of results
- * @returns A LIMIT SqlNode
+ * Creates a LIMIT clause for restricting the number of results.
+ * Use this to control how many rows are returned.
+ *
+ * @param count - The maximum number of rows to return
+ * @returns A LIMIT clause node
+ *
+ * @example
+ * ```ts
+ * limit(10)               // LIMIT 10
+ * limit(user.pageSize)    // LIMIT user.pageSize
+ *
+ * // Get top 5 highest-scoring users
+ * users.select().orderBy(user.score.desc()).limit(5)
+ * ```
  */
 export const limit = (count: SqlNodeValue) => new LimitNode(expr(count))
 
 /**
- * Creates an OFFSET clause for result pagination.
- * @param count - The number of results to skip
- * @returns An OFFSET SqlNode
+ * Creates an OFFSET clause for skipping rows in pagination.
+ * Use this with LIMIT to implement pagination functionality.
+ *
+ * @param count - The number of rows to skip
+ * @returns An OFFSET clause node
+ *
+ * @example
+ * ```ts
+ * offset(20)              // OFFSET 20
+ * offset(mul(page, 10))   // OFFSET page * 10
+ *
+ * // Get page 3 of results (20 per page)
+ * users.select().limit(20).offset(40)
+ * ```
  */
 export const offset = (count: SqlNodeValue) => new OffsetNode(expr(count))
 
 /**
- * Creates a RETURNING clause for getting affected row data.
- * @param columns - The columns to return
- * @returns A RETURNING SqlNode
+ * Creates a RETURNING clause to get data from affected rows.
+ * Use this to retrieve information about rows that were inserted, updated, or deleted.
+ *
+ * @param columns - The columns to return (defaults to * if empty)
+ * @returns A RETURNING clause node
+ *
+ * @example
+ * ```ts
+ * returning(user.id, user.name)       // RETURNING user.id, user.name
+ * returning()                         // RETURNING *
+ *
+ * // Get the ID of newly inserted user
+ * users.insert('name', 'email')
+ *   .values('John', 'john@example.com')
+ *   .returning(user.id)
+ * ```
  */
 export const returning = (...columns: SqlNodeValue[]) =>
     new ReturningNode(
@@ -398,16 +557,36 @@ export const returning = (...columns: SqlNodeValue[]) =>
     )
 
 /**
- * Creates a VALUES clause for explicit row data.
- * @param rows - The rows of data
- * @returns A VALUES SqlNode
+ * Creates a VALUES clause for specifying explicit row data.
+ * Use this to define the actual data for INSERT operations.
+ *
+ * @returns A VALUES clause node
+ *
+ * @example
+ * ```ts
+ * const valuesClause = values()
+ * valuesClause.addRow(valueList('John', 25))
+ * valuesClause.addRow(valueList('Jane', 30))
+ * // VALUES ('John', 25), ('Jane', 30)
+ * ```
  */
 export const values = () => new ValuesNode()
 
 /**
- * Creates a SET clause for UPDATE statements.
+ * Creates a SET clause for UPDATE operations.
+ * Use this to specify which columns should be updated and their new values.
+ *
  * @param assignments - The column assignments
- * @returns A SET SqlNode
+ * @returns A SET clause node
+ *
+ * @example
+ * ```ts
+ * set(user.name.set('John'), user.age.set(25))
+ * // SET user.name = 'John', user.age = 25
+ *
+ * set(product.price.set(mul(product.price, 1.1)))
+ * // SET product.price = product.price * 1.1
+ * ```
  */
 export const set = (...assignments: SqlNodeValue[]) =>
     new SetNode(assignments.map(expr))
@@ -422,37 +601,136 @@ const conflict = (action: string) => (...targets: SqlNodeValue[]) =>
     new OnConflictNode(raw(action), targets.map(id))
 
 /**
- * Creates a ON CONFLICT clause for DO ABORT resolution.
+ * Creates an ON CONFLICT DO ABORT clause.
+ * Use this to abort the transaction when a conflict occurs.
+ *
+ * @param targets - The conflict target columns
+ * @returns An ON CONFLICT clause node
+ *
+ * @example
+ * ```ts
+ * onConflictAbort('email')
+ * // ON CONFLICT (email) DO ABORT
+ * ```
  */
 export const onConflictAbort = conflict(sql('ABORT'))
 
 /**
- * Creates a ON CONFLICT clause for DO FAIL resolution.
+ * Creates an ON CONFLICT DO FAIL clause.
+ * Use this to fail the current statement when a conflict occurs.
+ *
+ * @param targets - The conflict target columns
+ * @returns An ON CONFLICT clause node
+ *
+ * @example
+ * ```ts
+ * onConflictFail('username')
+ * // ON CONFLICT (username) DO FAIL
+ * ```
  */
 export const onConflictFail = conflict(sql('FAIL'))
 
 /**
- * Creates a ON CONFLICT clause for DO IGNORE resolution.
+ * Creates an ON CONFLICT DO IGNORE clause.
+ * Use this to silently ignore conflicts and continue.
+ *
+ * @param targets - The conflict target columns
+ * @returns An ON CONFLICT clause node
+ *
+ * @example
+ * ```ts
+ * onConflictIgnore('email')
+ * // ON CONFLICT (email) DO IGNORE
+ *
+ * // Insert user, ignore if email already exists
+ * users.insert('name', 'email')
+ *   .values('John', 'john@example.com')
+ *   .conflict('email').ignore()
+ * ```
  */
 export const onConflictIgnore = conflict(sql('IGNORE'))
 
 /**
- * Creates a ON CONFLICT clause for DO REPLACE resolution.
+ * Creates an ON CONFLICT DO REPLACE clause.
+ * Use this to replace the entire row when a conflict occurs.
+ *
+ * @param targets - The conflict target columns
+ * @returns An ON CONFLICT clause node
+ *
+ * @example
+ * ```ts
+ * onConflictReplace('id')
+ * // ON CONFLICT (id) DO REPLACE
+ * ```
  */
 export const onConflictReplace = conflict(sql('REPLACE'))
 
 /**
- * Creates a ON CONFLICT clause for DO ROLLBACK resolution.
+ * Creates an ON CONFLICT DO ROLLBACK clause.
+ * Use this to rollback the transaction when a conflict occurs.
+ *
+ * @param targets - The conflict target columns
+ * @returns An ON CONFLICT clause node
+ *
+ * @example
+ * ```ts
+ * onConflictRollback('unique_key')
+ * // ON CONFLICT (unique_key) DO ROLLBACK
+ * ```
  */
 export const onConflictRollback = conflict(sql('ROLLBACK'))
 
 /**
- * Creates a ON CONFLICT clause for DO NOTHING resolution.
+ * Creates an ON CONFLICT DO NOTHING clause.
+ * Use this to skip the conflicting row and continue with other operations.
+ *
+ * @param targets - The conflict target columns
+ * @returns An ON CONFLICT clause node
+ *
+ * @example
+ * ```ts
+ * onConflictNothing('email')
+ * // ON CONFLICT (email) DO NOTHING
+ *
+ * // Insert multiple users, skip duplicates
+ * users.insert('name', 'email')
+ *   .values('John', 'john@example.com')
+ *   .values('Jane', 'jane@example.com')
+ *   .conflict('email').nothing()
+ * ```
  */
 export const onConflictNothing = conflict(sql('NOTHING'))
 
 /**
- * Creates a ON CONFLICT clause for UPSERT resolution.
+ * Creates an ON CONFLICT DO UPDATE clause for upsert operations.
+ * Use this to update existing rows when conflicts occur during insert.
+ *
+ * @param assignments - The column assignments for the update
+ * @param targets - The conflict target columns (optional)
+ * @param conditions - Additional WHERE conditions for the update (optional)
+ * @returns An UPSERT clause node
+ *
+ * @example
+ * ```ts
+ * onConflictUpdate([user.name.set('John Updated')], ['email'])
+ * // ON CONFLICT (email) DO UPDATE SET user.name = 'John Updated'
+ *
+ * // Upsert with conditions
+ * onConflictUpdate(
+ *   [user.loginCount.set(add(user.loginCount, 1))],
+ *   ['email'],
+ *   [user.active.eq(true)]
+ * )
+ * // ON CONFLICT (email) DO UPDATE SET user.loginCount = user.loginCount + 1 WHERE user.active = true
+ *
+ * // Common upsert pattern
+ * users.insert('email', 'name', 'loginCount')
+ *   .values('john@example.com', 'John', 1)
+ *   .conflict('email').upsert([
+ *     user.name.set(excluded(user.name)),
+ *     user.loginCount.set(add(user.loginCount, 1))
+ *   ])
+ * ```
  */
 export const onConflictUpdate = (
     assignments: SqlNodeValue[],
