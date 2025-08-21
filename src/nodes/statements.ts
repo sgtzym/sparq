@@ -126,20 +126,6 @@ export const _select = (columns?: SqlNodeValue[]): SqlNode => {
 }
 
 /**
- * Creates an UPDATE statement for the specified table.
- * Use this as the starting point for modifying existing records.
- *
- * @example
- * ```ts
- * _update('users') // UPDATE users
- *
- * // Typically followed by SET, WHERE clauses
- * // UPDATE users SET name = 'John' WHERE id = 1
- * ```
- */
-export const _update = (table: string): SqlNode => new UpdateNode(id(table))
-
-/**
  * Creates an INSERT statement with table and column specification.
  * Use this to add new records to a table with specified columns.
  *
@@ -154,6 +140,20 @@ export const _update = (table: string): SqlNode => new UpdateNode(id(table))
  */
 export const _insert = (table: string, columns: SqlNodeValue[]): SqlNode =>
     new InsertNode(id(table), columns.map(expr))
+
+/**
+ * Creates an UPDATE statement for the specified table.
+ * Use this as the starting point for modifying existing records.
+ *
+ * @example
+ * ```ts
+ * _update('users') // UPDATE users
+ *
+ * // Typically followed by SET, WHERE clauses
+ * // UPDATE users SET name = 'John' WHERE id = 1
+ * ```
+ */
+export const _update = (table: string): SqlNode => new UpdateNode(id(table))
 
 /**
  * Creates a DELETE statement.

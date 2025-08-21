@@ -31,6 +31,10 @@ type ColumnsProxy<T extends TableSchema> = {
     [K in keyof T]: ColumnTypeMapping<K & string, T[K]>
 }
 
+/**
+ * Schema-aware query builder for a specific table.
+ * Provides type-safe access to table columns and query operations.
+ */
 export class Sparq<T extends TableSchema> {
     public readonly table: string
     private readonly columns: ColumnsProxy<T>
@@ -61,22 +65,47 @@ export class Sparq<T extends TableSchema> {
         }
     }
 
-    // Provides direct access to columns via $
+    /**
+     * Access table columns with `$`.
+     *
+     * @example
+     * ```ts
+     * const users = sparq(...)
+     *
+     * users.$.id // users.id
+     * ```
+     */
     get $(): ColumnsProxy<T> {
         return this.columns
     }
 
     /**
-     * Creates a SELECT query for this table.
-     * @param columns - Columns to select (defaults to * if empty)
+     * Creates a SELECT statement with optional column specification.
+     * Use this to retrieve data from tables with specific columns or all columns.
+     *
+     * @param columns - The columns to select (defaults to * if empty)
+     *
+     * @example
+     * ```ts
+     * users.select() // SELECT * FROM users
+     * ```
      */
     select(...columns: SqlNodeValue[]): Select {
         return new Select(this.table, columns)
     }
 
     /**
-     * Creates an INSERT query for this table.
-     * @param columns - Columns to insert values into
+     * Creates an INSERT statement with table and column specification.
+     * Use this to add new records to a table with specified columns.
+     *
+     * @example
+     * ```ts
+     * // Insert rows into orders
+     * orders
+     *   .insert(order.id, order.total, order.status)
+     *   .values(34987, 3, 'pending')
+     *   .values(33001, 1, 'paid')
+     * ```
      */
     insert(
         ...columns: (keyof T | Column<string, SqlParam> | SqlNodeValue)[]
@@ -90,8 +119,14 @@ export class Sparq<T extends TableSchema> {
     }
 
     /**
-     * Creates an UPDATE query for this table.
-     * @param assignments - Column assignments (can be object or array of nodes)
+     * Creates an UPDATE statement for the specified table.
+     * Use this as the starting point for modifying existing records.
+     *
+     * @example
+     * ```ts
+     * // UPDATE users SET score = 0
+     * users.update(user.score.to(0))
+     * ```
      */
     update(assignments: Partial<T> | SqlNodeValue[]): Update {
         const assigns = Array.isArray(assignments)
@@ -103,7 +138,13 @@ export class Sparq<T extends TableSchema> {
     }
 
     /**
-     * Creates a DELETE query for this table.
+     * Creates a DELETE statement.
+     * Use this as the starting point for removing records from tables.
+     *
+     * @example
+     * ```ts
+     * users.delete() // DELETE * FROM users
+     * ```
      */
     delete(): Delete {
         return new Delete(this.table)
@@ -111,10 +152,8 @@ export class Sparq<T extends TableSchema> {
 }
 
 /**
- * Creates a reusable, schema-aware query builder.
- * @param tableName - The name of the target table
- * @param schema - The target table's schema
- * @returns The query builder
+ * Entry-point for schema-aware table operations.
+ * Creates a table-specific API object that can be reused to query/change data.
  */
 export function sparq<T extends TableSchema>(
     tableName: string,

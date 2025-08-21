@@ -617,9 +617,6 @@ export const onConflictRollback = conflict(sql('ROLLBACK'))
  * Creates an ON CONFLICT DO NOTHING clause.
  * Use this to skip the conflicting row and continue with other operations.
  *
- * @param targets - The conflict target columns
- * @returns An ON CONFLICT clause node
- *
  * @example
  * ```ts
  * // ON CONFLICT (email) DO NOTHING

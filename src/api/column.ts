@@ -869,66 +869,84 @@ export class NumberColumn<TName extends string = string>
     gt(arg: ColumnValue<number>): SqlNode {
         return ex.gt(this, expr(arg))
     }
+
     lt(arg: ColumnValue<number>): SqlNode {
         return ex.lt(this, expr(arg))
     }
+
     ge(arg: ColumnValue<number>): SqlNode {
         return ex.ge(this, expr(arg))
     }
+
     le(arg: ColumnValue<number>): SqlNode {
         return ex.le(this, expr(arg))
     }
+
     between(
         lower: ColumnValue<number>,
         upper: ColumnValue<number>,
     ): SqlNode {
         return ex.between(this, lower, upper)
     }
+
     add(arg: ColumnValue<number>): this {
         return this.wrap(ex.add(this, expr(arg)))
     }
+
     sub(arg: ColumnValue<number>): this {
         return this.wrap(ex.sub(this, expr(arg)))
     }
+
     mul(arg: ColumnValue<number>): this {
         return this.wrap(ex.mul(this, expr(arg)))
     }
+
     div(arg: ColumnValue<number>): this {
         return this.wrap(ex.div(this, expr(arg)))
     }
+
     abs(): this {
         return this.wrap(fn.abs(this))
     }
+
     round(decimals?: ColumnValue<number>): this {
         const node: SqlNode = decimals !== undefined
             ? fn.round(this, expr(decimals))
             : fn.round(this)
         return this.wrap(node)
     }
+
     ceil(): this {
         return this.wrap(fn.ceil(this))
     }
+
     floor(): this {
         return this.wrap(fn.floor(this))
     }
+
     sqrt(): this {
         return this.wrap(fn.sqrt(this))
     }
+
     mod(divisor: ColumnValue<number>): this {
         return this.wrap(fn.mod(this, expr(divisor)))
     }
+
     pow(exponent: ColumnValue<number>): this {
         return this.wrap(fn.pow(this, expr(exponent)))
     }
+
     percent(total: ColumnValue<number>): this {
         return this.wrap(ex.mul(
             ex.div(this, expr(total)),
             expr(100),
         ))
     }
+
     avg(): this {
         return this.wrap(fn.avg(this))
     }
+
     sum(): this {
         return this.wrap(fn.sum(this))
     }
