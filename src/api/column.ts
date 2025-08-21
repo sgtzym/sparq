@@ -6,83 +6,672 @@ import * as ex from '~/nodes/expressions.ts'
 import * as fn from '~/nodes/functions.ts'
 import { assign, valueList } from '~/nodes/values.ts'
 
+/**
+ * Union type for values that can be used in column operations.
+ */
 type ColumnValue<TType extends SqlParam = SqlParam> = any
 
+/**
+ * Base interface for all column types with common SQL operations.
+ */
 export interface IColumn<
     TName extends string = string,
     TType extends SqlParam = SqlParam,
 > {
+    /**
+     * Returns distinct values only.
+     *
+     * @example
+     * ```ts
+     * // DISTINCT user.city
+     * user.city.distinct()
+     * ```
+     */
     distinct(): this
+
+    /**
+     * Returns all values.
+     *
+     * @example
+     * ```ts
+     * // ALL user.city
+     * user.city.all()
+     * ```
+     */
     all(): this
+
+    /**
+     * Equals (=).
+     *
+     * @example
+     * ```ts
+     * // user.name = 'John'
+     * user.name.eq('John')
+     * ```
+     */
     eq(arg: ColumnValue<TType>): SqlNode
+
+    /**
+     * Not equal to (!=).
+     *
+     * @example
+     * ```ts
+     * // user.name != 'John'
+     * user.name.ne('John')
+     * ```
+     */
     ne(arg: ColumnValue<TType>): SqlNode
+
+    /**
+     * Membership in set.
+     *
+     * @example
+     * ```ts
+     * // user.role IN ('admin', 'moderator')
+     * user.role.in(['admin', 'moderator'])
+     */
     in(args: TType[]): SqlNode
+
+    /**
+     * Is null.
+     *
+     * @example
+     * ```ts
+     * // user.deletedAt IS NULL
+     * user.deletedAt.isNull()
+     * ```
+     */
     isNull(): SqlNode
+
+    /**
+     * Is not null.
+     *
+     * @example
+     * ```ts
+     * // user.email IS NOT NULL
+     * user.email.isNotNull()
+     * ```
+     */
     isNotNull(): SqlNode
+
+    /**
+     * Aliases (AS).
+     * @param asName - The alias name
+     *
+     * @example
+     * ```ts
+     * // user.firstName AS name
+     * user.firstName.as('name')
+     * ```
+     */
     as(asName: ColumnValue<string>): SqlNode
-    set(arg: ColumnValue<TType>): SqlNode
+
+    /**
+     * Assigns a value.
+     *
+     * @example
+     * ```ts
+     * // user.name = 'John'
+     * user.name.to('John')
+     * ```
+     */
+    to(value: ColumnValue<TType>): SqlNode
+
+    /**
+     * Sorts in ascending order.
+     *
+     * @example
+     * ```ts
+     * // user.name ASC
+     * user.name.asc()
+     * ```
+     */
     asc(): SqlNode
+
+    /**
+     * Sorts in descending order.
+     * @example
+     * ```ts
+     * // user.createdAt DESC
+     * user.createdAt.desc()
+     * ```
+     */
     desc(): SqlNode
+
+    /**
+     * Counts non-null value rows.
+     *
+     * @example
+     * ```ts
+     * // COUNT(user.email)
+     * user.email.count()
+     * ```
+     */
     count(): this
+
+    /**
+     * Finds maximum value.
+     *
+     * @example
+     * ```ts
+     * // MAX(user.score)
+     * user.score.max()
+     * ```
+     */
     max(): this
+
+    /**
+     * Finds minimum value.
+     *
+     * @example
+     * ```ts
+     * // MIN(user.score)
+     * user.score.min()
+     * ```
+     */
     min(): this
 }
 
 export interface INumberColumn<TName extends string = string>
     extends IColumn<TName, number> {
-    gt(arg: ColumnValue<number>): SqlNode
-    lt(arg: ColumnValue<number>): SqlNode
-    ge(arg: ColumnValue<number>): SqlNode
-    le(arg: ColumnValue<number>): SqlNode
+    /**
+     * Greater than (>).
+     * @example
+     * ```ts
+     * // user.age > 18
+     * user.age.gt(18)
+     */
+    gt(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Less than (>).
+     *
+     * @example
+     * ```ts
+     * // user.age < 18
+     * user.age.lt(18)
+     * ```
+     */
+    lt(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Greater than or equal to (>=).
+     *
+     * @example
+     * // user.score >= 100
+     * user.score.ge(100)
+     */
+    ge(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Less than or equal to (<=).
+     *
+     * @example
+     * // user.score <= 100
+     * user.score.le(100)
+     */
+    le(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Within range (a – b).
+     *
+     * @example
+     * ```ts
+     * // user.age BETWEEN 18 AND 65
+     * user.age.between(18, 65)
+     */
     between(lower: ColumnValue<number>, upper: ColumnValue<number>): SqlNode
-    add(arg: ColumnValue<number>): this
-    sub(arg: ColumnValue<number>): this
-    mul(arg: ColumnValue<number>): this
-    div(arg: ColumnValue<number>): this
+
+    /**
+     * Adds the value (+).
+     *
+     * @example
+     * ```ts
+     * // user.score + 1000
+     * user.score.add(1000)
+     * ```
+     */
+    add(value: ColumnValue<number>): this
+
+    /**
+     * Subtracts the value (`-`).
+     *
+     * @example
+     * ```ts
+     * // user.score - 1000
+     * user.score.sub(1000)
+     * ```
+     */
+    sub(value: ColumnValue<number>): this
+
+    /**
+     * Multiplies by the value (`*`)
+     *
+     * @example
+     * ```ts
+     * // user.score * 1.1
+     * user.score.mul(1.1)
+     * ```
+     */
+    mul(value: ColumnValue<number>): this
+
+    /**
+     * Divides by the value (`/`)
+     *
+     * @example
+     * ```ts
+     * // user.score / 2
+     * user.score.div(2)
+     * ```
+     */
+    div(value: ColumnValue<number>): this
+
+    /**
+     * Returns the absolute value.
+     *
+     * @example
+     * ```ts
+     * // ABS(user.balance)
+     * user.balance.abs()
+     * ```
+     */
     abs(): this
+
+    /**
+     * Returns to decimal places.
+     *
+     * @example
+     * ```ts
+     * // ROUND(user.rating, 2)
+     * user.rating.round(2)
+     * ```
+     */
     round(decimals?: ColumnValue<number>): this
+
+    /**
+     * Returns up to nearest integer.
+     *
+     * @example
+     * ```ts
+     * // CEIL(user.rating)
+     * user.rating.ceil()
+     * ```
+     */
     ceil(): this
+
+    /**
+     * Returns down to nearest integer.
+     *
+     * @example
+     * ```ts
+     * // FLOOR(user.rating)
+     * user.rating.floor()
+     * ```
+     */
     floor(): this
+
+    /**
+     * Returns the square root.
+     *
+     * @example
+     * ```ts
+     * // SQRT(user.area)
+     * user.area.sqrt()
+     * ```
+     */
     sqrt(): this
+
+    /**
+     * Returns the remainder after division (modulo).
+     *
+     * @example
+     * ```ts
+     * // MOD(user.id, 10)
+     * user.id.mod(10)
+     * ```
+     */
     mod(divisor: ColumnValue<number>): this
+
+    /**
+     * Raises to the specified power.
+     *
+     * @example
+     * ```ts
+     * // POWER(user.level, 2)
+     * user.level.pow(2)
+     * ```
+     */
     pow(exponent: ColumnValue<number>): this
+
+    /**
+     * Calculates percentage of a total.
+     *
+     * @example
+     * ```ts
+     * // user.score / 1000 * 100
+     * user.score.percent(1000)
+     * ```
+     */
     percent(total: ColumnValue<number>): this
+
+    /**
+     * Calculates the average value.
+     *
+     * @example
+     * ```ts
+     * // AVG(user.score)
+     * user.score.avg()
+     * ```
+     */
     avg(): this
+
+    /**
+     * Calculates the sum of values.
+     *
+     * @example
+     * ```ts
+     * // SUM(order.total)
+     * order.total.sum()
+     * ```
+     */
     sum(): this
 }
 
 export interface ITextColumn<TName extends string = string>
     extends IColumn<TName, string> {
+    /**
+     * Matches pattern using wildcards.
+     * Case-insensitive. Uses % (any characters) and _ (single character).
+     *
+     * @example
+     * ```ts
+     * // user.name LIKE '%John%'
+     * user.name.like('%John%')
+     * ```
+     */
     like(pattern: ColumnValue<string>): SqlNode
+
+    /**
+     * Matches Unix file glob pattern.
+     * Case-sensitive. Uses * (any characters), ? (single character), and [...] (character ranges).
+     *
+     * @example
+     * ```ts
+     * // user.email GLOB '*@gmail.com'
+     * user.email.glob('*@gmail.com')
+     */
     glob(pattern: ColumnValue<string>): SqlNode
+
+    /**
+     * Starts with the specified prefix.
+     *
+     * @example
+     * ```ts
+     * // user.name LIKE 'John%'
+     * user.name.startsWith('John')
+     * ```
+     */
     startsWith(prefix: ColumnValue<string>): SqlNode
+
+    /**
+     * Ends with the specified suffix.
+     *
+     * @example
+     * ```ts
+     * // user.email LIKE '%@gmail.com'
+     * user.email.endsWith('@gmail.com')
+     * ```
+     */
     endsWith(suffix: ColumnValue<string>): SqlNode
+
+    /**
+     * Contains the specified substring.
+     *
+     * @example
+     * ```ts
+     * // user.bio LIKE '%developer%'
+     * user.bio.contains('developer')
+     * ```
+     */
     contains(substring: ColumnValue<string>): SqlNode
+
+    /**
+     * Converts to uppercase.
+     *
+     * @example
+     * ```ts
+     * // UPPER(user.name)
+     * user.name.upper()
+     * ```
+     */
     upper(): this
+
+    /**
+     * Converts to lowercase.
+     *
+     * @example
+     * ```ts
+     * // LOWER(user.email)
+     * user.email.lower()
+     * ```
+     */
     lower(): this
+
+    /**
+     * Returns the character count.
+     *
+     * @example
+     * ```ts
+     * // LENGTH(user.bio)
+     * user.bio.length()
+     * ```
+     */
     length(): this
+
+    /**
+     * Removes leading and trailing whitespace.
+     *
+     * @example
+     * ```ts
+     * // TRIM(user.name)
+     * user.name.trim()
+     * ```
+     */
     trim(): this
+
+    /**
+     * Removes leading whitespace.
+     *
+     * @example
+     * ```ts
+     * // LTRIM(user.description)
+     * user.description.ltrim()
+     * ```
+     */
     ltrim(): this
+
+    /**
+     * Removes trailing whitespace.
+     *
+     * @example
+     * ```ts
+     * // RTRIM(user.notes)
+     * user.notes.rtrim()
+     * ```
+     */
     rtrim(): this
+
+    /**
+     * Extracts a substring.
+     *
+     * @example
+     * ```ts
+     * // SUBSTR(user.name, 1, 5)
+     * user.name.substr(1, 5)
+     * ```
+     */
     substr(start?: ColumnValue<number>, length?: ColumnValue<number>): this
+
+    /**
+     * Replaces occurrences of text.
+     *
+     * @example
+     * ```ts
+     * // REPLACE(user.phone, '-', '')
+     * user.phone.replace('-', '')
+     * ```
+     */
     replace(search: ColumnValue<number>, replacement: ColumnValue<number>): this
+
+    /**
+     * Finds the position of a substring.
+     * Returns 0 if not found, or the index if found.
+     *
+     * @example
+     * ```ts
+     * // INSTR(user.email, '@')
+     * user.email.instr('@')
+     * ```
+     */
     instr(substring: ColumnValue<string>): SqlNode
 }
 
 export interface IDateTimeColumn<TName extends string = string>
     extends IColumn<TName, Date | string> {
-    gt(arg: ColumnValue<Date>): SqlNode
-    lt(arg: ColumnValue<Date>): SqlNode
-    ge(arg: ColumnValue<Date>): SqlNode
-    le(arg: ColumnValue<Date>): SqlNode
-    between(lower: ColumnValue<Date>, upper: ColumnValue<Date>): SqlNode
+    /**
+     * Greater than (>).
+     * @example
+     * ```ts
+     * // user.createdAt > '2024-01-01'
+     * user.createdAt.gt(new Date('2024-01-01'))
+     */
+    gt(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Less than (>)..
+     *
+     * @example
+     * ```ts
+     * // user.expiresAt < NOW
+     * user.expiresAt.lt(new Date())
+     * ```
+     */
+    lt(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Greater than or equal to (>=).
+     *
+     * @example
+     * // user.lastLogin >= yesterday
+     * user.lastLogin.ge(yesterday)
+     */
+    ge(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Less than or equal to (<=).
+     *
+     * @example
+     * // user.birthDate <= maxDate
+     * user.birthDate.le(maxDate)
+     */
+    le(value: ColumnValue<number>): SqlNode
+
+    /**
+     * Within range (a – b).
+     *
+     * @example
+     * ```ts
+     * // user.createdAt BETWEEN startDate AND endDate
+     * user.createdAt.between(startDate, endDate)
+     */
+    between(lower: ColumnValue<number>, upper: ColumnValue<number>): SqlNode
+
+    /**
+     * Extracts the date part.
+     *
+     * @example
+     * ```ts
+     * // DATE(user.createdAt)
+     * user.createdAt.date()
+     * ```
+     */
     date(): this
+
+    /**
+     * Extracts the time part.
+     *
+     * @example
+     * ```ts
+     * // TIME(user.loginAt)
+     * user.loginAt.time()
+     * ```
+     */
     time(): this
+
+    /**
+     * Converts to datetime format.
+     *
+     * @example
+     * ```ts
+     * // DATETIME(user.timestamp)
+     * user.timestamp.dateTime()
+     * ```
+     */
     dateTime(): this
+
+    /**
+     * Converts to specified format string.
+     *
+     * @example
+     * ```ts
+     * // STRFTIME('%Y-%m-%d', user.createdAt)
+     * user.createdAt.strftime('%Y-%m-%d')
+     * ```
+     */
     strftime(format: ColumnValue<string>): this
+
+    /**
+     * Converts to Julian day number.
+     *
+     * @example
+     * ```ts
+     * // JULIANDAY(user.birthDate)
+     * user.birthDate.julianday()
+     * ```
+     */
     julianday(): this
+
+    /**
+     * Extracts the year.
+     *
+     * @example
+     * ```ts
+     * // STRFTIME('%Y', user.createdAt)
+     * user.createdAt.year()
+     * ```
+     */
     year(): this
+
+    /**
+     * Extracts the month.
+     *
+     * @example
+     * ```ts
+     * // STRFTIME('%m', user.birthDate)
+     * user.birthDate.month()
+     * ```
+     */
     month(): this
+
+    /**
+     * Extracts the day.
+     *
+     * @example
+     * ```ts
+     * // STRFTIME('%d', user.birthDate)
+     * user.birthDate.day()
+     * ```
+     */
     day(): this
 }
 
@@ -96,12 +685,8 @@ export interface IJsonColumn<TName extends string = string>
 
 /**
  * Base column class with common SQL operations.
- *
  * Provides core functionality available to all column types including
  * comparisons, null checks, aliasing, and basic aggregates.
- *
- * @template TName - The column name type
- * @template TType - The column arg type
  */
 export class Column<
     TName extends string = string,
@@ -133,7 +718,7 @@ export class Column<
 
     /**
      * Creates a new column instance wrapping the given node.
-     * Preserves the column's metadata for chaining.
+     * Preserves the column's metadata for method chaining.
      */
     protected wrap<T extends Column<TName, TType>>(node: SqlNode): T {
         const Constructor = this.constructor as new (
@@ -146,213 +731,113 @@ export class Column<
         return wrapped
     }
 
-    /**
-     * Returns distinct args only.
-     */
     distinct(): this {
         return this.wrap(ex.distinct(this))
     }
 
-    /**
-     * Returns all args.
-     */
     all(): this {
         return this.wrap(ex.all(this))
     }
 
-    /**
-     * Equals (=).
-     * @param arg - The comparison arg
-     */
-    eq(arg: ColumnValue<TType>): SqlNode {
-        return ex.eq(this, expr(arg))
+    eq(value: ColumnValue<TType>): SqlNode {
+        return ex.eq(this, expr(value))
     }
 
-    /**
-     * Not equal to (!=).
-     * @param arg - The comparison arg
-     */
-    ne(arg: ColumnValue<TType>): SqlNode {
-        return ex.ne(this, expr(arg))
+    ne(value: ColumnValue<TType>): SqlNode {
+        return ex.ne(this, expr(value))
     }
 
-    /**
-     * Membership in set.
-     * @param args - The array of args to test against
-     */
-    in(args: TType[]): SqlNode {
-        return ex.in_(this, valueList(...args))
+    in(values: TType[]): SqlNode {
+        return ex.in_(this, valueList(...values))
     }
 
-    /**
-     * Is null.
-     */
     isNull(): SqlNode {
         return ex.isNull(this)
     }
 
-    /**
-     * Is not null.
-     */
     isNotNull(): SqlNode {
         return ex.isNotNull(this)
     }
 
-    /**
-     * Creates an alias (AS).
-     * @param asName - The alias name
-     */
     as(asName: ColumnValue<string>): SqlNode {
         return ex.alias(this, id(asName))
     }
 
-    /**
-     * Assigns a arg to the column.
-     * @param arg - The arg or expression to assign
-     */
-    set(arg: ColumnValue<TType>): SqlNode {
-        return assign(this, expr(arg))
+    to(value: ColumnValue<TType>): SqlNode {
+        return assign(this, expr(value))
     }
 
-    /**
-     * Sorts in ascending order (ASC).
-     */
     asc(): SqlNode {
         return ex.asc(this)
     }
 
-    /**
-     * Sorts in descending order (DESC).
-     */
     desc(): SqlNode {
         return ex.desc(this)
     }
 
-    /**
-     * Counts rows (COUNT).
-     */
     count(): this {
         return this.wrap(fn.count(this))
     }
 
-    /**
-     * Finds maximum arg (MAX).
-     */
     max(): this {
         return this.wrap(fn.max(this))
     }
 
-    /**
-     * Finds minimum arg (MIN).
-     */
     min(): this {
         return this.wrap(fn.min(this))
     }
 }
 
 /**
- * Text column with string-specific operations.
- *
- * Extends the base column with string manipulation functions,
- * pattern matching, and text-specific transformations.
- *
- * @template TName - The column name type
+ * Text column class with string manipulation and pattern matching operations.
  */
 export class TextColumn<TName extends string = string>
     extends Column<TName, string>
     implements ITextColumn<TName> {
-    /**
-     * Matches pattern using wildcards.
-     * Case-insensitive. Uses % (any characters) and _ (single character).
-     * @param pattern - The pattern to match
-     */
     like(pattern: ColumnValue<string>): SqlNode {
         return ex.like(this, expr(pattern))
     }
 
-    /**
-     * Matches Unix file glob pattern.
-     * Case-sensitive. Uses * (any characters), ? (single character), and [...] (character ranges).
-     * @param pattern - The glob pattern to match
-     */
     glob(pattern: ColumnValue<string>): SqlNode {
         return ex.glob(this, expr(pattern))
     }
 
-    /**
-     * Starts with the specified prefix.
-     * Case-insensitive match using LIKE operator.
-     * @param prefix - The prefix to match
-     */
     startsWith(prefix: ColumnValue<string>): SqlNode {
         return ex.like(this, expr(prefix + '%'))
     }
 
-    /**
-     * Ends with the specified suffix.
-     * Case-insensitive match using LIKE operator.
-     * @param suffix - The suffix to match
-     */
     endsWith(suffix: ColumnValue<string>): SqlNode {
         return ex.like(this, expr('%' + suffix))
     }
 
-    /**
-     * Contains the specified substring.
-     * Case-insensitive match using LIKE operator.
-     * @param substring - The substring to find
-     */
     contains(substring: ColumnValue<string>): SqlNode {
         return ex.like(this, expr('%' + substring + '%'))
     }
 
-    /**
-     * Converts to uppercase.
-     */
     upper(): this {
         return this.wrap(fn.upper(this))
     }
 
-    /**
-     * Converts to lowercase.
-     */
     lower(): this {
         return this.wrap(fn.lower(this))
     }
 
-    /**
-     * Returns the character count.
-     */
     length(): this {
         return this.wrap(fn.length(this))
     }
 
-    /**
-     * Removes leading and trailing whitespace.
-     */
     trim(): this {
         return this.wrap(fn.trim(this))
     }
 
-    /**
-     * Removes leading whitespace.
-     */
     ltrim(): this {
         return this.wrap(fn.ltrim(this))
     }
 
-    /**
-     * Removes trailing whitespace.
-     */
     rtrim(): this {
         return this.wrap(fn.rtrim(this))
     }
 
-    /**
-     * Extracts a substring from the string.
-     * @param start - The starting position
-     * @param length - The number of characters to extract (optional)
-     */
     substr(
         start: ColumnValue<number> = 1,
         length?: ColumnValue<number>,
@@ -363,11 +848,6 @@ export class TextColumn<TName extends string = string>
         return this.wrap(node)
     }
 
-    /**
-     * Replaces occurrences of a substring.
-     * @param search - The substring to find
-     * @param replacement - The replacement string
-     */
     replace(
         search: ColumnValue<number>,
         replacement: ColumnValue<number>,
@@ -375,232 +855,107 @@ export class TextColumn<TName extends string = string>
         return this.wrap(fn.replace(this, expr(search), expr(replacement)))
     }
 
-    /**
-     * Finds the position of a substring.
-     * Returns 0 if not found, or the index if found.
-     * @param substring - The substring to find
-     */
     instr(substring: ColumnValue<string>): SqlNode {
         return fn.instr(this, expr(substring))
     }
 }
 
 /**
- * Numeric column with mathematical operations.
- *
- * Extends the base column with arithmetic operations,
- * mathematical functions, and numeric aggregates.
- *
- * @template TName - The column name type
+ * Numeric column class with mathematical operations and comparisons.
  */
 export class NumberColumn<TName extends string = string>
     extends Column<TName, number>
     implements INumberColumn<TName> {
-    /**
-     * Greater than (>).
-     * @param arg - The comparison arg
-     */
     gt(arg: ColumnValue<number>): SqlNode {
         return ex.gt(this, expr(arg))
     }
-
-    /**
-     * Less than (<).
-     * @param arg - The comparison arg
-     */
     lt(arg: ColumnValue<number>): SqlNode {
         return ex.lt(this, expr(arg))
     }
-
-    /**
-     * Greater than or equal to (>=).
-     * @param arg - The comparison arg
-     */
     ge(arg: ColumnValue<number>): SqlNode {
         return ex.ge(this, expr(arg))
     }
-
-    /**
-     * Less than or equal to (<=).
-     * @param arg - The comparison arg
-     */
     le(arg: ColumnValue<number>): SqlNode {
         return ex.le(this, expr(arg))
     }
-
-    /**
-     * Within range (a to b).
-     * @param lower - The lower bound (inclusive)
-     * @param upper - The upper bound (inclusive)
-     */
     between(
         lower: ColumnValue<number>,
         upper: ColumnValue<number>,
     ): SqlNode {
         return ex.between(this, lower, upper)
     }
-
-    /**
-     * Adds arg (+).
-     * @param arg - The arg to add
-     */
     add(arg: ColumnValue<number>): this {
         return this.wrap(ex.add(this, expr(arg)))
     }
-
-    /**
-     * Subtracts arg (-).
-     * @param arg - The arg to subtract
-     */
     sub(arg: ColumnValue<number>): this {
         return this.wrap(ex.sub(this, expr(arg)))
     }
-
-    /**
-     * Multiplies by arg (*).
-     * @param arg - The arg to multiply by
-     */
     mul(arg: ColumnValue<number>): this {
         return this.wrap(ex.mul(this, expr(arg)))
     }
-
-    /**
-     * Divides by arg (/).
-     * @param arg - The arg to divide by
-     */
     div(arg: ColumnValue<number>): this {
         return this.wrap(ex.div(this, expr(arg)))
     }
-
-    /**
-     * Returns the absolute arg.
-     */
     abs(): this {
         return this.wrap(fn.abs(this))
     }
-
-    /**
-     * Rounds to the specified number of decimal places.
-     * @param decimals - The number of decimal places (optional)
-     */
     round(decimals?: ColumnValue<number>): this {
         const node: SqlNode = decimals !== undefined
             ? fn.round(this, expr(decimals))
             : fn.round(this)
         return this.wrap(node)
     }
-
-    /**
-     * Rounds up to the nearest integer.
-     */
     ceil(): this {
         return this.wrap(fn.ceil(this))
     }
-
-    /**
-     * Rounds down to the nearest integer.
-     */
     floor(): this {
         return this.wrap(fn.floor(this))
     }
-
-    /**
-     * Returns the square root.
-     */
     sqrt(): this {
         return this.wrap(fn.sqrt(this))
     }
-
-    /**
-     * Returns the remainder after division.
-     * @param divisor - The divisor arg
-     */
     mod(divisor: ColumnValue<number>): this {
         return this.wrap(fn.mod(this, expr(divisor)))
     }
-
-    /**
-     * Raises to the specified power.
-     * @param exponent - The exponent arg
-     */
     pow(exponent: ColumnValue<number>): this {
         return this.wrap(fn.pow(this, expr(exponent)))
     }
-
-    /**
-     * Calculates percentage of a total.
-     * @param total - The total arg
-     */
     percent(total: ColumnValue<number>): this {
         return this.wrap(ex.mul(
             ex.div(this, expr(total)),
             expr(100),
         ))
     }
-
-    /**
-     * Calculates average (AVG).
-     */
     avg(): this {
         return this.wrap(fn.avg(this))
     }
-
-    /**
-     * Calculates sum (SUM).
-     */
     sum(): this {
         return this.wrap(fn.sum(this))
     }
 }
 
 /**
- * DateTime column with date/time operations.
- *
- * Extends the base column with date manipulation functions,
- * formatting options, and date-specific comparisons.
- *
- * @template TName - The column name type
+ * DateTime column class with date/time manipulation and comparison operations.
  */
 export class DateTimeColumn<TName extends string = string>
     extends Column<TName, Date | string>
     implements IDateTimeColumn<TName> {
-    /**
-     * Greater than (>).
-     * @param arg - The comparison arg
-     */
     gt(arg: ColumnValue<Date>): SqlNode {
         return ex.gt(this, expr(arg))
     }
 
-    /**
-     * Less than (<).
-     * @param arg - The comparison arg
-     */
     lt(arg: ColumnValue<Date>): SqlNode {
         return ex.lt(this, expr(arg))
     }
 
-    /**
-     * Greater than or equal to (>=).
-     * @param arg - The comparison arg
-     */
     ge(arg: ColumnValue<Date>): SqlNode {
         return ex.ge(this, expr(arg))
     }
 
-    /**
-     * Less than or equal to (<=).
-     * @param arg - The comparison arg
-     */
     le(arg: ColumnValue<Date>): SqlNode {
         return ex.le(this, expr(arg))
     }
 
-    /**
-     * Within range (a to b).
-     * @param lower - The lower bound (inclusive)
-     * @param upper - The upper bound (inclusive)
-     */
     between(
         lower: ColumnValue<Date>,
         upper: ColumnValue<Date>,
@@ -608,76 +963,70 @@ export class DateTimeColumn<TName extends string = string>
         return ex.between(this, lower, upper)
     }
 
-    /**
-     * Converts to date.
-     */
     date(): this {
         return this.wrap(fn.date(this))
     }
 
-    /**
-     * Converts to time.
-     */
     time(): this {
         return this.wrap(fn.time(this))
     }
 
-    /**
-     * Converts to datetime format.
-     */
     dateTime(): this {
         return this.wrap(fn.dateTime(this))
     }
 
-    /**
-     * Formats date/time using the specified format string.
-     * @param format - The strftime format string
-     */
     strftime(format: ColumnValue<string>): this {
         return this.wrap(fn.strftime(expr(format), this))
     }
 
-    /**
-     * Converts to Julian day number.
-     */
     julianday(): this {
         return this.wrap(fn.julianday(this))
     }
 
-    /**
-     * Extracts the year portion.
-     */
     year(): this {
         return this.wrap(fn.strftime(expr('%Y'), this))
     }
 
-    /**
-     * Extracts the month portion (01-12).
-     */
     month(): this {
         return this.wrap(fn.strftime(expr('%m'), this))
     }
 
-    /**
-     * Extracts the day portion (01-31).
-     */
     day(): this {
         return this.wrap(fn.strftime(expr('%d'), this))
     }
 }
 
+/**
+ * Boolean column class for true/false values.
+ */
 export class BooleanColumn<TName extends string = string>
     extends Column<TName, boolean>
     implements IBooleanColumn<TName> {
 }
 
+/**
+ * JSON column class for structured data storage.
+ */
 export class JsonColumn<TName extends string = string>
     extends Column<TName, Record<string, any>>
     implements IJsonColumn<TName> {
     // TODO(#sgtzym): Implement JSON handling - future feature!
 }
 
-/** SQL parameter data types */
+/**
+ * Factory functions for creating column type instances.
+ * Use these to define your table schema.
+ *
+ * @example
+ * ```ts
+ * const users = sparq('users', {
+ *   id: SqlType.number(),
+ *   name: SqlType.text(),
+ *   active: SqlType.boolean(),
+ *   createdAt: SqlType.date()
+ * })
+ * ```
+ */
 export const SqlType = {
     number: (): number => 0,
     text: (): string => '',

@@ -56,13 +56,13 @@ const albums = sparq('albums', {
     releaseDate: SqlType.date(),
 })
 
-const { $: r } = artists
-const { $: l } = albums
+const { $: artist } = artists
+const { $: album } = albums
 
 const my = albums
-    .select(l.title, r.name.as('artist'))
-    .join(artists).inner(r.artistId.eq(l.artistId))
-    .where(r.name.like('The%')),
+    .select(album.title, artist.name.as('artist'))
+    .join(artists).inner(artist.artistId.eq(album.artistId))
+    .where(artist.name.like('The%')),
 
 console.log(my.sql, my.params)
 ```

@@ -98,19 +98,18 @@ export class DeleteNode extends SqlNode {
  * Use this to retrieve data from tables with specific columns or all columns.
  *
  * @param columns - The columns to select (defaults to * if empty)
- * @returns A SELECT statement node
  *
  * @example
  * ```ts
- * _select(['name', 'email'])      // SELECT name, email
- * _select([user.name, user.age])  // SELECT users.name, users.age
- * _select()                       // SELECT *
+ * _select(['name', 'email'])     // SELECT name, email
+ * _select([user.name, user.age]) // SELECT users.name, users.age
+ * _select()                      // SELECT *
  *
  * // With expressions and aliases
  * _select([
  *   user.name,
- *   upper(user.email).as('email_upper'),
- *   count().as('total')
+ *   alias(upper(user.email), 'email_upper'),
+ *   alias(count(), 'total')
  * ])
  * ```
  */
@@ -130,13 +129,9 @@ export const _select = (columns?: SqlNodeValue[]): SqlNode => {
  * Creates an UPDATE statement for the specified table.
  * Use this as the starting point for modifying existing records.
  *
- * @param table - The table to update
- * @returns An UPDATE statement node
- *
  * @example
  * ```ts
- * _update('users')        // UPDATE users
- * _update('products')     // UPDATE products
+ * _update('users') // UPDATE users
  *
  * // Typically followed by SET, WHERE clauses
  * // UPDATE users SET name = 'John' WHERE id = 1
@@ -148,17 +143,10 @@ export const _update = (table: string): SqlNode => new UpdateNode(id(table))
  * Creates an INSERT statement with table and column specification.
  * Use this to add new records to a table with specified columns.
  *
- * @param table - The table to insert into
- * @param columns - The columns to insert values into
- * @returns An INSERT statement node
- *
  * @example
  * ```ts
- * _insert('users', ['name', 'email'])
- * // INSERT INTO users (name, email)
- *
- * _insert('orders', [order.userId, order.total, order.status])
  * // INSERT INTO orders (orders.userId, orders.total, orders.status)
+ * _insert('orders', [order.userId, order.total, order.status])
  *
  * // Typically followed by VALUES clause
  * // INSERT INTO users (name, email) VALUES ('John', 'john@example.com')
@@ -171,11 +159,9 @@ export const _insert = (table: string, columns: SqlNodeValue[]): SqlNode =>
  * Creates a DELETE statement.
  * Use this as the starting point for removing records from tables.
  *
- * @returns A DELETE statement node
- *
  * @example
  * ```ts
- * _delete()               // DELETE
+ * _delete() // DELETE
  *
  * // Typically followed by FROM and WHERE clauses
  * // DELETE FROM users WHERE active = false

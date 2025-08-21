@@ -13,9 +13,9 @@ export type ArrayLike<T> = T | T[]
  *
  * @example
  * ```ts
- * castArray('hello')     // ['hello']
- * castArray([1, 2, 3])   // [1, 2, 3]
- * castArray(42)          // [42]
+ * castArray('hello')   // ['hello']
+ * castArray([1, 2, 3]) // [1, 2, 3]
+ * castArray(42)        // [42]
  * ```
  */
 export function castArray<T>(value: ArrayLike<T>): T[] {
@@ -37,11 +37,11 @@ export type Maybe<T> = T | null | undefined
  *
  * @example
  * ```ts
- * isDefined('hello')    // true
- * isDefined(null)       // false
- * isDefined(undefined)  // false
- * isDefined(0)          // true
- * isDefined('')         // true
+ * isDefined('hello')   // true
+ * isDefined(null)      // false
+ * isDefined(undefined) // false
+ * isDefined(0)         // true
+ * isDefined('')        // true
  * ```
  */
 export function isDefined<T>(value: Maybe<T>): value is T {

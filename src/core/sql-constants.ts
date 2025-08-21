@@ -204,11 +204,5 @@ export const SQL_KEYWORDS = {
 /**
  * Union type for SQL snippets that can be keywords or custom strings.
  * The (string & {}) pattern preserves IntelliSense while allowing any string.
- *
- * @example
- * ```ts
- * const snippet: SqlSnippet = 'SELECT'  // Keyword
- * const custom: SqlSnippet = 'my_table' // Custom identifier
- * ```
  */
 export type SqlSnippet = keyof typeof SQL_KEYWORDS | (string & {})

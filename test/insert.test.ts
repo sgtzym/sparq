@@ -123,7 +123,7 @@ test('SQLite INSERT', [
                 .insert('albumId', 'title', 'artistId')
                 .values(1, 'For Those About To Rock We Salute You', 1)
                 .conflict('albumId').upsert([
-                    l.title.set('For Those About To Rock (We Salute You)'),
+                    l.title.to('For Those About To Rock (We Salute You)'),
                 ])
         })(),
         expected: {

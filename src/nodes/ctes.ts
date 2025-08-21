@@ -97,18 +97,18 @@ export const cte = (name: string, query: SqlNodeValue[]): CteNode =>
  * @example
  * ```ts
  * // Single CTE
- * with_(false, cte1)
  * // WITH cte1 AS (...)
+ * with_(false, cte1)
  *
  * // Multiple CTEs
- * with_(false, cte1, cte2, cte3)
  * // WITH cte1 AS (...), cte2 AS (...), cte3 AS (...)
+ * with_(false, cte1, cte2, cte3)
  *
  * // Recursive CTE for hierarchical data
- * with_(true, recursiveCte)
  * // WITH RECURSIVE recursive_cte AS (...)
+ * with_(true, recursiveCte)
  *
- * // Complete example with actual usage
+ * // Complete example with actual usages
  * const activeUsers = cte('active_users',
  *   users.select(user.id, user.name)
  *     .where(user.active.eq(true))

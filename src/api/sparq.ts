@@ -97,7 +97,7 @@ export class Sparq<T extends TableSchema> {
         const assigns = Array.isArray(assignments)
             ? assignments
             : Object.entries(assignments).map(([col, val]) =>
-                this.columns[col as keyof T].set(val)
+                this.columns[col as keyof T].to(val)
             )
         return new Update(this.table, assigns)
     }

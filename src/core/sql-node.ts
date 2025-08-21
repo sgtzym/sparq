@@ -26,13 +26,13 @@ export type SqlParam =
  *
  * @example
  * ```ts
- * isSqlParam('hello')        // true (string)
- * isSqlParam(42)             // true (number)
- * isSqlParam(new Date())     // true (Date object)
- * isSqlParam(true)           // true (boolean)
- * isSqlParam({key: 'val'})   // true (object)
- * isSqlParam(function(){})   // false (function)
- * isSqlParam(Symbol('x'))    // false (symbol)
+ * isSqlParam('hello')      // true (string)
+ * isSqlParam(42)           // true (number)
+ * isSqlParam(new Date())   // true (Date object)
+ * isSqlParam(true)         // true (boolean)
+ * isSqlParam({key: 'val'}) // true (object)
+ * isSqlParam(function(){}) // false (function)
+ * isSqlParam(Symbol('x'))  // false (symbol)
  * ```
  */
 export function isSqlParam(value: unknown): value is SqlParam {
@@ -54,16 +54,6 @@ export abstract class SqlNode {
     /**
      * Gets the priority for ordering SQL clauses in the correct sequence.
      * Lower numbers appear earlier in the final SQL statement.
-     *
-     * @returns The priority number (lower = earlier in query)
-     *
-     * @example
-     * ```ts
-     * // SELECT has priority 0, FROM has 1, WHERE has 3, etc.
-     * selectNode.priority  // 0
-     * fromNode.priority    // 1
-     * whereNode.priority   // 3
-     * ```
      */
     get priority(): number {
         return this._priority
@@ -78,9 +68,8 @@ export abstract class SqlNode {
      *
      * @example
      * ```ts
-     * const params = new ParameterReg()
-     * const node = new LiteralNode('hello')
-     * node.render(params)  // ':p1' (and params now contains 'hello')
+     * const node: SqlNode = new LiteralNode('hello')
+     * node.render(new ParameterReg()) // ':p1', [ 'hello' ]
      * ```
      */
     abstract render(params: ParameterReg): SqlString
@@ -95,9 +84,9 @@ export abstract class SqlNode {
  *
  * @example
  * ```ts
- * isSqlNode(new LiteralNode('hello'))  // true
- * isSqlNode('hello')                   // false
- * isSqlNode({render: () => 'SQL'})     // true (duck typing)
+ * isSqlNode(new LiteralNode('hello')) // true
+ * isSqlNode('hello')                  // false
+ * isSqlNode({render: () => 'SQL'})    // true (duck typing)
  * ```
  */
 export function isSqlNode(value: any): value is SqlNode {
@@ -124,10 +113,9 @@ export type SqlNodeValue = SqlNode | SqlParam
  *
  * @example
  * ```ts
- * // Ensures proper SQL clause order regardless of input order
  * const nodes = [whereNode, selectNode, fromNode]
  * const sorted = sortSqlNodes(nodes)
- * // Result: [selectNode, fromNode, whereNode] (0, 1, 3)
+ * // [selectNode, fromNode, whereNode]
  * ```
  */
 export function sortSqlNodes(nodes: SqlNode[]): readonly SqlNode[] {
@@ -152,12 +140,6 @@ export function sortSqlNodes(nodes: SqlNode[]): readonly SqlNode[] {
  * ```ts
  * const params = new ParameterReg()
  * const nodes = [selectNode, fromNode, whereNode]
- *
- * // Without sorting (maintains input order)
- * renderSqlNodes(nodes, params, false)
- * // ['SELECT *', 'FROM users', 'WHERE active = :p1']
- *
- * // With sorting (proper SQL clause order)
  * renderSqlNodes(nodes, params, true)
  * // ['SELECT *', 'FROM users', 'WHERE active = :p1'] (reordered if needed)
  * ```

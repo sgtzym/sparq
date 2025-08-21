@@ -169,8 +169,8 @@ const conjunction =
  *
  * @example
  * ```ts
- * and(user.active.eq(true), user.age.gt(18))
  * // (user.active = true AND user.age > 18)
+ * and(user.active.eq(true), user.age.gt(18))
  * ```
  */
 export const and = conjunction(sql('AND'), true)
@@ -181,8 +181,8 @@ export const and = conjunction(sql('AND'), true)
  *
  * @example
  * ```ts
- * or(user.role.eq('admin'), user.role.eq('moderator'))
  * // (user.role = 'admin' OR user.role = 'moderator')
+ * or(user.role.eq('admin'), user.role.eq('moderator'))
  * ```
  */
 export const or = conjunction(sql('OR'), true)
@@ -193,8 +193,8 @@ export const or = conjunction(sql('OR'), true)
  *
  * @example
  * ```ts
- * not(user.active.eq(true))
  * // NOT user.active = true
+ * not(user.active.eq(true))
  * ```
  */
 export const not = unary(sql('NOT'), 'pfx')
@@ -207,8 +207,8 @@ export const not = unary(sql('NOT'), 'pfx')
  *
  * @example
  * ```ts
- * eq(user.name, 'John')
  * // user.name = 'John'
+ * eq(user.name, 'John')
  * ```
  */
 export const eq = binary('=')
@@ -219,8 +219,8 @@ export const eq = binary('=')
  *
  * @example
  * ```ts
- * ne(user.status, 'deleted')
  * // user.status != 'deleted'
+ * ne(user.status, 'deleted')
  * ```
  */
 export const ne = binary('!=')
@@ -231,8 +231,8 @@ export const ne = binary('!=')
  *
  * @example
  * ```ts
- * gt(user.age, 18)
  * // user.age > 18
+ * gt(user.age, 18)
  * ```
  */
 export const gt = binary('>')
@@ -243,8 +243,8 @@ export const gt = binary('>')
  *
  * @example
  * ```ts
- * lt(user.age, 18)
  * // user.age < 18
+ * lt(user.age, 18)
  * ```
  */
 export const lt = binary('<')
@@ -255,8 +255,8 @@ export const lt = binary('<')
  *
  * @example
  * ```ts
- * ge(user.score, 100)
  * // user.score >= 100
+ * ge(user.score, 100)
  * ```
  */
 export const ge = binary('>=')
@@ -267,8 +267,8 @@ export const ge = binary('>=')
  *
  * @example
  * ```ts
- * le(user.score, 1000)
  * // user.score <= 1000
+ * le(user.score, 1000)
  * ```
  */
 export const le = binary('<=')
@@ -281,8 +281,8 @@ export const le = binary('<=')
  *
  * @example
  * ```ts
- * like(user.name, '%John%')
  * // user.name LIKE '%John%'
+ * like(user.name, '%John%')
  * ```
  */
 export const like = binary(sql('LIKE'))
@@ -293,8 +293,8 @@ export const like = binary(sql('LIKE'))
  *
  * @example
  * ```ts
- * glob(user.email, '*@gmail.com')
  * // user.email GLOB '*@gmail.com'
+ * glob(user.email, '*@gmail.com')
  * ```
  */
 export const glob = binary(sql('GLOB'))
@@ -305,8 +305,8 @@ export const glob = binary(sql('GLOB'))
  *
  * @example
  * ```ts
- * in_(user.role, ['admin', 'moderator'])
  * // user.role IN ('admin', 'moderator')
+ * in_(user.role, ['admin', 'moderator'])
  * ```
  */
 export const in_ = binary(sql('IN'))
@@ -319,8 +319,8 @@ export const in_ = binary(sql('IN'))
  *
  * @example
  * ```ts
- * add(user.score, 10)
  * // user.score + 10
+ * add(user.score, 10)
  * ```
  */
 export const add = binary('+')
@@ -331,8 +331,8 @@ export const add = binary('+')
  *
  * @example
  * ```ts
- * sub(user.balance, 100)
  * // user.balance - 100
+ * sub(user.balance, 100)
  * ```
  */
 export const sub = binary('-')
@@ -343,8 +343,8 @@ export const sub = binary('-')
  *
  * @example
  * ```ts
- * mul(user.score, 2,5)
- * // user.score * 2,5
+ * // user.score * 2.5
+ * mul(user.score, 2.5)
  * ```
  */
 export const mul = binary('*')
@@ -352,11 +352,11 @@ export const mul = binary('*')
 /**
  * Creates a division operation between two numeric expressions.
  * Use this to divide numbers or calculate ratios.
- * 
+ *
  * @example
  * ```ts
- * div(user.score, 2,5)
  * // user.score / 2,5
+ * div(user.score, 2,5)
  * ```
  */
 export const div = binary('/')
@@ -369,8 +369,8 @@ export const div = binary('/')
  *
  * @example
  * ```ts
- * distinct(user.city)
  * // DISTINCT user.city
+ * distinct(user.city)
  * ```
  */
 export const distinct = unary(sql('DISTINCT'), 'pfx')
@@ -381,8 +381,8 @@ export const distinct = unary(sql('DISTINCT'), 'pfx')
  *
  * @example
  * ```ts
- * all(user.name)
  * // ALL user.name
+ * all(user.name)
  * ```
  */
 export const all = unary(sql('ALL'), 'pfx')
@@ -393,8 +393,8 @@ export const all = unary(sql('ALL'), 'pfx')
  *
  * @example
  * ```ts
- * asc(user.name)
  * // user.name ASC
+ * asc(user.name)
  * ```
  */
 export const asc = unary(sql('ASC'))
@@ -405,8 +405,8 @@ export const asc = unary(sql('ASC'))
  *
  * @example
  * ```ts
- * desc(user.createdAt)
  * // user.createdAt DESC
+ * desc(user.createdAt)
  * ```
  */
 export const desc = unary(sql('DESC'))
@@ -417,8 +417,8 @@ export const desc = unary(sql('DESC'))
  *
  * @example
  * ```ts
- * excluded(user.name)
  * // EXCLUDED.user.name
+ * excluded(user.name)
  *
  * // Common usage in upserts
  * users.insert('email', 'name')
@@ -438,11 +438,11 @@ export const excluded = unary(sql('EXCLUDED'), 'pfx')
  *
  * @example
  * ```ts
- * alias(user.firstName, 'name')
  * // user.firstName AS name
+ * alias(user.firstName, 'name')
  *
- * alias(count(order.id), 'total_orders')
  * // COUNT(order.id) AS total_orders
+ * alias(count(order.id), 'total_orders')
  * ```
  */
 export const alias = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
@@ -460,8 +460,8 @@ export const alias = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
  *
  * @example
  * ```ts
- * between(user.age, 18, 99)
  * // user.age BETWEEN 18 AND 99
+ * between(user.age, 18, 99)
  * ```
  */
 export const between = (
@@ -484,8 +484,8 @@ export const between = (
  *
  * @example
  * ```ts
- * exists(orders.select().where(orders.userId.eq(user.id)))
  * // EXISTS (SELECT * FROM orders WHERE orders.userId = user.id)
+ * exists(orders.select().where(order.userId.eq(user.id)))
  * ```
  */
 export const exists = unary(sql('EXISTS'), 'pfx')
@@ -496,8 +496,8 @@ export const exists = unary(sql('EXISTS'), 'pfx')
  *
  * @example
  * ```ts
- * isNull(user.deletedAt)
  * // user.deletedAt IS NULL
+ * isNull(user.deletedAt)
  * ```
  */
 export const isNull = unary(sql('IS NULL'), 'sfx')
@@ -508,8 +508,8 @@ export const isNull = unary(sql('IS NULL'), 'sfx')
  *
  * @example
  * ```ts
- * isNotNull(user.email)
  * // user.email IS NOT NULL
+ * isNotNull(user.email)
  * ```
  */
 export const isNotNull = unary(sql('IS NOT NULL'), 'sfx')
@@ -524,18 +524,18 @@ export const isNotNull = unary(sql('IS NOT NULL'), 'sfx')
  * @example
  * ```ts
  * // Simple case with test expression
+ * // CASE user.status WHEN 'active' THEN 'User is active' WHEN 'suspended' THEN 'User is suspended' ELSE 'Unknown status' END
  * case_(user.status)
  *   .when('active').then('User is active')
  *   .when('suspended').then('User is suspended')
  *   .else_('Unknown status')
- * // CASE user.status WHEN 'active' THEN 'User is active' WHEN 'suspended' THEN 'User is suspended' ELSE 'Unknown status' END
  *
  * // Searched case with conditions
+ * // CASE WHEN user.age < 18 THEN 'Minor' WHEN user.age < 65 THEN 'Adult' ELSE 'Senior' END
  * case_()
  *   .when(user.age.lt(18)).then('Minor')
  *   .when(user.age.lt(65)).then('Adult')
  *   .else_('Senior')
- * // CASE WHEN user.age < 18 THEN 'Minor' WHEN user.age < 65 THEN 'Adult' ELSE 'Senior' END
  * ```
  */
 export const case_ = (test?: SqlNodeValue) =>

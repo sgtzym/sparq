@@ -15,24 +15,8 @@ interface ParameterRegOptions {
 
 /**
  * Manages SQL query parameters with automatic deduplication and formatting.
+ * Also prevents SQL injection by properly parameterizing all values.
  * Handles both named (:param) and positional (:1, :2) parameter styles.
- * Prevents SQL injection by properly parameterizing all values.
- *
- * @example
- * ```ts
- * const params = new ParameterReg()
- * params.add('John')     // Returns ':p1'
- * params.add('John')     // Returns ':p1' (deduplicated)
- * params.add('Jane')     // Returns ':p2'
- * params.toArray()       // ['John', 'Jane']
- *
- * // Custom configuration
- * const customParams = new ParameterReg({
- *   prefix: 'param',
- *   style: 'positional',
- *   deduplication: false
- * })
- * ```
  */
 export class ParameterReg {
     #byName = new Map<string, SqlDataType>() // name -> value
@@ -41,24 +25,6 @@ export class ParameterReg {
     #positions: string[] = []
     readonly #options: Required<ParameterRegOptions>
 
-    /**
-     * Creates a new parameter registry with optional configuration.
-     *
-     * @param options - Configuration options for parameter handling
-     *
-     * @example
-     * ```ts
-     * // Default configuration
-     * const params = new ParameterReg()
-     *
-     * // Custom configuration
-     * const params = new ParameterReg({
-     *   deduplication: false,  // Allow duplicate values
-     *   prefix: 'val',         // Use 'val1', 'val2', etc.
-     *   style: 'positional'    // Use ':1', ':2' format
-     * })
-     * ```
-     */
     constructor(options: ParameterRegOptions = {}) {
         this.#options = {
             deduplication: true,
@@ -87,7 +53,7 @@ export class ParameterReg {
 
     /**
      * Registers a parameter value and returns its placeholder.
-     * Automatically deduplicates identical values when enabled.
+     * Automatically deduplicates identical values, if enabled.
      *
      * @param value - The value to parameterize
      * @param name - Optional custom parameter name
@@ -96,7 +62,7 @@ export class ParameterReg {
      * @example
      * ```ts
      * params.add('hello')           // ':p1'
-     * params.add('hello')           // ':p1' (same reference due to deduplication)
+     * params.add('hello')           // ':p1' (deduplicated)
      * params.add('world', 'custom') // ':custom'
      * params.add(42)                // ':p2'
      * params.add(null)              // ':p3'
@@ -133,7 +99,7 @@ export class ParameterReg {
      * params.add('John')
      * params.add('Jane')
      * params.add(25)
-     * params.toArray()  // ['John', 'Jane', 25]
+     * params.toArray() // ['John', 'Jane', 25]
      * ```
      */
     toArray(): readonly SqlDataType[] {
@@ -152,7 +118,7 @@ export class ParameterReg {
      * ```ts
      * params.add('John')
      * params.add('Jane', 'custom')
-     * params.toObject()  // { p1: 'John', custom: 'Jane' }
+     * params.toObject() // { p1: 'John', custom: 'Jane' }
      * ```
      */
     toObject(): Readonly<Record<string, SqlDataType>> {
@@ -168,7 +134,7 @@ export class ParameterReg {
      * ```ts
      * params.add('hello')
      * params.add('world')
-     * params.index  // 2
+     * params.index // 2
      * ```
      */
     get index(): number {

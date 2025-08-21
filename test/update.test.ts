@@ -10,7 +10,7 @@ test('SQLite UPDATE', [
     {
         name: 'with simple SET and WHERE',
         query: artists
-            .update([r.name.set('AC⚡DC')])
+            .update([r.name.to('AC⚡DC')])
             .where(r.artistId.eq(1)),
         expected: {
             sql: `
@@ -28,8 +28,8 @@ test('SQLite UPDATE', [
         name: 'with multiple columns',
         query: tracks
             .update([
-                t.unitPrice.set(1.29),
-                t.composer.set('Lennon/McCartney'),
+                t.unitPrice.to(1.29),
+                t.composer.to('Lennon/McCartney'),
             ])
             .where(t.trackId.eq(1)),
         expected: {
@@ -49,8 +49,8 @@ test('SQLite UPDATE', [
         name: 'with arithmetic operations',
         query: tracks
             .update([
-                t.unitPrice.set(t.unitPrice.mul(1.1)),
-                t.milliseconds.set(t.milliseconds.add(1000)),
+                t.unitPrice.to(t.unitPrice.mul(1.1)),
+                t.milliseconds.to(t.milliseconds.add(1000)),
             ])
             .where(t.albumId.eq(1)),
         expected: {
@@ -69,7 +69,7 @@ test('SQLite UPDATE', [
     {
         name: 'with complex WHERE conditions',
         query: tracks
-            .update([t.unitPrice.set(0.99)])
+            .update([t.unitPrice.to(0.99)])
             .where(
                 t.unitPrice.gt(1.99),
                 or(
@@ -92,7 +92,7 @@ test('SQLite UPDATE', [
     {
         name: 'with RETURNING clause',
         query: albums
-            .update([l.title.set(l.title.upper())])
+            .update([l.title.to(l.title.upper())])
             .where(l.artistId.eq(1))
             .returning(l.albumId, l.title),
         expected: {

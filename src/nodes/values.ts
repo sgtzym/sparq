@@ -52,20 +52,13 @@ export class ValueListNode extends SqlNode {
  * Creates a column assignment for UPDATE operations.
  * Use this to specify how columns should be updated with new values.
  *
- * @param column - The column to assign to
- * @param value - The value to assign
- * @returns An assignment node for UPDATE SET clauses
- *
  * @example
  * ```ts
- * assign('name', 'John')
- * // name = 'John'
- *
- * assign(user.email, 'new@example.com')
  * // user.email = 'new@example.com'
+ * assign(user.email, 'new@example.com')
  *
- * assign(product.price, mul(product.price, 1.1))
  * // product.price = product.price * 1.1
+ * assign(product.price, mul(product.price, 1.1))
  * ```
  */
 export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
@@ -76,23 +69,14 @@ export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
  * Creates a parenthesized list of values.
  * Use this for INSERT VALUES clauses or IN comparisons.
  *
- * @param values - The values to include in the list
- * @returns A value list node for INSERT VALUES or IN clauses
- *
  * @example
  * ```ts
- * valueList('John', 25, 'admin')
- * // ('John', 25, 'admin')
- *
- * valueList(1, 2, 3, 4, 5)
- * // (1, 2, 3, 4, 5)
+ * valueList('John', 25, 'admin') // ('John', 25, 'admin')
+ * valueList(1, 2, 3, 4, 5)       // (1, 2, 3, 4, 5)
  *
  * // Usage in INSERT
  * users.insert('name', 'age', 'role')
- *   .values('John', 25, 'admin')  // Uses valueList internally
- *
- * // Usage in IN clause
- * users.select().where(user.id.in(valueList(1, 2, 3)))
+ *   .values('John', 25, 'admin')
  * ```
  */
 export const valueList = (...values: SqlNodeValue[]): SqlNode => {
