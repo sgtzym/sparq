@@ -10,10 +10,6 @@ import { expr, id } from '~/nodes/primitives.ts'
 
 // -> 🔷 Nodes
 
-/**
- * Represents a Common Table Expression (CTE) for creating temporary named result sets.
- * Makes complex queries more readable by breaking them into logical components.
- */
 export class CteNode extends SqlNode {
     constructor(
         private readonly name: SqlNode,
@@ -32,10 +28,6 @@ export class CteNode extends SqlNode {
     }
 }
 
-/**
- * Represents a WITH clause containing one or more CTEs.
- * Allows you to define temporary result sets at the beginning of your query.
- */
 export class WithNode extends SqlNode {
     override readonly _priority: number = -1
 
@@ -56,76 +48,36 @@ export class WithNode extends SqlNode {
 // -> 🏭 Factories
 
 /**
- * Creates a Common Table Expression (CTE) with a name and query.
- * Use this to define reusable subqueries that make complex queries more readable.
+ * Defines a Common Table Expression (CTE) for reusable subqueries.
  *
- * @param name - The name for the CTE (acts like a temporary table name)
+ * @param name - The CTE name (acts like a temporary table)
  * @param query - The query nodes that define the CTE's data
- * @returns A CTE node that can be used in WITH clauses
+ * @returns A CTE node for use in WITH clauses
  *
  * @example
  * ```ts
- * // Define a CTE for high-value customers
  * const highValueCustomers = cte('high_value_customers', [
  *   selectNode, fromNode, whereNode
  * ])
- * // high_value_customers AS (SELECT ... FROM ... WHERE ...)
- *
- * // More practical example with actual query builder
- * const activeUsers = users
- *   .select(user.id, user.name, user.email)
- *   .where(user.active.eq(true), user.lastLogin.gt(lastWeek))
- *
- * const highValueOrders = orders
- *   .select(order.userId, sum(order.total).as('total_spent'))
- *   .where(order.status.eq('completed'))
- *   .groupBy(order.userId)
- *   .having(sum(order.total).gt(1000))
  * ```
  */
 export const cte = (name: string, query: SqlNodeValue[]): CteNode =>
     new CteNode(id(name), query.map(expr))
 
 /**
- * Creates a WITH clause to define CTEs at the beginning of a query.
- * Use this to include one or more CTEs in your main query.
+ * Adds CTEs to the beginning of a query using WITH.
  *
  * @param recursive - Whether to use WITH RECURSIVE for hierarchical data
- * @param ctes - The CTE nodes to include in the WITH clause
- * @returns A WITH clause node that prefixes your main query
+ * @param ctes - The CTE nodes to include
+ * @returns A WITH clause that prefixes your main query
  *
  * @example
  * ```ts
- * // Single CTE
- * // WITH cte1 AS (...)
- * with_(false, cte1)
+ * // WITH cte1 AS (...), cte2 AS (...)
+ * with_(false, cte1, cte2)
  *
- * // Multiple CTEs
- * // WITH cte1 AS (...), cte2 AS (...), cte3 AS (...)
- * with_(false, cte1, cte2, cte3)
- *
- * // Recursive CTE for hierarchical data
- * // WITH RECURSIVE recursive_cte AS (...)
- * with_(true, recursiveCte)
- *
- * // Complete example with actual usages
- * const activeUsers = cte('active_users',
- *   users.select(user.id, user.name)
- *     .where(user.active.eq(true))
- *     ._parts
- * )
- *
- * const recentOrders = cte('recent_orders',
- *   orders.select(order.userId, order.total)
- *     .where(order.createdAt.gt(lastMonth))
- *     ._parts
- * )
- *
- * // Main query using the CTEs
- * const finalQuery = users
- *   .select('*')
- *   .with_(false, activeUsers, recentOrders)
- *   .where(user.id.in([1, 2, 3]))
+ * // WITH RECURSIVE tree AS (...)
+ * with_(true, treeQuery)
  * ```
  */
 export const with_ = (recursive?: boolean, ...ctes: CteNode[]): WithNode =>
