@@ -18,22 +18,7 @@ export type SqlParam =
     | undefined
 
 /**
- * Checks if a value is a valid SQL parameter.
- * Use this to validate values before parameterization.
- *
- * @param value - The value to check
- * @returns True if the value can be used as a SQL parameter
- *
- * @example
- * ```ts
- * isSqlParam('hello')      // true (string)
- * isSqlParam(42)           // true (number)
- * isSqlParam(new Date())   // true (Date object)
- * isSqlParam(true)         // true (boolean)
- * isSqlParam({key: 'val'}) // true (object)
- * isSqlParam(function(){}) // false (function)
- * isSqlParam(Symbol('x'))  // false (symbol)
- * ```
+ * Validates if a value can be used as a SQL parameter.
  */
 export function isSqlParam(value: unknown): value is SqlParam {
     const isBoolean = typeof value === 'boolean'
@@ -44,9 +29,8 @@ export function isSqlParam(value: unknown): value is SqlParam {
 }
 
 /**
- * Base class for all SQL Abstract Syntax Tree (AST) nodes.
- * Provides the foundation for building SQL expressions and statements.
- * Each node knows how to render itself to SQL with proper parameterization.
+ * Base class for SQL Abstract Syntax Tree nodes.
+ * Each node renders itself to parameterized SQL.
  */
 export abstract class SqlNode {
     protected readonly _priority: number = -1
@@ -76,18 +60,8 @@ export abstract class SqlNode {
 }
 
 /**
- * Checks if a value is a SQL node.
- * Use this to distinguish between nodes and literal values.
- *
- * @param value - The value to check
- * @returns True if the value is a SQL node with a render method
- *
- * @example
- * ```ts
- * isSqlNode(new LiteralNode('hello')) // true
- * isSqlNode('hello')                  // false
- * isSqlNode({render: () => 'SQL'})    // true (duck typing)
- * ```
+ * Identifies SQL node instances.
+ * Distinguishes between nodes and literal values.
  */
 export function isSqlNode(value: any): value is SqlNode {
     return value &&
@@ -105,18 +79,7 @@ export type SqlNodeValue = SqlNode | SqlParam
 // ---------------------------------------------
 
 /**
- * Sorts SQL nodes based on their priority for proper clause ordering.
- * Ensures SQL statements are generated in the correct syntax order.
- *
- * @param nodes - The nodes to sort
- * @returns The sorted nodes in execution order
- *
- * @example
- * ```ts
- * const nodes = [whereNode, selectNode, fromNode]
- * const sorted = sortSqlNodes(nodes)
- * // [selectNode, fromNode, whereNode]
- * ```
+ * Orders nodes by priority for valid SQL syntax.
  */
 export function sortSqlNodes(nodes: SqlNode[]): readonly SqlNode[] {
     return [...nodes].sort((a, b) => {
@@ -128,21 +91,8 @@ export function sortSqlNodes(nodes: SqlNode[]): readonly SqlNode[] {
 }
 
 /**
- * Renders multiple SQL nodes to strings with optional sorting.
- * Converts an array of AST nodes into executable SQL fragments.
- *
- * @param nodes - The nodes to render
- * @param params - The parameter registry for managing query parameters
- * @param sort - Whether to sort nodes by priority first (default: false)
- * @returns Array of rendered SQL strings
- *
- * @example
- * ```ts
- * const params = new ParameterReg()
- * const nodes = [selectNode, fromNode, whereNode]
- * renderSqlNodes(nodes, params, true)
- * // ['SELECT *', 'FROM users', 'WHERE active = :p1'] (reordered if needed)
- * ```
+ * Converts AST nodes to SQL strings.
+ * Optionally sorts by priority before rendering.
  */
 export function renderSqlNodes(
     nodes: ArrayLike<SqlNode>,

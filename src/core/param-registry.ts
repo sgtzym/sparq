@@ -14,9 +14,8 @@ interface ParameterRegOptions {
 }
 
 /**
- * Manages SQL query parameters with automatic deduplication and formatting.
- * Also prevents SQL injection by properly parameterizing all values.
- * Handles both named (:param) and positional (:1, :2) parameter styles.
+ * Manages SQL query parameters with automatic deduplication.
+ * Prevents SQL injection through proper parameterization.
  */
 export class ParameterReg {
     #byName = new Map<string, SqlDataType>() // name -> value
