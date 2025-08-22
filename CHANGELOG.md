@@ -10,19 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `CASE WHEN` expressions for conditional logic in queries
 - `EXCLUDED` pseudo-table support for UPSERT operations
-- Comprehensive API documentation following Microsoft Writing Style Guide
+- Comprehensive API documentation following **Microsoft Writing Style Guide**
 
 ### Changed
+- Standardized documentation patterns across all modules
 - Simplified JSDoc comments to action-oriented language
 - Reduced documentation verbosity on self-explanatory methods
-- Standardized documentation patterns across all modules
 
-### Improved
-- Type-safe column operations with better IntelliSense support
-- Parameter deduplication for more efficient queries
-- Error messages for common usage mistakes
-
-## [0.9.3]
+## [0.9.3] - 2025-08-18
 
 ### Added
 - ON CONFLICT clauses (ABORT, FAIL, IGNORE, REPLACE, ROLLBACK, NOTHING)
