@@ -5,13 +5,13 @@
 
 ### Features
 
-- [x] UPSERT with EXCLUDED - 0.9.5
-- [x] CASE WHEN - 0.9.5
+- [x] UPSERT with EXCLUDED - 0.9.4
+- [x] CASE WHEN - 0.9.4
 - [ ] UNION/INTERSECT/EXCEPT
 - [ ] Window functions
 - [ ] JSON operators
 
 ### Refactoring & Enhancements
 
-- [ ] Cleanup JSDocs - apply to Microsoft's writing style guide
+- [X] Cleanup JSDocs - apply to Microsoft's writing style guide - 0.9.4
 - [ ] Enhance public factories API: Hide `render()`, `priority` etc.
