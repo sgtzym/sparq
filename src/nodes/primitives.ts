@@ -13,10 +13,6 @@ import {
 
 // -> 🔷 Nodes
 
-/**
- * Represents a raw SQL string that won't be parameterized.
- * Use this for SQL keywords, operators, and trusted static content.
- */
 export class RawNode extends SqlNode {
     constructor(private readonly sql: string) {
         super()
@@ -27,10 +23,6 @@ export class RawNode extends SqlNode {
     }
 }
 
-/**
- * Represents a literal value that will be automatically parameterized.
- * Converts user data into safe SQL parameters to prevent injection attacks.
- */
 export class LiteralNode extends SqlNode {
     constructor(private readonly value: SqlParam) {
         super()
@@ -41,10 +33,6 @@ export class LiteralNode extends SqlNode {
     }
 }
 
-/**
- * Represents a SQL identifier with automatic quoting when needed.
- * Handles table names, column names, and other identifiers safely.
- */
 export class IdentifierNode extends SqlNode {
     constructor(private readonly name: string) {
         super()
@@ -63,14 +51,13 @@ export class IdentifierNode extends SqlNode {
 // -> 🏭 Factories
 
 /**
- * Creates a raw SQL string node that won't be parameterized.
- * Use this for SQL keywords, operators, and trusted static content.
+ * Embeds raw SQL without parameterization.
+ * Use for SQL keywords, operators, and trusted static content.
  *
  * @example
  * ```ts
  * raw('SELECT')     // SELECT (not parameterized)
  * raw('COUNT(*)')   // COUNT(*) (not parameterized)
- * raw('INNER JOIN') // INNER JOIN (not parameterized)
  * ```
  */
 export const raw = (sql: string): SqlNode => {
@@ -78,15 +65,13 @@ export const raw = (sql: string): SqlNode => {
 }
 
 /**
- * Creates a literal value node that will be automatically parameterized.
- * Use this for user data and dynamic values to prevent SQL injection.
+ * Parameterizes values to prevent SQL injection.
+ * Converts user data and dynamic values into safe parameters.
  *
  * @example
  * ```ts
  * expr('hello')    // Creates :p1 parameter with value 'hello'
  * expr(42)         // Creates :p2 parameter with value 42
- * expr(true)       // Creates :p3 parameter with value 1 (SQLite boolean)
- * expr(new Date()) // Creates :p4 parameter with ISO date string
  * expr(someNode)   // Returns someNode unchanged (already a SQL node)
  * ```
  */
@@ -95,16 +80,14 @@ export const expr = (value: SqlNodeValue): SqlNode => {
 }
 
 /**
- * Creates an identifier node with automatic quoting when needed.
- * Use this for table names, column names, and other database identifiers.
+ * Quotes identifiers when needed.
+ * Handles table names, column names, and other database identifiers safely.
  *
  * @example
  * ```ts
  * id('user')       // user (no quotes needed)
  * id('user-id')    // "user-id" (quotes added for dash)
  * id('SELECT')     // "SELECT" (reserved keyword quoted)
- * id('my.table')   // "my"."table" (schema.table with quotes as needed)
- * id(existingNode) // Returns existingNode unchanged
  * ```
  */
 export const id = (value: SqlNodeValue): SqlNode => {

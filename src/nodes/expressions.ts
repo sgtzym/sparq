@@ -188,18 +188,18 @@ export const le = binary('<=')
 
 // -> Pattern matching
 
-/** Matches text pattern. */ 
+/** Matches text pattern. */
 export const like = binary(sql('LIKE'))
 
 /** Matches Unix glob pattern. */
 export const glob = binary(sql('GLOB'))
 
-/** Tests membership in set. */ 
+/** Tests membership in set. */
 export const in_ = binary(sql('IN'))
 
 // -> Arithmetic operators
 
-/** Adds values (+). */ 
+/** Adds values (+). */
 export const add = binary('+')
 
 /** Subtracts values (-). */
@@ -329,7 +329,7 @@ export const isNotNull = unary(sql('IS NOT NULL'), 'sfx')
 
 /**
  * Implements conditional logic in SQL queries.
- * Creates if-then-else logic using CASE expressions.
+ * Use this to create if-then-else logic.
  *
  * @param test - Optional expression to test against (for simple CASE)
  * @returns A CASE node with chainable when/then/else methods
