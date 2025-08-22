@@ -199,16 +199,16 @@ export const in_ = binary(sql('IN'))
 
 // -> Arithmetic operators
 
-/** Adds values (+). */
+/** Adds value (+). */
 export const add = binary('+')
 
-/** Subtracts values (-). */
+/** Subtracts value (-). */
 export const sub = binary('-')
 
-/** Multiplies values (*). */
+/** Multiplies value (*). */
 export const mul = binary('*')
 
-/** Divides values (/). */
+/** Divides value (/). */
 export const div = binary('/')
 
 // -> Modifiers
@@ -253,13 +253,13 @@ export const excluded = unary(sql('EXCLUDED'), 'pfx')
  * @example
  * ```ts
  * // user.firstName AS name
- * alias(user.firstName, 'name')
+ * as_(user.firstName, 'name')
  *
  * // COUNT(order.id) AS total_orders
- * alias(count(order.id), 'total_orders')
+ * as_(count(order.id), 'total_orders')
  * ```
  */
-export const alias = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
+export const as_ = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
     return new BinaryNode(expr(value), raw(sql('AS')), id(as))
 }
 

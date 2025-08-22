@@ -18,487 +18,151 @@ export interface IColumn<
     TName extends string = string,
     TType extends SqlParam = SqlParam,
 > {
-    /**
-     * Returns distinct values only.
-     *
-     * @example
-     * ```ts
-     * // DISTINCT user.city
-     * user.city.distinct()
-     * ```
-     */
+    /** Removes duplicates. */
     distinct(): this
 
-    /**
-     * Returns all values.
-     *
-     * @example
-     * ```ts
-     * // ALL user.city
-     * user.city.all()
-     * ```
-     */
+    /** Includes all values. */
     all(): this
 
-    /**
-     * Equals (=).
-     *
-     * @example
-     * ```ts
-     * // user.name = 'John'
-     * user.name.eq('John')
-     * ```
-     */
+    /** Tests equality (=). */
     eq(arg: ColumnValue<TType>): SqlNode
 
-    /**
-     * Not equal to (!=).
-     *
-     * @example
-     * ```ts
-     * // user.name != 'John'
-     * user.name.ne('John')
-     * ```
-     */
+    /** Tests inequality (!=). */
     ne(arg: ColumnValue<TType>): SqlNode
 
-    /**
-     * Membership in set.
-     *
-     * @example
-     * ```ts
-     * // user.role IN ('admin', 'moderator')
-     * user.role.in(['admin', 'moderator'])
-     */
+    /** Tests membership in set. */
     in(args: TType[]): SqlNode
 
-    /**
-     * Is null.
-     *
-     * @example
-     * ```ts
-     * // user.deletedAt IS NULL
-     * user.deletedAt.isNull()
-     * ```
-     */
+    /** Tests for null. */
     isNull(): SqlNode
 
-    /**
-     * Is not null.
-     *
-     * @example
-     * ```ts
-     * // user.email IS NOT NULL
-     * user.email.isNotNull()
-     * ```
-     */
+    /** Tests for non-null. */
     isNotNull(): SqlNode
 
-    /**
-     * Aliases (AS).
-     * @param asName - The alias name
-     *
-     * @example
-     * ```ts
-     * // user.firstName AS name
-     * user.firstName.as('name')
-     * ```
-     */
+    /** Creates an alias. */
     as(asName: ColumnValue<string>): SqlNode
 
-    /**
-     * Assigns a value.
-     *
-     * @example
-     * ```ts
-     * // user.name = 'John'
-     * user.name.to('John')
-     * ```
-     */
+    /** Assigns a value (for updates). */
     to(value: ColumnValue<TType>): SqlNode
 
-    /**
-     * Sorts in ascending order.
-     *
-     * @example
-     * ```ts
-     * // user.name ASC
-     * user.name.asc()
-     * ```
-     */
+    /** Sorts ascending. */
     asc(): SqlNode
 
-    /**
-     * Sorts in descending order.
-     * @example
-     * ```ts
-     * // user.createdAt DESC
-     * user.createdAt.desc()
-     * ```
-     */
+    /** Sorts descending. */
     desc(): SqlNode
 
-    /**
-     * Counts non-null value rows.
-     *
-     * @example
-     * ```ts
-     * // COUNT(user.email)
-     * user.email.count()
-     * ```
-     */
+    /** Counts non-null values. */
     count(): this
 
-    /**
-     * Finds maximum value.
-     *
-     * @example
-     * ```ts
-     * // MAX(user.score)
-     * user.score.max()
-     * ```
-     */
+    /** Finds maximum value. */
     max(): this
 
-    /**
-     * Finds minimum value.
-     *
-     * @example
-     * ```ts
-     * // MIN(user.score)
-     * user.score.min()
-     * ```
-     */
+    /** Finds minimum value. */
     min(): this
 }
 
 export interface INumberColumn<TName extends string = string>
     extends IColumn<TName, number> {
-    /**
-     * Greater than (>).
-     * @example
-     * ```ts
-     * // user.age > 18
-     * user.age.gt(18)
-     */
+    /** Tests if greater than (>). */
     gt(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Less than (>).
-     *
-     * @example
-     * ```ts
-     * // user.age < 18
-     * user.age.lt(18)
-     * ```
-     */
+    /** Tests if less than (<). */
     lt(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Greater than or equal to (>=).
-     *
-     * @example
-     * // user.score >= 100
-     * user.score.ge(100)
-     */
+    /** Tests if greater than or equal (>=). */
     ge(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Less than or equal to (<=).
-     *
-     * @example
-     * // user.score <= 100
-     * user.score.le(100)
-     */
+    /** Tests if less than or equal (<=). */
     le(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Within range (a – b).
-     *
-     * @example
-     * ```ts
-     * // user.age BETWEEN 18 AND 65
-     * user.age.between(18, 65)
-     */
+    /** Tests if within range. */
     between(lower: ColumnValue<number>, upper: ColumnValue<number>): SqlNode
 
-    /**
-     * Adds the value (+).
-     *
-     * @example
-     * ```ts
-     * // user.score + 1000
-     * user.score.add(1000)
-     * ```
-     */
+    /** Adds value (+). */
     add(value: ColumnValue<number>): this
 
-    /**
-     * Subtracts the value (`-`).
-     *
-     * @example
-     * ```ts
-     * // user.score - 1000
-     * user.score.sub(1000)
-     * ```
-     */
+    /** Subtracts value (-). */
     sub(value: ColumnValue<number>): this
 
-    /**
-     * Multiplies by the value (`*`)
-     *
-     * @example
-     * ```ts
-     * // user.score * 1.1
-     * user.score.mul(1.1)
-     * ```
-     */
+    /** Multiplies value (*). */
     mul(value: ColumnValue<number>): this
 
-    /**
-     * Divides by the value (`/`)
-     *
-     * @example
-     * ```ts
-     * // user.score / 2
-     * user.score.div(2)
-     * ```
-     */
+    /** Divides value (/). */
     div(value: ColumnValue<number>): this
 
-    /**
-     * Returns the absolute value.
-     *
-     * @example
-     * ```ts
-     * // ABS(user.balance)
-     * user.balance.abs()
-     * ```
-     */
+    /** Returns absolute value. */
     abs(): this
 
-    /**
-     * Returns to decimal places.
-     *
-     * @example
-     * ```ts
-     * // ROUND(user.rating, 2)
-     * user.rating.round(2)
-     * ```
-     */
+    /** Rounds to decimal places. */
     round(decimals?: ColumnValue<number>): this
 
-    /**
-     * Returns up to nearest integer.
-     *
-     * @example
-     * ```ts
-     * // CEIL(user.rating)
-     * user.rating.ceil()
-     * ```
-     */
+    /** Rounds up to integer. */
     ceil(): this
 
-    /**
-     * Returns down to nearest integer.
-     *
-     * @example
-     * ```ts
-     * // FLOOR(user.rating)
-     * user.rating.floor()
-     * ```
-     */
+    /** Rounds down to integer. */
     floor(): this
 
-    /**
-     * Returns the square root.
-     *
-     * @example
-     * ```ts
-     * // SQRT(user.area)
-     * user.area.sqrt()
-     * ```
-     */
-    sqrt(): this
-
-    /**
-     * Returns the remainder after division (modulo).
-     *
-     * @example
-     * ```ts
-     * // MOD(user.id, 10)
-     * user.id.mod(10)
-     * ```
-     */
+    /** Returns division remainder. */
     mod(divisor: ColumnValue<number>): this
 
-    /**
-     * Raises to the specified power.
-     *
-     * @example
-     * ```ts
-     * // POWER(user.level, 2)
-     * user.level.pow(2)
-     * ```
-     */
+    /** Raises to power. */
     pow(exponent: ColumnValue<number>): this
 
-    /**
-     * Calculates percentage of a total.
-     *
-     * @example
-     * ```ts
-     * // user.score / 1000 * 100
-     * user.score.percent(1000)
-     * ```
-     */
+    /** Calculates square root. */
+    sqrt(): this
+
+    /** Calculates percentage of a total. */
     percent(total: ColumnValue<number>): this
 
-    /**
-     * Calculates the average value.
-     *
-     * @example
-     * ```ts
-     * // AVG(user.score)
-     * user.score.avg()
-     * ```
-     */
+    /** Calculates the average value. */
     avg(): this
 
-    /**
-     * Calculates the sum of values.
-     *
-     * @example
-     * ```ts
-     * // SUM(order.total)
-     * order.total.sum()
-     * ```
-     */
+    /** Calculates the sum of values. */
     sum(): this
 }
 
 export interface ITextColumn<TName extends string = string>
     extends IColumn<TName, string> {
     /**
-     * Matches pattern using wildcards.
-     * Case-insensitive. Uses % (any characters) and _ (single character).
+     * Matches text pattern.
+     * Use "%" as wildcard.
      *
      * @example
      * ```ts
-     * // user.name LIKE '%John%'
-     * user.name.like('%John%')
+     * //users.name LIKE "%DOE"
+     * users.$.name.like('%Doe')
      * ```
      */
     like(pattern: ColumnValue<string>): SqlNode
 
-    /**
-     * Matches Unix file glob pattern.
-     * Case-sensitive. Uses * (any characters), ? (single character), and [...] (character ranges).
-     *
-     * @example
-     * ```ts
-     * // user.email GLOB '*@gmail.com'
-     * user.email.glob('*@gmail.com')
-     */
+    /** Matches Unix glob pattern. */
     glob(pattern: ColumnValue<string>): SqlNode
 
-    /**
-     * Starts with the specified prefix.
-     *
-     * @example
-     * ```ts
-     * // user.name LIKE 'John%'
-     * user.name.startsWith('John')
-     * ```
-     */
+    /** Tests if text starts with prefix. */
     startsWith(prefix: ColumnValue<string>): SqlNode
 
-    /**
-     * Ends with the specified suffix.
-     *
-     * @example
-     * ```ts
-     * // user.email LIKE '%@gmail.com'
-     * user.email.endsWith('@gmail.com')
-     * ```
-     */
+    /** Tests if text ends with suffix. */
     endsWith(suffix: ColumnValue<string>): SqlNode
 
-    /**
-     * Contains the specified substring.
-     *
-     * @example
-     * ```ts
-     * // user.bio LIKE '%developer%'
-     * user.bio.contains('developer')
-     * ```
-     */
+    /** Matches text containing substring. */
     contains(substring: ColumnValue<string>): SqlNode
 
-    /**
-     * Converts to uppercase.
-     *
-     * @example
-     * ```ts
-     * // UPPER(user.name)
-     * user.name.upper()
-     * ```
-     */
+    /** Converts to uppercase. */
     upper(): this
 
-    /**
-     * Converts to lowercase.
-     *
-     * @example
-     * ```ts
-     * // LOWER(user.email)
-     * user.email.lower()
-     * ```
-     */
+    /** Converts to lowercase. */
     lower(): this
 
-    /**
-     * Returns the character count.
-     *
-     * @example
-     * ```ts
-     * // LENGTH(user.bio)
-     * user.bio.length()
-     * ```
-     */
+    /** Gets text length. */
     length(): this
 
-    /**
-     * Removes leading and trailing whitespace.
-     *
-     * @example
-     * ```ts
-     * // TRIM(user.name)
-     * user.name.trim()
-     * ```
-     */
+    /** Removes leading and trailing whitespace. */
     trim(): this
 
-    /**
-     * Removes leading whitespace.
-     *
-     * @example
-     * ```ts
-     * // LTRIM(user.description)
-     * user.description.ltrim()
-     * ```
-     */
+    /** Removes leading whitespace. */
     ltrim(): this
 
-    /**
-     * Removes trailing whitespace.
-     *
-     * @example
-     * ```ts
-     * // RTRIM(user.notes)
-     * user.notes.rtrim()
-     * ```
-     */
+    /** Removes trailing whitespace. */
     rtrim(): this
 
     /**
@@ -506,172 +170,57 @@ export interface ITextColumn<TName extends string = string>
      *
      * @example
      * ```ts
-     * // SUBSTR(user.name, 1, 5)
-     * user.name.substr(1, 5)
+     * users.$.name.substr(1, 5) // First 5 characters
      * ```
      */
     substr(start?: ColumnValue<number>, length?: ColumnValue<number>): this
 
-    /**
-     * Replaces occurrences of text.
-     *
-     * @example
-     * ```ts
-     * // REPLACE(user.phone, '-', '')
-     * user.phone.replace('-', '')
-     * ```
-     */
+    /** Replaces text occurrences. */
     replace(search: ColumnValue<number>, replacement: ColumnValue<number>): this
 
-    /**
-     * Finds the position of a substring.
-     * Returns 0 if not found, or the index if found.
-     *
-     * @example
-     * ```ts
-     * // INSTR(user.email, '@')
-     * user.email.instr('@')
-     * ```
-     */
+    /** Finds substring position. */
     instr(substring: ColumnValue<string>): SqlNode
 }
 
 export interface IDateTimeColumn<TName extends string = string>
     extends IColumn<TName, Date | string> {
-    /**
-     * Greater than (>).
-     * @example
-     * ```ts
-     * // user.createdAt > '2024-01-01'
-     * user.createdAt.gt(new Date('2024-01-01'))
-     */
+    /** Tests if greater than (>). */
     gt(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Less than (>)..
-     *
-     * @example
-     * ```ts
-     * // user.expiresAt < NOW
-     * user.expiresAt.lt(new Date())
-     * ```
-     */
+    /** Tests if less than (<). */
     lt(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Greater than or equal to (>=).
-     *
-     * @example
-     * // user.lastLogin >= yesterday
-     * user.lastLogin.ge(yesterday)
-     */
+    /** Tests if greater than or equal (>=). */
     ge(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Less than or equal to (<=).
-     *
-     * @example
-     * // user.birthDate <= maxDate
-     * user.birthDate.le(maxDate)
-     */
+    /** Tests if less than or equal (<=). */
     le(value: ColumnValue<number>): SqlNode
 
-    /**
-     * Within range (a – b).
-     *
-     * @example
-     * ```ts
-     * // user.createdAt BETWEEN startDate AND endDate
-     * user.createdAt.between(startDate, endDate)
-     */
+    /** Tests if within range. */
     between(lower: ColumnValue<number>, upper: ColumnValue<number>): SqlNode
 
-    /**
-     * Extracts the date part.
-     *
-     * @example
-     * ```ts
-     * // DATE(user.createdAt)
-     * user.createdAt.date()
-     * ```
-     */
+    /** Extracts date part. */
     date(): this
 
-    /**
-     * Extracts the time part.
-     *
-     * @example
-     * ```ts
-     * // TIME(user.loginAt)
-     * user.loginAt.time()
-     * ```
-     */
+    /** Extracts time part. */
     time(): this
 
-    /**
-     * Converts to datetime format.
-     *
-     * @example
-     * ```ts
-     * // DATETIME(user.timestamp)
-     * user.timestamp.dateTime()
-     * ```
-     */
+    /** Converts to datetime format. */
     dateTime(): this
 
-    /**
-     * Converts to specified format string.
-     *
-     * @example
-     * ```ts
-     * // STRFTIME('%Y-%m-%d', user.createdAt)
-     * user.createdAt.strftime('%Y-%m-%d')
-     * ```
-     */
+    /** Formats datetime with custom pattern. */
     strftime(format: ColumnValue<string>): this
 
-    /**
-     * Converts to Julian day number.
-     *
-     * @example
-     * ```ts
-     * // JULIANDAY(user.birthDate)
-     * user.birthDate.julianday()
-     * ```
-     */
+    /** Converts to Julian day number. */
     julianday(): this
 
-    /**
-     * Extracts the year.
-     *
-     * @example
-     * ```ts
-     * // STRFTIME('%Y', user.createdAt)
-     * user.createdAt.year()
-     * ```
-     */
+    /** Extracts the year. */
     year(): this
 
-    /**
-     * Extracts the month.
-     *
-     * @example
-     * ```ts
-     * // STRFTIME('%m', user.birthDate)
-     * user.birthDate.month()
-     * ```
-     */
+    /** Extracts the month. */
     month(): this
 
-    /**
-     * Extracts the day.
-     *
-     * @example
-     * ```ts
-     * // STRFTIME('%d', user.birthDate)
-     * user.birthDate.day()
-     * ```
-     */
+    /** Extracts the day. */
     day(): this
 }
 
@@ -760,7 +309,7 @@ export class Column<
     }
 
     as(asName: ColumnValue<string>): SqlNode {
-        return ex.alias(this, id(asName))
+        return ex.as_(this, id(asName))
     }
 
     to(value: ColumnValue<TType>): SqlNode {
@@ -1032,8 +581,7 @@ export class JsonColumn<TName extends string = string>
 }
 
 /**
- * Factory functions for creating column type instances.
- * Use these to define your table schema.
+ * Column type factories for schema definition.
  *
  * @example
  * ```ts

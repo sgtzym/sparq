@@ -33,35 +33,21 @@ import { Sparq } from '~/api/sparq.ts'
 // Clause implementations
 // ---------------------------------------------
 
-/**
- * Creates an INNER JOIN clause to combine tables.
- */
+/** JOIN clause builder. */
 const joinImpl = function <T extends SqlQueryBuilder>(
     this: T,
     table: SqlNodeValue,
 ): {
-    /**
-     * Creates an `INNER JOIN` clause to combine tables on matching rows.
-     * Use this to get only rows that have matches in both tables.
-     */
+    /** Joins tables on matching rows. */
     inner: (condition?: SqlNodeValue) => T
 
-    /**
-     * Creates a `LEFT JOIN` clause to include all rows from the left table.
-     * Use this to get all rows from the first table, with matching rows from the second.
-     */
+    /** Includes all left table rows. */
     left: (condition?: SqlNodeValue) => T
 
-    /**
-     * Creates a `LEFT OUTER JOIN` clause.
-     * Alternative syntax for `LEFT JOIN` operations.
-     */
+    /** Alternative LEFT JOIN syntax. */
     leftOuter: (condition?: SqlNodeValue) => T
 
-    /**
-     * Creates a `CROSS JOIN` clause for Cartesian product of tables.
-     * Use this to get all possible combinations of rows from both tables.
-     */
+    /** Creates Cartesian product. */
     cross: () => T
 } {
     const _table: SqlNodeValue = table instanceof Sparq ? table.table : table
@@ -77,10 +63,7 @@ const joinImpl = function <T extends SqlQueryBuilder>(
     }
 }
 
-/**
- * Creates a WHERE clause for filtering rows based on conditions.
- * Use this to specify which rows should be included in your results.
- */
+/** Filters rows by conditions. */
 const whereImpl = function <T extends SqlQueryBuilder>(
     this: T,
     ...conditions: SqlNodeValue[]
@@ -88,10 +71,7 @@ const whereImpl = function <T extends SqlQueryBuilder>(
     return this.add(where(...conditions))
 }
 
-/**
- * Creates a GROUP BY clause for aggregating results by columns.
- * Use this to group rows together for aggregate calculations.
- */
+/** Groups rows for aggregation. */
 const groupByImpl = function <T extends SqlQueryBuilder>(
     this: T,
     ...columns: SqlNodeValue[]
@@ -228,8 +208,8 @@ const conflictImpl = function <T extends SqlQueryBuilder>(
 // ---------------------------------------------
 
 /**
- * Base class for all SQL query builders.
- * Provides common functionality for building and executing SQL queries.
+ * Base SQL query builder.
+ * Manages query construction and parameter binding.
  */
 export abstract class SqlQueryBuilder extends SqlNode {
     protected _parts: SqlNode[] = []
@@ -257,37 +237,18 @@ export abstract class SqlQueryBuilder extends SqlNode {
         return this
     }
 
-    /**
-     * Gets the generated SQL string ready for execution.
-     *
-     * @example
-     * ```ts
-     * // "SELECT * FROM users WHERE users.active = :p1"
-     * users.select().where(user.active.eq(true)).sql
-     * ```
-     */
+    /** Returns generated SQL string. */
     get sql(): SqlString {
         return this._cache ? this._cache.sql : this.render()
     }
 
-    /**
-     * Gets the parameter values for the query in order.
-     *
-     * @example
-     * ```ts
-     * // [true]
-     * users.select().where(user.active.eq(true)).params
-     * ```
-     */
+    /** Returns parameter values in order. */
     get params(): readonly SqlDataType[] {
         if (!this._cache) this.render()
         return this._cache!.params
     }
 
-    /**
-     * Creates a WITH clause containing one or more CTEs.
-     * Allows you to define temporary result sets at the beginning of your query.
-     */
+    /** Adds CTEs to query. */
     with(name: string, query: Select, recursive?: boolean): this {
         return this.add(with_(recursive, cte(name, query._parts)))
     }

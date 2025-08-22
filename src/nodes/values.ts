@@ -40,7 +40,7 @@ export class ValueListNode extends SqlNode {
 
 // -> 🏭 Factories
 
-/** Assigns values to columns in updates. */
+/** Assigns a value (for updates). */
 export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
     return new AssignmentNode(id(column), expr(value))
 }

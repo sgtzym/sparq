@@ -1,4 +1,4 @@
-import { alias, and, desc, gt, or } from '~/nodes/expressions.ts'
+import { as_, and, desc, gt, or } from '~/nodes/expressions.ts'
 import { count } from '~/nodes/functions.ts'
 import { test } from '~~/test-runner.ts'
 import { albums, artists, tracks } from '~~/test-data.ts'
@@ -160,7 +160,7 @@ test('SQLite SELECT', [
         query: albums
             .select(
                 l.artistId,
-                alias(count(l.artistId), 'album_count'),
+                as_(count(l.artistId), 'album_count'),
             )
             .groupBy(l.artistId)
             .having(gt(l.artistId.count(), 5))
@@ -187,9 +187,9 @@ test('SQLite SELECT', [
         query: tracks
             .select(
                 t.name,
-                alias(t.milliseconds.div(1000), 'seconds'),
-                alias(t.bytes.div(1048576), 'megabytes'),
-                alias(t.unitPrice.mul(1.1), 'price_with_tax'),
+                as_(t.milliseconds.div(1000), 'seconds'),
+                as_(t.bytes.div(1048576), 'megabytes'),
+                as_(t.unitPrice.mul(1.1), 'price_with_tax'),
             )
             .where(t.albumId.eq(1)),
         expected: {
