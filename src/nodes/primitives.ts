@@ -1,11 +1,6 @@
 import { needsQuoting, type SqlString, toSqlDataType } from '~/core/sql.ts'
 import type { ParameterReg } from '~/core/param-registry.ts'
-import {
-    isSqlNode,
-    SqlNode,
-    type SqlNodeValue,
-    type SqlParam,
-} from '~/core/sql-node.ts'
+import { isSqlNode, SqlNode, type SqlNodeValue, type SqlParam } from '~/core/sql-node.ts'
 
 // ---------------------------------------------
 // Primitives

@@ -40,12 +40,12 @@ export class ValueListNode extends SqlNode {
 
 // -> 🏭 Factories
 
-/** Assigns a value (for updates). */
+/** Assigns value. */
 export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
     return new AssignmentNode(id(column), expr(value))
 }
 
-/** Groups values in parentheses for inserts. */
+/** Groups values in parentheses. */
 export const valueList = (...values: SqlNodeValue[]): SqlNode => {
     return new ValueListNode(values.map(expr))
 }
