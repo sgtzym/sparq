@@ -5,6 +5,13 @@ All notable changes to SPARQ will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.5] - 2025-08-24
+
+### Changed
+- Refactored column- and query-builders: Introduced mixins for decluttering and possible expansions.
+- Simplified column wrap() method using Object.assign(Object.create()) pattern for better maintainability.
+- Reduced Docs by a lot and changed to action-oriented speech. Aligned with [Microsoft's Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/welcome/).
+
 ## [0.9.4] - 2025-08-22
 
 ### Added
