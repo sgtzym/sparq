@@ -28,8 +28,7 @@ export class FnNode extends SqlNode {
 
 // -> 🏭 Factories
 
-const fn = (name: string) => (...args: SqlNodeValue[]) =>
-    new FnNode(raw(name), args.map(expr))
+const fn = (name: string) => (...args: SqlNodeValue[]) => new FnNode(raw(name), args.map(expr))
 
 const aggregate = (name: string) => (column?: SqlNodeValue) =>
     new FnNode(raw(name), column ? expr(column) : raw('*'))
@@ -88,7 +87,7 @@ export const ltrim = fn(sql('LTRIM'))
 export const rtrim = fn(sql('RTRIM'))
 
 /**
- * Extracts a substring.
+ * Extracts substring.
  *
  * @example
  * ```ts

@@ -258,14 +258,12 @@ export class UpsertNode extends SqlNode {
 /** Specifies source tables. */
 export const from = (...tables: SqlNodeValue[]) => new FromNode(tables.map(id))
 
-const join =
-    (type: string) =>
-    (table: SqlNodeValue, condition?: SqlNodeValue): SqlNode =>
-        new JoinNode(
-            raw(type),
-            id(table),
-            condition ? expr(condition) : undefined,
-        )
+const join = (type: string) => (table: SqlNodeValue, condition?: SqlNodeValue): SqlNode =>
+    new JoinNode(
+        raw(type),
+        id(table),
+        condition ? expr(condition) : undefined,
+    )
 
 /** Joins tables with matching rows. */
 export const joinInner = join(sql('INNER'))
@@ -277,24 +275,19 @@ export const joinLeft = join(sql('LEFT'))
 export const joinLeftOuter = join(sql('LEFT OUTER'))
 
 /** Creates Cartesian product of tables. */
-export const joinCross = (table: SqlNodeValue) =>
-    new JoinNode(raw(sql('CROSS')), id(table))
+export const joinCross = (table: SqlNodeValue) => new JoinNode(raw(sql('CROSS')), id(table))
 
 /** Filters rows by conditions. */
-export const where = (...conditions: SqlNodeValue[]) =>
-    new WhereNode(conditions.map(expr))
+export const where = (...conditions: SqlNodeValue[]) => new WhereNode(conditions.map(expr))
 
 /** Groups rows for aggregation. */
-export const groupBy = (...columns: SqlNodeValue[]) =>
-    new GroupByNode(columns.map(id))
+export const groupBy = (...columns: SqlNodeValue[]) => new GroupByNode(columns.map(id))
 
 /** Filters grouped results. */
-export const having = (...conditions: SqlNodeValue[]) =>
-    new HavingNode(conditions.map(expr))
+export const having = (...conditions: SqlNodeValue[]) => new HavingNode(conditions.map(expr))
 
 /** Sorts query results. */
-export const orderBy = (...columns: SqlNodeValue[]) =>
-    new OrderByNode(columns.map(id))
+export const orderBy = (...columns: SqlNodeValue[]) => new OrderByNode(columns.map(id))
 
 /** Limits result count. */
 export const limit = (count: SqlNodeValue) => new LimitNode(expr(count))
@@ -335,8 +328,7 @@ export const values = () => new ValuesNode()
  * set(user.name.to('John'), user.age.to(25))
  * ```
  */
-export const set = (...assignments: SqlNodeValue[]) =>
-    new SetNode(assignments.map(expr))
+export const set = (...assignments: SqlNodeValue[]) => new SetNode(assignments.map(expr))
 
 const conflict = (action: string) => (...targets: SqlNodeValue[]) =>
     new OnConflictNode(raw(action), targets.map(id))

@@ -1,51 +1,21 @@
 import type { SqlNodeValue, SqlParam } from '~/core/sql-node.ts'
-import {
-    BooleanColumn,
-    type Column,
-    DateTimeColumn,
-    type IBooleanColumn,
-    type IColumn,
-    type IDateTimeColumn,
-    type IJsonColumn,
-    type INumberColumn,
-    type ITextColumn,
-    JsonColumn,
-    NumberColumn,
-    TextColumn,
-} from '~/api/column.ts'
+import { Column, type ColumnTypeMapping, NumberColumn } from '~/api/column.ts'
 import { Delete, Insert, Select, Update } from '~/api/query-builders.ts'
-
-type TableSchema = Record<string, SqlParam>
-
-type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number
-    ? INumberColumn<K>
-    : T extends string ? ITextColumn<K>
-    : T extends Date ? IDateTimeColumn<K>
-    : T extends boolean ? IBooleanColumn<K>
-    : T extends Record<string, any> ? IJsonColumn<K>
-    : T extends Uint8Array ? IColumn<K, T>
-    : T extends null ? IColumn<K, T>
-    : IColumn<K, T>
-
-type ColumnsProxy<T extends TableSchema> = {
-    [K in keyof T]: ColumnTypeMapping<K & string, T[K]>
-}
+import { BooleanColumn, DateTimeColumn, TextColumn } from '~/api/column.ts'
 
 /**
  * Type-safe query builder for SQLite tables.
  * Provides schema-aware column access and query operations.
  */
-export class Sparq<T extends TableSchema> {
+export class Sparq<T extends Record<string, any>> {
     public readonly table: string
-    private readonly columns: ColumnsProxy<T>
+    private readonly _$: { [P in keyof T]: ColumnTypeMapping<string & P, T[P]> }
 
-    constructor(
-        table: string,
-        schema: T,
-    ) {
+    constructor(table: string, schema: T) {
         this.table = table
-        this.columns = {} as ColumnsProxy<T>
+        this._$ = {} as any
 
+        // Instanciate columns based on schema
         for (const [name, value] of Object.entries(schema)) {
             let column: Column<string, SqlParam>
 
@@ -58,16 +28,11 @@ export class Sparq<T extends TableSchema> {
             } else if (typeof value === 'boolean') {
                 column = new BooleanColumn(name, table)
             } else {
-                column = new JsonColumn(name, table)
+                column = new Column(name, table)
             }
 
-            ;(this.columns as any)[name] = column
+            ;(this._$ as any)[name] = column
         }
-    }
-
-    /** Accesses typed table columns. */
-    get $(): ColumnsProxy<T> {
-        return this.columns
     }
 
     /** Retrieves data from table. */
@@ -80,26 +45,25 @@ export class Sparq<T extends TableSchema> {
         ...columns: (keyof T | Column<string, SqlParam> | SqlNodeValue)[]
     ): Insert {
         const cols = columns.map((col) =>
-            typeof col === 'string' && col in this.columns
-                ? this.columns[col as keyof T]
-                : col
+            typeof col === 'string' && col in this.$ ? this.$[col as keyof T] : col
         )
         return new Insert(this.table, cols as SqlNodeValue[])
     }
-
     /** Modifies existing records. */
     update(assignments: Partial<T> | SqlNodeValue[]): Update {
         const assigns = Array.isArray(assignments)
             ? assignments
-            : Object.entries(assignments).map(([col, val]) =>
-                this.columns[col as keyof T].to(val)
-            )
+            : Object.entries(assignments).map(([col, val]) => this.$[col as keyof T].to(val))
         return new Update(this.table, assigns)
     }
 
     /** Removes records. */
     delete(): Delete {
         return new Delete(this.table)
+    }
+
+    get $(): { [P in keyof T]: ColumnTypeMapping<string & P, T[P]> } {
+        return this._$
     }
 }
 
@@ -123,7 +87,7 @@ export class Sparq<T extends TableSchema> {
  *   .where(users.$.active.eq(true))
  * ```
  */
-export function sparq<T extends TableSchema>(
+export function sparq<T extends Record<string, any>>(
     tableName: string,
     schema: T,
 ): Sparq<T> {

@@ -23,9 +23,7 @@ export class UnaryNode extends SqlNode {
         const op: string = this.operator.render(params)
         const expr: string | undefined = this.expr?.render(params)
 
-        return this.expr
-            ? this.position === 'pfx' ? `${op} ${expr}` : `${expr} ${op}`
-            : op
+        return this.expr ? this.position === 'pfx' ? `${op} ${expr}` : `${expr} ${op}` : op
     }
 }
 
@@ -114,19 +112,15 @@ export class CaseNode extends SqlNode {
 
 // -> 🏭 Factories
 
-const unary =
-    (op: string, pos: 'pfx' | 'sfx' = 'sfx') =>
-    (value: SqlNodeValue): SqlNode => {
-        return new UnaryNode(raw(op), expr(value), pos)
-    }
+const unary = (op: string, pos: 'pfx' | 'sfx' = 'sfx') => (value: SqlNodeValue): SqlNode => {
+    return new UnaryNode(raw(op), expr(value), pos)
+}
 
-const binary =
-    (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
-        new BinaryNode(expr(left), raw(op), expr(right))
+const binary = (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
+    new BinaryNode(expr(left), raw(op), expr(right))
 
-const conjunction =
-    (op: string, grouped = false) => (...conditions: SqlNodeValue[]): SqlNode =>
-        new ConjunctionNode(raw(op), conditions.map(expr), grouped)
+const conjunction = (op: string, grouped = false) => (...conditions: SqlNodeValue[]): SqlNode =>
+    new ConjunctionNode(raw(op), conditions.map(expr), grouped)
 
 // -> Logical operators
 
@@ -168,33 +162,33 @@ export const not = unary(sql('NOT'), 'pfx')
 
 // -> Comparison operators
 
-/** Tests equality (=). */
+/** Filters by equality (=). */
 export const eq = binary('=')
 
-/** Tests inequality (!=). */
+/** Filters by inequality (!=).  */
 export const ne = binary('!=')
 
-/** Tests if greater than (>). */
+/** Filters by greater than (>). */
 export const gt = binary('>')
 
-/** Tests if less than (<). */
+/** Filters by less than (<). */
 export const lt = binary('<')
 
-/** Tests if greater than or equal (>=). */
+/** Filters by greater than or equal (>=). */
 export const ge = binary('>=')
 
-/** Tests if less than or equal (<=). */
+/** Filters by less than or equal (<=). */
 export const le = binary('<=')
 
 // -> Pattern matching
 
-/** Matches text pattern. */
+/** Filters by text pattern matches. */
 export const like = binary(sql('LIKE'))
 
-/** Matches Unix glob pattern. */
+/** Filters by Unix glob pattern matches. */
 export const glob = binary(sql('GLOB'))
 
-/** Tests membership in set. */
+/** Filters by membership in set. */
 export const in_ = binary(sql('IN'))
 
 // -> Arithmetic operators
@@ -264,7 +258,7 @@ export const as_ = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
 }
 
 /**
- * Tests if a value falls within a range.
+ * Filters by range.
  * Checks inclusively between lower and upper bounds.
  *
  * @param test - The expression to test
@@ -304,7 +298,6 @@ export const between = (
 export const exists = unary(sql('EXISTS'), 'pfx')
 
 /**
- * Tests if a value is null.
  * Finds records with missing or empty values.
  *
  * @example
@@ -316,7 +309,6 @@ export const exists = unary(sql('EXISTS'), 'pfx')
 export const isNull = unary(sql('IS NULL'), 'sfx')
 
 /**
- * Tests if a value is not null.
  * Finds records with actual values.
  *
  * @example
@@ -349,5 +341,4 @@ export const isNotNull = unary(sql('IS NOT NULL'), 'sfx')
  *   .else_('Senior')
  * ```
  */
-export const case_ = (test?: SqlNodeValue) =>
-    new CaseNode(test ? expr(test) : undefined)
+export const case_ = (test?: SqlNodeValue) => new CaseNode(test ? expr(test) : undefined)

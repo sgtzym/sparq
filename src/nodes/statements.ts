@@ -1,12 +1,7 @@
 import type { ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
 import type { ParameterReg } from '~/core/param-registry.ts'
-import {
-    isSqlNode,
-    renderSqlNodes,
-    SqlNode,
-    type SqlNodeValue,
-} from '~/core/sql-node.ts'
+import { isSqlNode, renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
 import { expr, id, raw } from '~/nodes/primitives.ts'
 
 // ---------------------------------------------
@@ -88,9 +83,7 @@ export const _select = (columns?: SqlNodeValue[]): SqlNode => {
         return new SelectNode(raw('*'))
     }
 
-    const _columns: SqlNode[] = columns.map((col) =>
-        isSqlNode(col) ? col : id(col)
-    )
+    const _columns: SqlNode[] = columns.map((col) => isSqlNode(col) ? col : id(col))
 
     return new SelectNode(_columns)
 }
