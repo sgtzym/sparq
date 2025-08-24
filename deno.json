@@ -1,6 +1,6 @@
 {
     "name": "@sgtzym/sparq",
-    "version": "0.9.5",
+    "version": "0.9.5a",
     "license": "MIT",
     "imports": {
         "~/": "./src/",
