@@ -263,6 +263,7 @@ export class FormatDate<T extends Column = Column> {
     }
 }
 
+// Common aggregates
 export class Aggregate<T extends Column = Column> {
     /** Counts rows or non-null values. */
     count(this: T): T {
@@ -278,7 +279,10 @@ export class Aggregate<T extends Column = Column> {
     min(this: T): T {
         return this.wrap(fn.min(this))
     }
+}
 
+// Number column specific aggregates
+export class AggregateArithmetic<T extends Column = Column> {
     /**
      * Calculates the average value.
      * Finds the mean across all rows in a group.

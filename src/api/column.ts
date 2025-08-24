@@ -69,6 +69,7 @@ applyMixins(Column, [
 ])
 
 applyMixins(NumberColumn, [
+    mix.AggregateArithmetic,
     mix.ComputeByArithmetic,
     mix.ComputeByMath,
     mix.FilterByComparison,
@@ -86,6 +87,7 @@ applyMixins(DateTimeColumn, [
 ])
 
 export interface Column extends
+    mix.Aggregate<Column>,
     mix.Alias<Column>,
     mix.Assign<Column>,
     mix.FilterByEquality<Column>,
@@ -95,18 +97,16 @@ export interface Column extends
     mix.Sort<Column> {}
 
 export interface NumberColumn extends
-    mix.Aggregate<NumberColumn>,
+    mix.AggregateArithmetic<NumberColumn>,
     mix.ComputeByArithmetic<NumberColumn>,
     mix.ComputeByMath<NumberColumn>,
     mix.FilterByComparison<NumberColumn> {}
 
 export interface TextColumn extends
-    Pick<mix.Aggregate<TextColumn>, 'count' | 'min' | 'max'>,
     mix.FilterByTextPattern<TextColumn>,
     mix.TransformText<TextColumn> {}
 
 export interface DateTimeColumn extends
-    Pick<mix.Aggregate<DateTimeColumn>, 'count' | 'min' | 'max'>,    
     mix.ExtractDate<DateTimeColumn>,
     mix.FilterByComparison<DateTimeColumn>,
     mix.FormatDate<DateTimeColumn> {}
