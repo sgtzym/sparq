@@ -15,5 +15,9 @@
     },
     "compilerOptions": {
         "exactOptionalPropertyTypes": false
+    },
+    "tasks": {
+        "build": "deno test --allow-all",
+        "publish": "npx jsr publish --dry-run"
     }
 }

@@ -47,7 +47,12 @@ export class Return<T extends SqlQueryBuilder = SqlQueryBuilder> {
 }
 
 export class Join<T extends SqlQueryBuilder = SqlQueryBuilder> {
-    join(this: T, table: SqlNodeValue) {
+    join(this: T, table: SqlNodeValue): {
+        inner: (condition?: SqlNodeValue) => T
+        left: (condition?: SqlNodeValue) => T
+        leftOuter: (condition?: SqlNodeValue) => T
+        cross: () => T
+    } {
         const _table: SqlNodeValue = (table as any)?.table ?? table // duck-typed Sparq instance
 
         return {
@@ -65,7 +70,15 @@ export class Join<T extends SqlQueryBuilder = SqlQueryBuilder> {
 }
 
 export class Resolve<T extends SqlQueryBuilder = SqlQueryBuilder> {
-    conflict(this: T, ...targets: SqlNodeValue[]) {
+    conflict(this: T, ...targets: SqlNodeValue[]): {
+        abort: () => T
+        fail: () => T
+        ignore: () => T
+        replace: () => T
+        rollback: () => T
+        nothing: () => T
+        upsert: (assignments: SqlNodeValue[], ...conditions: SqlNodeValue[]) => T
+    } {
         return {
             /** Aborts on conflict. */
             abort: (): T => this.add(clause.onConflictAbort(...targets)),
