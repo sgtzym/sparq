@@ -1,5 +1,5 @@
-import type { SqlNode } from '~/core/sql-node.ts'
-import { expr } from '~/nodes/primitives.ts'
+import type { SqlNode, SqlNodeValue } from '~/core/sql-node.ts'
+import { expr, id } from '~/nodes/primitives.ts'
 import * as ex from '~/nodes/expressions.ts'
 import * as fn from '~/nodes/functions.ts'
 import { assign, valueList } from '~/nodes/values.ts'
@@ -11,11 +11,11 @@ import type { Column } from '~/api/column.ts'
 
 export class FilterByEquality<T extends Column = Column> {
     /** Filters by equality (=). */
-    eq(this: T, value: any): SqlNode {
+    eq(this: T, value: SqlNodeValue): SqlNode {
         return ex.eq(this, expr(value))
     }
     /** Filters by inequality (!=).  */
-    ne(this: T, value: any): SqlNode {
+    ne(this: T, value: SqlNodeValue): SqlNode {
         return ex.ne(this, expr(value))
     }
 }
@@ -33,29 +33,29 @@ export class FilterByNull<T extends Column = Column> {
 
 export class FilterByInclusion<T extends Column = Column> {
     /** Filters by membership in set. */
-    in(this: T, values: any[]): SqlNode {
+    in(this: T, values: SqlNodeValue[]): SqlNode {
         return ex.in_(this, valueList(...values))
     }
 }
 
 export class FilterByComparison<T extends Column = Column> {
     /** Filters by greater than (>). */
-    gt(this: T, value: any): SqlNode {
+    gt(this: T, value: SqlNodeValue): SqlNode {
         return ex.gt(this, expr(value))
     }
 
     /** Filters by less than (<). */
-    lt(this: T, value: any): SqlNode {
+    lt(this: T, value: SqlNodeValue): SqlNode {
         return ex.lt(this, expr(value))
     }
 
     /** Filters by greater than or equal (>=). */
-    ge(this: T, value: any): SqlNode {
+    ge(this: T, value: SqlNodeValue): SqlNode {
         return ex.ge(this, expr(value))
     }
 
     /** Filters by less than or equal (<=). */
-    le(this: T, value: any): SqlNode {
+    le(this: T, value: SqlNodeValue): SqlNode {
         return ex.le(this, expr(value))
     }
 
@@ -63,7 +63,7 @@ export class FilterByComparison<T extends Column = Column> {
      * Filters by range.
      * Checks inclusively between lower and upper bounds.
      */
-    between(this: T, lower: any, upper: any): SqlNode {
+    between(this: T, lower: SqlNodeValue, upper: SqlNodeValue): SqlNode {
         return ex.between(this, lower, upper)
     }
 }
@@ -299,13 +299,13 @@ export class Alias<T extends Column = Column> {
      * Renames items in your result set.
      */
     as(this: T, alias: string): SqlNode {
-        return ex.as_(this, expr(alias))
+        return ex.as_(this, id(alias))
     }
 }
 
 export class Assign<T extends Column = Column> {
     /** Assigns value. */
-    to(this: T, value: any): SqlNode {
+    to(this: T, value: SqlNodeValue): SqlNode {
         return assign(this, expr(value))
     }
 }

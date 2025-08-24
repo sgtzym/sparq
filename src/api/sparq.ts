@@ -1,7 +1,7 @@
 import type { SqlNodeValue, SqlParam } from '~/core/sql-node.ts'
-import type { Column, ColumnTypeMapping } from '~/api/column.ts'
+import { Column, type ColumnTypeMapping, NumberColumn } from '~/api/column.ts'
 import { Delete, Insert, Select, Update } from '~/api/query-builders.ts'
-import { SqlType } from '~/api/column.ts'
+import { BooleanColumn, DateTimeColumn, TextColumn } from '~/api/column.ts'
 
 /**
  * Type-safe query builder for SQLite tables.
@@ -11,9 +11,28 @@ export class Sparq<T extends Record<string, any>> {
     public readonly table: string
     private readonly _$: { [P in keyof T]: ColumnTypeMapping<string & P, T[P]> }
 
-    constructor(table: string, _schema: T) {
+    constructor(table: string, schema: T) {
         this.table = table
         this._$ = {} as any
+
+        // Instanciate columns based on schema
+        for (const [name, value] of Object.entries(schema)) {
+            let column: Column<string, SqlParam>
+
+            if (typeof value === 'number') {
+                column = new NumberColumn(name, table)
+            } else if (typeof value === 'string') {
+                column = new TextColumn(name, table)
+            } else if (value instanceof Date) {
+                column = new DateTimeColumn(name, table)
+            } else if (typeof value === 'boolean') {
+                column = new BooleanColumn(name, table)
+            } else {
+                column = new Column(name, table)
+            }
+
+            ;(this._$ as any)[name] = column
+        }
     }
 
     /** Retrieves data from table. */

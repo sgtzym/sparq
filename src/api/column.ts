@@ -42,23 +42,19 @@ export class Column<
 
     /**
      * Creates a new column instance wrapping the given node.
-     * Preserves the column's metadata for method chaining.
+     * Immutable chaining: Preserves the column's metadata for method chaining.
      */
     protected wrap<T extends Column<TName, TType>>(node: SqlNode): T {
-        const Constructor = this.constructor as new (
-            name: TName,
-            table?: string,
-            type?: TType,
-        ) => T
-        const wrapped = new Constructor(this._name, this._table, this._type)
+        // Copies the original constructor and just replaces _node.
+        const wrapped = Object.assign(Object.create(Object.getPrototypeOf(this)), this) as T
         wrapped._node = node
         return wrapped
     }
 }
 
-export class Number<TName extends string = string> extends Column<TName, number> {}
-export class Text<TName extends string = string> extends Column<TName, string> {}
-export class DateTime<TName extends string = string> extends Column<TName, Date | string> {}
+export class NumberColumn<TName extends string = string> extends Column<TName, number> {}
+export class TextColumn<TName extends string = string> extends Column<TName, string> {}
+export class DateTimeColumn<TName extends string = string> extends Column<TName, Date | string> {}
 export class BooleanColumn<TName extends string = string> extends Column<TName, boolean> {}
 
 applyMixins(Column, [
@@ -72,18 +68,18 @@ applyMixins(Column, [
     mix.Sort,
 ])
 
-applyMixins(Number, [
+applyMixins(NumberColumn, [
     mix.ComputeByArithmetic,
     mix.ComputeByMath,
     mix.FilterByComparison,
 ])
 
-applyMixins(Text, [
+applyMixins(TextColumn, [
     mix.FilterByTextPattern,
     mix.TransformText,
 ])
 
-applyMixins(DateTime, [
+applyMixins(DateTimeColumn, [
     mix.ExtractDate,
     mix.FilterByComparison,
     mix.FormatDate,
@@ -98,26 +94,26 @@ export interface Column extends
     mix.Quantify<Column>,
     mix.Sort<Column> {}
 
-export interface Number extends
-    mix.Aggregate<Number>,
-    mix.ComputeByArithmetic<Number>,
-    mix.ComputeByMath<Number>,
-    mix.FilterByComparison<Number> {}
+export interface NumberColumn extends
+    mix.Aggregate<NumberColumn>,
+    mix.ComputeByArithmetic<NumberColumn>,
+    mix.ComputeByMath<NumberColumn>,
+    mix.FilterByComparison<NumberColumn> {}
 
-export interface Text extends
-    Pick<mix.Aggregate<Text>, 'count' | 'min' | 'max'>,
-    mix.FilterByTextPattern<Text>,
-    mix.TransformText<Text> {}
+export interface TextColumn extends
+    Pick<mix.Aggregate<TextColumn>, 'count' | 'min' | 'max'>,
+    mix.FilterByTextPattern<TextColumn>,
+    mix.TransformText<TextColumn> {}
 
-export interface DateTime extends
-    Pick<mix.Aggregate<DateTime>, 'count' | 'min' | 'max'>,    
-    mix.ExtractDate<DateTime>,
-    mix.FilterByComparison<DateTime>,
-    mix.FormatDate<DateTime> {}
+export interface DateTimeColumn extends
+    Pick<mix.Aggregate<DateTimeColumn>, 'count' | 'min' | 'max'>,    
+    mix.ExtractDate<DateTimeColumn>,
+    mix.FilterByComparison<DateTimeColumn>,
+    mix.FormatDate<DateTimeColumn> {}
 
-export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number ? Number<K>
-    : T extends string ? Text<K>
-    : T extends Date ? DateTime<K>
+export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number ? NumberColumn<K>
+    : T extends string ? TextColumn<K>
+    : T extends Date ? DateTimeColumn<K>
     : T extends boolean ? BooleanColumn<K>
     : T extends Record<string, any> ? Column<K, T> // Fallback for JSON
     : T extends Uint8Array ? Column<K, T>

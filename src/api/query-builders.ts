@@ -36,6 +36,7 @@ export abstract class SqlQueryBuilder extends SqlNode {
 
     /**
      * Adds a SQL clause or node to the query.
+     * Mutable accumulation - collect SQL parts as array.
      */
     add(part: SqlNode): this {
         this._parts.push(part)
