@@ -4,26 +4,15 @@
 [![JSR](https://jsr.io/badges/@sgtzym/sparq)](https://jsr.io/@sgtzym/sparq)
 [![JSR Score](https://jsr.io/badges/@sgtzym/sparq/score)](https://jsr.io/@sgtzym/sparq)
 
-> A declarative, AST-based and type-safe SQLite query builder for Deno 🦕 - with
-> zero dependencies.
+SPARQ is a type-safe (TypeScript) query-builder for SQLite3 that transforms fluent API calls to
+[Abstract Syntax Trees](https://en.wikipedia.org/wiki/Abstract_syntax_tree) (ASTs) incl. automatic
+parameter binding, deduplication and quoting.
 
-SPARQ’s fluent API uses abstract syntax trees (ASTs) to build complex,
-parameterized queries - including subqueries and CTEs - while preserving
-SQLite's full expressiveness.
-
-**Conversion:** Query composition (fluent API) → Abstract syntax tree (AST) →
-SQLite syntax + parameter list
-
-## Features
-
-- **Complex query composition** via easy-to-use fluent API including JOINs, CTEs
-  and subqueries
-- **Schema-aware column operations** with readable and type-safe methods
-- **Automatic parameter binding** with deduplication and SQL injection
-  protection
-- **Auto-quoted identifiers** for qualified table and column names
-- **Conflict resolution** with Upsert and ON CONFLICT handling
-- **Zero runtime dependencies** - pure TypeScript implementation
+- Schema-aware column API with automatic type inference
+- AST-based queries - Immutable, reusable and predictable results
+- Capable of composing complex queries and subqueries
+- Parameter binding, deduplication and naming
+- Auto-quotation for qualified names and reserved keywords
 
 ## Installation
 
@@ -33,50 +22,50 @@ deno add @sgtzym/sparq
 
 ## Usage
 
-1. Define table schemas with `sparq()`
-2. Build queries on set schemas
-3. Use `sql` and `params` for prepared statements with any SQLite driver that
-   supports named parameters
-
-> [!TIP]
-> Columns are exposed via the `$` property.\
-> Assign them to local variables to simplify access, especially in JOINs and
-> subqueries.
+### Define Schemas
 
 ```ts
-const artists = sparq('artists', {
-    artistId: SqlType.number(),
-    name: SqlType.text(),
+export const artists = sparq('artists', {
+    id: column.number(), // Use column helper (optional)
+    name: column.text(),
 })
 
-const albums = sparq('albums', {
-    albumId: SqlType.number(),
-    title: SqlType.text(),
-    artistId: SqlType.number(),
-    releaseDate: SqlType.date(),
+export const albums = sparq('albums', {
+    id: column.number(),
+    title: column.text(),
+    artistId: column.number(),
+    releaseDate: column.date(),
 })
+```
+### Compose Queries
 
-const { $: artist } = artists
+```ts
+const { $: artist } = artists // Shortcut for artists.$.<column>
 const { $: album } = albums
 
-const my = albums
-    .select(album.title, artist.name.as('artist'))
-    .join(artists).inner(artist.artistId.eq(album.artistId))
-    .where(artist.name.like('The%')),
+const query = albums
+  .select(
+      album.title,
+      artist.name.as('artist')
+  )
+  .join(artists).inner(
+    artist.id.eq(album.artistId)
+  )
+  .where(
+    artist.name.like('The%')
+  )
 
-console.log(my.sql, my.params)
+console.log(query.sql, query.params)
 ```
 
-**Generated SQL**:
-
+**Output:**
 ```sql
-SELECT
-    albums.title,
-    artists.name AS artist
-FROM
-    albums INNER JOIN artists ON artists.artistId = albums.artistId
-WHERE
-    artists.name LIKE :p1
+SELECT albums.title, artists.name AS artist
+FROM albums INNER JOIN artists ON artists.id = albums.artistId
+WHERE artists.name LIKE :p1
+```
 
--- Parameters: [ 'The%' ]
+**Parameters:**
+```json
+[ "The%" ]
 ```

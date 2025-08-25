@@ -133,7 +133,7 @@ export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends 
  * })
  * ```
  */
-export const SqlType = {
+export const column = {
     number: (): number => 0,
     text: (): string => '',
     boolean: (): boolean => true,

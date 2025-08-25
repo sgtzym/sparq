@@ -1,4 +1,4 @@
-import { SqlType } from '~/api/column.ts'
+import { column } from '~/api/column.ts'
 import { sparq } from '~/api/sparq.ts'
 import { test } from '~~/test-runner.ts'
 import { tracks } from '~~/test-data.ts'
@@ -40,11 +40,11 @@ test('Core Features', [
         name: 'with identifier quoting for reserved words',
         query: (() => {
             const problematic = sparq('order', {
-                'select': SqlType.number(),
-                'from': SqlType.text(),
-                'where': SqlType.text(),
-                'normal_column': SqlType.text(),
-                'column-with-dash': SqlType.text(),
+                'select': column.number(),
+                'from': column.text(),
+                'where': column.text(),
+                'normal_column': column.text(),
+                'column-with-dash': column.text(),
             })
             const { $ } = problematic
             return problematic
@@ -73,11 +73,11 @@ test('Core Features', [
         name: 'with special characters in identifiers',
         query: (() => {
             const special = sparq('user-tracks', {
-                'track id': SqlType.number(),
-                'track-name': SqlType.text(),
-                'track:name': SqlType.text(),
-                '123_column': SqlType.number(),
-                'SELECT': SqlType.text(),
+                'track id': column.number(),
+                'track-name': column.text(),
+                'track:name': column.text(),
+                '123_column': column.number(),
+                'SELECT': column.text(),
             })
             const { $: s } = special
             return special
@@ -131,9 +131,9 @@ test('Core Features', [
         name: 'with boolean conversion',
         query: (() => {
             const settings = sparq('user_settings', {
-                userId: SqlType.number(),
-                notifications: SqlType.boolean(),
-                darkMode: SqlType.boolean(),
+                userId: column.number(),
+                notifications: column.boolean(),
+                darkMode: column.boolean(),
             })
             return settings
                 .insert('userId', 'notifications', 'darkMode')
@@ -158,8 +158,8 @@ test('Core Features', [
         name: 'with date conversion',
         query: (() => {
             const logs = sparq('logs', {
-                id: SqlType.number(),
-                timestamp: SqlType.date(),
+                id: column.number(),
+                timestamp: column.date(),
             })
             const { $: l } = logs
             const date1 = new Date('2024-01-01T12:00:00.000Z')
@@ -211,8 +211,8 @@ test('Core Features', [
         name: 'with schema prefix',
         query: (() => {
             const qualified = sparq('music.albums', {
-                albumId: SqlType.number(),
-                title: SqlType.text(),
+                albumId: column.number(),
+                title: column.text(),
             })
             const { $ } = qualified
             return qualified
