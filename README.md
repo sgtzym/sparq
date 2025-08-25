@@ -14,6 +14,8 @@ parameter binding, deduplication and quoting.
 - Parameter binding, deduplication and naming
 - Auto-quotation for qualified names and reserved keywords
 
+See the [Wiki](https://github.com/sgtzym/sparq/wiki) for supported SQL features, API reference and recipes.
+
 ## Installation
 
 ```bash
