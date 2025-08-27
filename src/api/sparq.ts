@@ -49,6 +49,7 @@ export class Sparq<T extends Record<string, any>> {
         )
         return new Insert(this.table, cols as SqlNodeValue[])
     }
+
     /** Modifies existing records. */
     update(assignments: Partial<T> | SqlNodeValue[]): Update {
         const assigns = Array.isArray(assignments)

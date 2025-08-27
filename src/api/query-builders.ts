@@ -1,10 +1,11 @@
 // deno-fmt-ignore-file
 import { applyMixins } from '~/core/mixins.ts'
-import type { SqlDataType, SqlString } from '~/core/sql.ts'
+import { sql, type SqlDataType, type SqlString } from '~/core/sql.ts'
 import { ParameterReg } from '~/core/param-registry.ts'
 import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
 import { from, set, values } from '~/nodes/clauses.ts'
 import { cte, with_ } from '~/nodes/ctes.ts'
+import { raw, expr } from '~/nodes/primitives.ts'
 import { _delete, _insert, _select, _update } from '~/nodes/statements.ts'
 import { AssignmentNode, valueList } from '~/nodes/values.ts'
 import * as mix from '~/api/mixins-clause.ts'
@@ -82,6 +83,40 @@ export class Select extends SqlQueryBuilder {
      */
     override render(params?: ParameterReg): SqlString {
         return params ? `(${renderSqlNodes(this._parts, params).join(' ')})` : super.render()
+    }
+
+    private _combineQuery(op: string, query: SqlNodeValue): Select {
+        const combined = new Select('', [])
+        combined._parts = []
+        combined._parts.push(this)
+        combined._parts.push(raw(sql(op)))
+        combined._parts.push(expr(query))
+        return combined
+    }
+
+    /**
+     * Combines rows from both queries.
+     * @param {SqlNodeValue} query - The union target
+     * @param {boolean} [all] - Includes duplicate rows, if true
+     */
+    union(query: SqlNodeValue, all?: boolean): Select {
+        return this._combineQuery(all ? sql('UNION ALL') : sql('UNION'), query)
+    }
+
+    /**
+     * Returns rows that appear in both queries.
+     * @param {SqlNodeValue} query - The intersection target
+     */
+    intersect(query: SqlNodeValue): Select {
+        return this._combineQuery(sql('INTERSECT'), query)
+    }
+
+    /**
+     * Excludes rows that appear in the specified query.
+     * @param {SqlNodeValue} query - The exclusion target
+     */
+    except(query: SqlNodeValue): Select {
+        return this._combineQuery(sql('EXCEPT'), query)
     }
 }
 
