@@ -151,3 +151,14 @@ export const sqrt = fn(sql('SQRT'))
 
 /** Generates random number. */
 export const random = fn(sql('RANDOM'))
+
+// → Null handling
+
+/** Returns NULL if arguments are equal. */
+export const nullIf = fn(sql('NULLIF'))
+
+/** Returns the first non-NULL argument. */
+export const ifNull = fn(sql('IFNULL'))
+
+/** Returns the first non-NULL argument. */
+export const coalesce = fn(sql('COALESCE'))

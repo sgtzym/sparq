@@ -199,6 +199,11 @@ export const SQL_KEYWORDS = {
     POWER: Symbol('POWER'),
     SQRT: Symbol('SQRT'),
     RANDOM: Symbol('RANDOM'),
+
+    // NULL handling functions
+    NULLIF: Symbol('NULLIF'),
+    IFNULL: Symbol('IFNULL'),
+    COALESCE: Symbol('COALESCE')
 } as const
 
 /**
