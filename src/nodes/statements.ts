@@ -1,4 +1,4 @@
-import type { ArrayLike } from '~/core/utils.ts'
+import { castArray, type ArrayLike } from '~/core/utils.ts'
 import { sql, type SqlString } from '~/core/sql.ts'
 import type { ParameterReg } from '~/core/param-registry.ts'
 import { isSqlNode, renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
@@ -38,7 +38,13 @@ export class InsertNode extends SqlNode {
 
     render(params: ParameterReg): SqlString {
         const table: string = this.table.render(params)
-        const cols: string = renderSqlNodes(this.columns, params).join(', ')
+
+        // Removes table qualified names
+        const cols: string = castArray(this.columns).map(col => {
+            const rendered = col.render(params)
+            const parts = rendered.split('.')
+            return parts.length > 1 ? parts[parts.length - 1] : rendered
+        }).join(', ')
 
         return `${sql('INSERT')} ${sql('INTO')} ${table} (${cols})`
     }
