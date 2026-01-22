@@ -164,21 +164,21 @@ test('Column Operations', [
             params: ['2000-01-01T00:00:00.000Z', '2020-12-31T00:00:00.000Z'],
         },
     },
-    // {
-    //     name: 'with DISTINCT values',
-    //     query: tracks
-    //         .select(
-    //             t.composer.distinct().as('unique_composers'),
-    //             t.unitPrice.distinct().count().as('price_variations')
-    //         ),
-    //     expected: {
-    //         sql: `
-    //             SELECT
-    //                 DISTINCT tracks.composer AS unique_composers,
-    //                 COUNT(DISTINCT tracks.unitPrice) AS price_variations
-    //             FROM
-    //                 tracks
-    //         `,
-    //     },
-    // },
+    {
+        name: 'with DISTINCT values',
+        query: tracks
+            .select(
+                t.composer.distinct().as('unique_composers'),
+                t.unitPrice.distinct().count().as('price_variations')
+            ),
+        expected: {
+            sql: `
+                SELECT
+                    DISTINCT tracks.composer AS unique_composers,
+                    COUNT(DISTINCT tracks.unitPrice) AS price_variations
+                FROM
+                    tracks
+            `,
+        },
+    },
 ])
