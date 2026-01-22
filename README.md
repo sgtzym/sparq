@@ -19,7 +19,7 @@ See the [Wiki](https://github.com/sgtzym/sparq/wiki) for supported SQL features,
 ## Installation
 
 ```bash
-deno add @sgtzym/sparq
+deno add jsr:@sgtzym/sparq
 ```
 
 ## Usage
