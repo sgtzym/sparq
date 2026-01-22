@@ -13,8 +13,8 @@ test('SQLite INSERT', [
         expected: {
             sql: `
                 INSERT INTO artists (
-                    artists.artistId,
-                    artists.name
+                    artistId,
+                    name
                 )
                 VALUES
                     (:p1, :p2)
@@ -31,9 +31,9 @@ test('SQLite INSERT', [
         expected: {
             sql: `
                 INSERT INTO albums (
-                    albums.albumId,
-                    albums.title,
-                    albums.artistId
+                    albumId,
+                    title,
+                    artistId
                 )
                 VALUES
                     (:p1, :p2, :p3),
@@ -70,15 +70,15 @@ test('SQLite INSERT', [
         expected: {
             sql: `
                 INSERT INTO tracks (
-                    tracks.trackId,
-                    tracks.name,
-                    tracks.albumId,
-                    tracks.mediaTypeId,
-                    tracks.genreId,
-                    tracks.composer,
-                    tracks.milliseconds,
-                    tracks.bytes,
-                    tracks.unitPrice
+                    trackId,
+                    name,
+                    albumId,
+                    mediaTypeId,
+                    genreId,
+                    composer,
+                    milliseconds,
+                    bytes,
+                    unitPrice
                 )
                 VALUES
                     (:p1, :p2, :p3, :p4, :p5, :p6, :p7, :p8, :p9)
@@ -105,8 +105,8 @@ test('SQLite INSERT', [
         expected: {
             sql: `
                 INSERT INTO artists (
-                    artists.artistId,
-                    artists.name
+                    artistId,
+                    name
                 )
                 VALUES
                     (:p1, :p2)
@@ -129,9 +129,9 @@ test('SQLite INSERT', [
         expected: {
             sql: `
                 INSERT INTO albums (
-                    albums.albumId,
-                    albums.title,
-                    albums.artistId
+                    albumId,
+                    title,
+                    artistId
                 )
                 VALUES
                     (:p1, :p2, :p1)
@@ -154,7 +154,7 @@ test('SQLite INSERT', [
         expected: {
             sql: `
                 INSERT INTO artists (
-                    artists.name
+                    name
                 )
                 VALUES
                     (:p1)
@@ -183,13 +183,13 @@ test('SQLite INSERT', [
         expected: {
             sql: `
                 INSERT INTO tracks (
-                    tracks.name,
-                    tracks.albumId,
-                    tracks.mediaTypeId,
-                    tracks.genreId,
-                    tracks.milliseconds,
-                    tracks.bytes,
-                    tracks.unitPrice
+                    name,
+                    albumId,
+                    mediaTypeId,
+                    genreId,
+                    milliseconds,
+                    bytes,
+                    unitPrice
                 )
                 VALUES
                     (:p1, :p2, :p2, :p2, :p3, :p4, :p5),

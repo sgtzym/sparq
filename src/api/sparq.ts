@@ -2,6 +2,7 @@ import type { SqlNodeValue, SqlParam } from '~/core/sql-node.ts'
 import { Column, type ColumnTypeMapping, NumberColumn } from '~/api/column.ts'
 import { Delete, Insert, Select, Update } from '~/api/query-builders.ts'
 import { BooleanColumn, DateTimeColumn, TextColumn } from '~/api/column.ts'
+import { id } from '~/nodes/primitives.ts'
 
 /**
  * Type-safe query builder for SQLite tables.
@@ -45,7 +46,7 @@ export class Sparq<T extends Record<string, any>> {
         ...columns: (keyof T | Column<string, SqlParam> | SqlNodeValue)[]
     ): Insert {
         const cols = columns.map((col) =>
-            typeof col === 'string' && col in this.$ ? this.$[col as keyof T] : col
+            typeof col === 'string' ? id(col) : col
         )
         return new Insert(this.table, cols as SqlNodeValue[])
     }

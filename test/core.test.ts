@@ -117,8 +117,8 @@ test('Core Features', [
         expected: {
             sql: `
                 INSERT INTO tracks (
-                    tracks.composer,
-                    tracks.albumId
+                    composer,
+                    albumId
                 )
                 VALUES
                     (:p1, :p2),
@@ -143,9 +143,9 @@ test('Core Features', [
         expected: {
             sql: `
                 INSERT INTO user_settings (
-                    user_settings.userId,
-                    user_settings.notifications,
-                    user_settings.darkMode
+                    userId,
+                    notifications,
+                    darkMode
                 )
                 VALUES
                     (:p1, :p1, :p2),
