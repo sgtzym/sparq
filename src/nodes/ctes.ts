@@ -11,38 +11,38 @@ import { expr, id } from '~/nodes/primitives.ts'
 // -> 🔷 Nodes
 
 export class CteNode extends SqlNode {
-    constructor(
-        private readonly name: SqlNode,
-        private readonly clauses: SqlNode[],
-    ) {
-        super()
-    }
+	constructor(
+		private readonly name: SqlNode,
+		private readonly clauses: SqlNode[],
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const _name: SqlString = this.name.render(params)
-        const _clauses: SqlString = renderSqlNodes(this.clauses, params).join(
-            ' ',
-        )
+	render(params: ParameterReg): SqlString {
+		const _name: SqlString = this.name.render(params)
+		const _clauses: SqlString = renderSqlNodes(this.clauses, params).join(
+			' ',
+		)
 
-        return sql(`${_name} AS (${_clauses})`)
-    }
+		return sql(`${_name} AS (${_clauses})`)
+	}
 }
 
 export class WithNode extends SqlNode {
-    override readonly _priority: number = -1
+	override readonly _priority: number = -1
 
-    constructor(
-        private readonly ctes: ArrayLike<CteNode>,
-        private readonly recursive: boolean = false,
-    ) {
-        super()
-    }
+	constructor(
+		private readonly ctes: ArrayLike<CteNode>,
+		private readonly recursive: boolean = false,
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const _ctes: SqlString = renderSqlNodes(this.ctes, params).join(', ')
+	render(params: ParameterReg): SqlString {
+		const _ctes: SqlString = renderSqlNodes(this.ctes, params).join(', ')
 
-        return sql(this.recursive ? 'WITH RECURSIVE' : 'WITH', _ctes)
-    }
+		return sql(this.recursive ? 'WITH RECURSIVE' : 'WITH', _ctes)
+	}
 }
 
 // -> 🏭 Factories
@@ -62,7 +62,7 @@ export class WithNode extends SqlNode {
  * ```
  */
 export const cte = (name: string, query: SqlNodeValue[]): CteNode =>
-    new CteNode(id(name), query.map(expr))
+	new CteNode(id(name), query.map(expr))
 
 /**
  * Adds CTEs to the beginning of a query using WITH.
@@ -81,4 +81,4 @@ export const cte = (name: string, query: SqlNodeValue[]): CteNode =>
  * ```
  */
 export const with_ = (recursive?: boolean, ...ctes: CteNode[]): WithNode =>
-    new WithNode(ctes, recursive)
+	new WithNode(ctes, recursive)

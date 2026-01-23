@@ -9,17 +9,17 @@ export type Mixin<T> = new (...args: any[]) => T
 
 /** Applies Mixins to a Class. */
 export function applyMixins<T extends new (...args: any[]) => any>(
-    derivedCtor: T,
-    ctors: Mixin<any>[],
+	derivedCtor: T,
+	ctors: Mixin<any>[],
 ) {
-    ctors.forEach((baseCtor) => {
-        Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
-            Object.defineProperty(
-                derivedCtor.prototype,
-                name,
-                Object.getOwnPropertyDescriptor(baseCtor.prototype, name) ??
-                    Object.create(null),
-            )
-        })
-    })
+	ctors.forEach((baseCtor) => {
+		Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
+			Object.defineProperty(
+				derivedCtor.prototype,
+				name,
+				Object.getOwnPropertyDescriptor(baseCtor.prototype, name) ??
+					Object.create(null),
+			)
+		})
+	})
 }

@@ -9,7 +9,7 @@ export type ArrayLike<T> = T | T[]
  * Handles both single values and arrays uniformly.
  */
 export function castArray<T>(value: ArrayLike<T>): T[] {
-    return Array.isArray(value) ? value : [value]
+	return Array.isArray(value) ? value : [value]
 }
 
 /**
@@ -23,5 +23,5 @@ export type Maybe<T> = T | null | undefined
  * Returns true for defined values, false for null/undefined.
  */
 export function isDefined<T>(value: Maybe<T>): value is T {
-    return value !== null && value !== undefined
+	return value !== null && value !== undefined
 }

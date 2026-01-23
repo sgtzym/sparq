@@ -14,7 +14,8 @@ parameter binding, deduplication and quoting.
 - Parameter binding, deduplication and naming
 - Auto-quotation for qualified names and reserved keywords
 
-See the [Wiki](https://github.com/sgtzym/sparq/wiki) for supported SQL features, API reference and recipes.
+See the [Wiki](https://github.com/sgtzym/sparq/wiki) for supported SQL features, API reference and
+recipes.
 
 ## Installation
 
@@ -28,17 +29,18 @@ deno add jsr:@sgtzym/sparq
 
 ```ts
 export const artists = sparq('artists', {
-    id: column.number(), // Use column helper (optional)
-    name: column.text(),
+	id: column.number(), // Use column helper (optional)
+	name: column.text(),
 })
 
 export const albums = sparq('albums', {
-    id: column.number(),
-    title: column.text(),
-    artistId: column.number(),
-    releaseDate: column.date(),
+	id: column.number(),
+	title: column.text(),
+	artistId: column.number(),
+	releaseDate: column.date(),
 })
 ```
+
 ### Compose Queries
 
 ```ts
@@ -46,21 +48,22 @@ const { $: artist } = artists // Shortcut for artists.$.<column>
 const { $: album } = albums
 
 const query = albums
-  .select(
-      album.title,
-      artist.name.as('artist')
-  )
-  .join(artists).inner(
-    artist.id.eq(album.artistId)
-  )
-  .where(
-    artist.name.like('The%')
-  )
+	.select(
+		album.title,
+		artist.name.as('artist'),
+	)
+	.join(artists).inner(
+		artist.id.eq(album.artistId),
+	)
+	.where(
+		artist.name.like('The%'),
+	)
 
 console.log(query.sql, query.params)
 ```
 
 **Output:**
+
 ```sql
 SELECT albums.title, artists.name AS artist
 FROM albums INNER JOIN artists ON artists.id = albums.artistId
@@ -68,6 +71,7 @@ WHERE artists.name LIKE :p1
 ```
 
 **Parameters:**
+
 ```json
-[ "The%" ]
+["The%"]
 ```

@@ -9,38 +9,38 @@ import { isSqlNode, SqlNode, type SqlNodeValue, type SqlParam } from '~/core/sql
 // -> 🔷 Nodes
 
 export class RawNode extends SqlNode {
-    constructor(private readonly sql: string) {
-        super()
-    }
+	constructor(private readonly sql: string) {
+		super()
+	}
 
-    render(_params: ParameterReg): SqlString {
-        return this.sql
-    }
+	render(_params: ParameterReg): SqlString {
+		return this.sql
+	}
 }
 
 export class LiteralNode extends SqlNode {
-    constructor(private readonly value: SqlParam) {
-        super()
-    }
+	constructor(private readonly value: SqlParam) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        return params.add(toSqlDataType(this.value))
-    }
+	render(params: ParameterReg): SqlString {
+		return params.add(toSqlDataType(this.value))
+	}
 }
 
 export class IdentifierNode extends SqlNode {
-    constructor(private readonly name: string) {
-        super()
-    }
+	constructor(private readonly name: string) {
+		super()
+	}
 
-    render(_params: ParameterReg): SqlString {
-        const sql: string = this.name
-            .split('.')
-            .map((part) => (needsQuoting(part) ? `"${part}"` : part))
-            .join('.')
+	render(_params: ParameterReg): SqlString {
+		const sql: string = this.name
+			.split('.')
+			.map((part) => (needsQuoting(part) ? `"${part}"` : part))
+			.join('.')
 
-        return sql
-    }
+		return sql
+	}
 }
 
 // -> 🏭 Factories
@@ -56,7 +56,7 @@ export class IdentifierNode extends SqlNode {
  * ```
  */
 export const raw = (sql: string): SqlNode => {
-    return new RawNode(sql)
+	return new RawNode(sql)
 }
 
 /**
@@ -71,7 +71,7 @@ export const raw = (sql: string): SqlNode => {
  * ```
  */
 export const expr = (value: SqlNodeValue): SqlNode => {
-    return isSqlNode(value) ? value : new LiteralNode(value)
+	return isSqlNode(value) ? value : new LiteralNode(value)
 }
 
 /**
@@ -86,5 +86,5 @@ export const expr = (value: SqlNodeValue): SqlNode => {
  * ```
  */
 export const id = (value: SqlNodeValue): SqlNode => {
-    return isSqlNode(value) ? value : new IdentifierNode(value as string)
+	return isSqlNode(value) ? value : new IdentifierNode(value as string)
 }

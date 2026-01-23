@@ -11,41 +11,41 @@ import { expr, id } from '~/nodes/primitives.ts'
 // -> 🔷 Nodes
 
 export class AssignmentNode extends SqlNode {
-    constructor(
-        private readonly column: SqlNode,
-        private readonly value: SqlNode,
-    ) {
-        super()
-    }
+	constructor(
+		private readonly column: SqlNode,
+		private readonly value: SqlNode,
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const col: string = this.column.render(params)
-        const val: string = this.value.render(params)
+	render(params: ParameterReg): SqlString {
+		const col: string = this.column.render(params)
+		const val: string = this.value.render(params)
 
-        return `${col} = ${val}`
-    }
+		return `${col} = ${val}`
+	}
 }
 
 export class ValueListNode extends SqlNode {
-    constructor(private readonly values: ArrayLike<SqlNode>) {
-        super()
-    }
+	constructor(private readonly values: ArrayLike<SqlNode>) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const values: string = renderSqlNodes(this.values, params).join(', ')
+	render(params: ParameterReg): SqlString {
+		const values: string = renderSqlNodes(this.values, params).join(', ')
 
-        return `(${values})`
-    }
+		return `(${values})`
+	}
 }
 
 // -> 🏭 Factories
 
 /** Assigns value. */
 export const assign = (column: SqlNodeValue, value: SqlNodeValue): SqlNode => {
-    return new AssignmentNode(id(column), expr(value))
+	return new AssignmentNode(id(column), expr(value))
 }
 
 /** Groups values in parentheses. */
 export const valueList = (...values: SqlNodeValue[]): SqlNode => {
-    return new ValueListNode(values.map(expr))
+	return new ValueListNode(values.map(expr))
 }

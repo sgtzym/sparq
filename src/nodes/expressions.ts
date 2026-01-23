@@ -11,116 +11,116 @@ import { expr, id, raw } from '~/nodes/primitives.ts'
 // -> 🔷 Nodes
 
 export class UnaryNode extends SqlNode {
-    constructor(
-        private readonly operator: SqlNode,
-        private readonly expr?: SqlNode,
-        private readonly position: 'pfx' | 'sfx' = 'sfx',
-    ) {
-        super()
-    }
+	constructor(
+		private readonly operator: SqlNode,
+		private readonly expr?: SqlNode,
+		private readonly position: 'pfx' | 'sfx' = 'sfx',
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const op: string = this.operator.render(params)
-        const expr: string | undefined = this.expr?.render(params)
+	render(params: ParameterReg): SqlString {
+		const op: string = this.operator.render(params)
+		const expr: string | undefined = this.expr?.render(params)
 
-        return this.expr ? this.position === 'pfx' ? `${op} ${expr}` : `${expr} ${op}` : op
-    }
+		return this.expr ? this.position === 'pfx' ? `${op} ${expr}` : `${expr} ${op}` : op
+	}
 }
 
 export class BinaryNode extends SqlNode {
-    constructor(
-        private readonly left: SqlNode,
-        private readonly operator: SqlNode,
-        private readonly right: SqlNode,
-    ) {
-        super()
-    }
+	constructor(
+		private readonly left: SqlNode,
+		private readonly operator: SqlNode,
+		private readonly right: SqlNode,
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const left: string = this.left.render(params)
-        const op: string = this.operator.render(params)
-        const right: string = this.right.render(params)
+	render(params: ParameterReg): SqlString {
+		const left: string = this.left.render(params)
+		const op: string = this.operator.render(params)
+		const right: string = this.right.render(params)
 
-        return `${left} ${op} ${right}`
-    }
+		return `${left} ${op} ${right}`
+	}
 }
 
 export class ConjunctionNode extends SqlNode {
-    constructor(
-        private readonly operator: SqlNode,
-        private readonly conditions: ArrayLike<SqlNode>,
-        private readonly grouped: boolean = false,
-    ) {
-        super()
-    }
+	constructor(
+		private readonly operator: SqlNode,
+		private readonly conditions: ArrayLike<SqlNode>,
+		private readonly grouped: boolean = false,
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const op: string = this.operator.render(params)
-        const conditions: string = renderSqlNodes(this.conditions, params).join(
-            ` ${op} `,
-        )
+	render(params: ParameterReg): SqlString {
+		const op: string = this.operator.render(params)
+		const conditions: string = renderSqlNodes(this.conditions, params).join(
+			` ${op} `,
+		)
 
-        return this.grouped ? `(${conditions})` : conditions
-    }
+		return this.grouped ? `(${conditions})` : conditions
+	}
 }
 
 export class CaseNode extends SqlNode {
-    private conditions: Array<{ when: SqlNode; then: SqlNode }> = []
-    private elseValue?: SqlNode
+	private conditions: Array<{ when: SqlNode; then: SqlNode }> = []
+	private elseValue?: SqlNode
 
-    constructor(private test?: SqlNode) {
-        super()
-    }
+	constructor(private test?: SqlNode) {
+		super()
+	}
 
-    /**
-     * Adds a WHEN condition to the CASE expression.
-     */
-    when(condition: SqlNodeValue): { then: (value: SqlNodeValue) => CaseNode } {
-        return {
-            then: (value: SqlNodeValue) => {
-                this.conditions.push({
-                    when: this.test ? expr(condition) : expr(condition),
-                    then: expr(value),
-                })
-                return this
-            },
-        }
-    }
+	/**
+	 * Adds a WHEN condition to the CASE expression.
+	 */
+	when(condition: SqlNodeValue): { then: (value: SqlNodeValue) => CaseNode } {
+		return {
+			then: (value: SqlNodeValue) => {
+				this.conditions.push({
+					when: this.test ? expr(condition) : expr(condition),
+					then: expr(value),
+				})
+				return this
+			},
+		}
+	}
 
-    /**
-     * Adds an ELSE clause to the CASE expression.
-     */
-    else_(value: SqlNodeValue): this {
-        this.elseValue = expr(value)
-        return this
-    }
+	/**
+	 * Adds an ELSE clause to the CASE expression.
+	 */
+	else_(value: SqlNodeValue): this {
+		this.elseValue = expr(value)
+		return this
+	}
 
-    render(params: ParameterReg): SqlString {
-        let sql = this.test ? `CASE ${this.test.render(params)}` : 'CASE'
+	render(params: ParameterReg): SqlString {
+		let sql = this.test ? `CASE ${this.test.render(params)}` : 'CASE'
 
-        for (const { when, then } of this.conditions) {
-            sql += ` WHEN ${when.render(params)} THEN ${then.render(params)}`
-        }
+		for (const { when, then } of this.conditions) {
+			sql += ` WHEN ${when.render(params)} THEN ${then.render(params)}`
+		}
 
-        if (this.elseValue) {
-            sql += ` ELSE ${this.elseValue.render(params)}`
-        }
+		if (this.elseValue) {
+			sql += ` ELSE ${this.elseValue.render(params)}`
+		}
 
-        return sql + ' END'
-    }
+		return sql + ' END'
+	}
 }
 
 // -> 🏭 Factories
 
 const unary = (op: string, pos: 'pfx' | 'sfx' = 'sfx') => (value: SqlNodeValue): SqlNode => {
-    return new UnaryNode(raw(op), expr(value), pos)
+	return new UnaryNode(raw(op), expr(value), pos)
 }
 
 const binary = (op: string) => (left: SqlNodeValue, right: SqlNodeValue): SqlNode =>
-    new BinaryNode(expr(left), raw(op), expr(right))
+	new BinaryNode(expr(left), raw(op), expr(right))
 
 const conjunction = (op: string, grouped = false) => (...conditions: SqlNodeValue[]): SqlNode =>
-    new ConjunctionNode(raw(op), conditions.map(expr), grouped)
+	new ConjunctionNode(raw(op), conditions.map(expr), grouped)
 
 // -> Logical operators
 
@@ -254,7 +254,7 @@ export const excluded = unary(sql('EXCLUDED'), 'pfx')
  * ```
  */
 export const as_ = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
-    return new BinaryNode(expr(value), raw(sql('AS')), id(as))
+	return new BinaryNode(expr(value), raw(sql('AS')), id(as))
 }
 
 /**
@@ -272,18 +272,18 @@ export const as_ = (value: SqlNodeValue, as: SqlNodeValue): SqlNode => {
  * ```
  */
 export const between = (
-    test: SqlNodeValue,
-    lower: SqlNodeValue,
-    upper: SqlNodeValue,
+	test: SqlNodeValue,
+	lower: SqlNodeValue,
+	upper: SqlNodeValue,
 ): SqlNode =>
-    new BinaryNode(
-        expr(test),
-        raw(sql('BETWEEN')),
-        new ConjunctionNode(raw(sql('AND')), [
-            expr(lower),
-            expr(upper),
-        ]),
-    )
+	new BinaryNode(
+		expr(test),
+		raw(sql('BETWEEN')),
+		new ConjunctionNode(raw(sql('AND')), [
+			expr(lower),
+			expr(upper),
+		]),
+	)
 
 /**
  * Checks if a subquery returns any rows.

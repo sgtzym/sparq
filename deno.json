@@ -1,23 +1,32 @@
 {
-    "name": "@sgtzym/sparq",
-    "version": "0.9.7",
-    "license": "MIT",
-    "imports": {
-        "~/": "./src/",
-        "~~/": "./test/"
-    },
-    "exports": "./mod.ts",
-    "fmt": {
-        "indentWidth": 4,
-        "singleQuote": true,
-        "semiColons": false,
-        "lineWidth": 100
-    },
-    "compilerOptions": {
-        "exactOptionalPropertyTypes": false
-    },
-    "tasks": {
-        "build": "deno test --allow-all",
-        "publish": "npx jsr publish --dry-run"
-    }
+	"name": "@sgtzym/sparq",
+	"version": "0.9.7",
+	"license": "MIT",
+	"imports": {
+		"~/": "./src/",
+		"~~/": "./test/"
+	},
+	"exports": "./mod.ts",
+	"compilerOptions": {
+		"exactOptionalPropertyTypes": false
+	},
+	"tasks": {
+		"build": "deno test --allow-all",
+		"publish": "npx jsr publish --dry-run"
+	},
+	"fmt": {
+		"indentWidth": 4,
+		"lineWidth": 100,
+		"semiColons": false,
+		"singleQuote": true,
+		"useTabs": true,
+
+		"bracePosition": "sameLineUnlessHanging",
+		"trailingCommas": "onlyMultiLine",
+		"quoteProps": "asNeeded",
+
+		"jsx.bracketPosition": "sameLine",
+		"jsx.forceNewLinesSurroundingContent": false,
+		"jsx.multiLineParens": "always"
+	}
 }

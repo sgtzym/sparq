@@ -11,19 +11,19 @@ import { expr, raw } from '~/nodes/primitives.ts'
 // -> 🔷 Nodes
 
 export class FnNode extends SqlNode {
-    constructor(
-        private readonly name: SqlNode,
-        private readonly expr: ArrayLike<SqlNode>,
-    ) {
-        super()
-    }
+	constructor(
+		private readonly name: SqlNode,
+		private readonly expr: ArrayLike<SqlNode>,
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): SqlString {
-        const _name: string = this.name.render(params)
-        const _expr: string = renderSqlNodes(this.expr, params).join(', ')
+	render(params: ParameterReg): SqlString {
+		const _name: string = this.name.render(params)
+		const _expr: string = renderSqlNodes(this.expr, params).join(', ')
 
-        return `${_name}(${_expr ?? ''})`
-    }
+		return `${_name}(${_expr ?? ''})`
+	}
 }
 
 // -> 🏭 Factories
@@ -31,7 +31,7 @@ export class FnNode extends SqlNode {
 const fn = (name: string) => (...args: SqlNodeValue[]) => new FnNode(raw(name), args.map(expr))
 
 const aggregate = (name: string) => (column?: SqlNodeValue) =>
-    new FnNode(raw(name), column ? expr(column) : raw('*'))
+	new FnNode(raw(name), column ? expr(column) : raw('*'))
 
 // → Aggregate functions
 

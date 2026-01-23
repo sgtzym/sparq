@@ -23,9 +23,9 @@ const SQL_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
  * Returns true for special characters or reserved keywords.
  */
 export function needsQuoting(value: string): boolean {
-    if (typeof value !== 'string') return false
+	if (typeof value !== 'string') return false
 
-    return !SQL_NAME_PATTERN.test(value) || isSqlKeyword(value)
+	return !SQL_NAME_PATTERN.test(value) || isSqlKeyword(value)
 }
 
 /**
@@ -33,7 +33,7 @@ export function needsQuoting(value: string): boolean {
  * Checks case-insensitively against SQL-92 standard.
  */
 export function isSqlKeyword(value: string): boolean {
-    return value.toUpperCase() in SQL_KEYWORDS
+	return value.toUpperCase() in SQL_KEYWORDS
 }
 
 /**
@@ -41,13 +41,13 @@ export function isSqlKeyword(value: string): boolean {
  * Returns true if the value can be safely parameterized.
  */
 export function isSqlDataType(value: unknown): value is SqlDataType {
-    return (
-        value === null ||
-        typeof value === 'number' ||
-        typeof value === 'bigint' ||
-        typeof value === 'string' ||
-        value instanceof Uint8Array
-    )
+	return (
+		value === null ||
+		typeof value === 'number' ||
+		typeof value === 'bigint' ||
+		typeof value === 'string' ||
+		value instanceof Uint8Array
+	)
 }
 
 /**
@@ -55,24 +55,24 @@ export function isSqlDataType(value: unknown): value is SqlDataType {
  * Handles booleans, dates, and objects through serialization.
  */
 export function toSqlDataType(value: unknown): SqlDataType {
-    switch (true) {
-        case isSqlDataType(value):
-            return value
-        case value === undefined:
-            return null
-        case typeof value === 'boolean':
-            return value ? 1 : 0
-        case value instanceof Date:
-            return value.toISOString()
-        case Array.isArray(value) || typeof value === 'object':
-            try {
-                return JSON.stringify(value)
-            } catch (error) {
-                throw new TypeError(`Unable to serialize value: ${error}`)
-            }
-        default:
-            throw new TypeError(`Unsupported literal type: ${value}`)
-    }
+	switch (true) {
+		case isSqlDataType(value):
+			return value
+		case value === undefined:
+			return null
+		case typeof value === 'boolean':
+			return value ? 1 : 0
+		case value instanceof Date:
+			return value.toISOString()
+		case Array.isArray(value) || typeof value === 'object':
+			try {
+				return JSON.stringify(value)
+			} catch (error) {
+				throw new TypeError(`Unable to serialize value: ${error}`)
+			}
+		default:
+			throw new TypeError(`Unsupported literal type: ${value}`)
+	}
 }
 
 /**
@@ -80,8 +80,8 @@ export function toSqlDataType(value: unknown): SqlDataType {
  * Filters empty values and maintains correct syntax.
  */
 export function sql(...parts: SqlSnippet[]): string {
-    return parts
-        .flatMap((p) => typeof p === 'string' ? p.split(' ') : p)
-        .filter(Boolean)
-        .join(' ')
+	return parts
+		.flatMap((p) => typeof p === 'string' ? p.split(' ') : p)
+		.filter(Boolean)
+		.join(' ')
 }
