@@ -1,6 +1,6 @@
 {
 	"name": "@sgtzym/sparq",
-	"version": "0.9.7",
+	"version": "0.9.8",
 	"license": "MIT",
 	"imports": {
 		"@std/assert": "jsr:@std/assert@^1.0.17",
