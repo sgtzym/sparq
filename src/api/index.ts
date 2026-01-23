@@ -1,5 +1,6 @@
-export * from './column.ts'
 export * from './mixins-clause.ts'
 export * from './mixins-column.ts'
+
 export * from './query-builders.ts'
+export * from './column.ts'
 export * from './sparq.ts'
