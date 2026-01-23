@@ -19,9 +19,10 @@ import {
 } from '~api'
 
 // ---------------------------------------------
-// Column Options for Schema Generation
+// Column API
 // ---------------------------------------------
 
+/** Column Options for Schema Generation */
 export interface ColumnOptions {
 	/** Column cannot be NULL */
 	notNull?: boolean
@@ -36,10 +37,6 @@ export interface ColumnOptions {
 	/** Check constraint */
 	check?: string
 }
-
-// ---------------------------------------------
-// Column API
-// ---------------------------------------------
 
 /**
  * Base column class with common SQL operations.
@@ -100,27 +97,31 @@ export class Column<
 	}
 }
 
+/** Creates a number column. */
 export class NumberColumn<TName extends string = string> extends Column<TName, number> {
 	override get sqlType(): string {
 		return 'INTEGER'
 	}
 }
 
+/** Creates a text column. */
 export class TextColumn<TName extends string = string> extends Column<TName, string> {
 	override get sqlType(): string {
 		return 'TEXT'
 	}
 }
 
+/** Creates a date-time (ISO 8601 TEXT) column. */
 export class DateTimeColumn<TName extends string = string> extends Column<TName, Date | string> {
 	override get sqlType(): string {
-		return 'TEXT' // ISO 8601 TEXT
+		return 'TEXT'
 	}
 }
 
+/** Creates a boolean (0/1) column. */
 export class BooleanColumn<TName extends string = string> extends Column<TName, boolean> {
 	override get sqlType(): string {
-		return 'INTEGER' // 0/1
+		return 'INTEGER'
 	}
 }
 
@@ -182,6 +183,7 @@ export interface DateTimeColumn
 		FormatDate<DateTimeColumn>
 {}
 
+/** Maps column types to primitives. */
 export type ColumnTypeMapping<K extends string, T> = T extends ColumnDescriptor<'number'>
 	? NumberColumn<K>
 	: T extends ColumnDescriptor<'text'> ? TextColumn<K>
@@ -196,6 +198,7 @@ type ColumnDescriptor<T extends string> = {
 	__options?: ColumnOptions
 }
 
+/** Column API interface */
 export const column = {
 	number: (options?: ColumnOptions): ColumnDescriptor<'number'> => ({
 		__type: 'number',
