@@ -207,6 +207,15 @@ export function sparq<const TSchema extends Record<string, any>>(
 	return new Sparq(tableName, schema as any)
 }
 
+/** Maps a ColumnDescriptor to its corresponding JavaScript value type. */
+type MapColumnToValue<T> = T extends { __type: 'number' } ? number
+	: T extends { __type: 'text' } ? string
+	: T extends { __type: 'boolean' } ? boolean
+	: T extends { __type: 'date' } ? Date
+	: T extends { __type: 'list' } ? Uint8Array | null
+	: T extends { __type: 'json' } ? Record<string, any> | undefined
+	: T
+
 /**
  * Extracts the row-type from a Sparq instance.
  *
@@ -216,4 +225,6 @@ export function sparq<const TSchema extends Record<string, any>>(
  * type User = Rec<typeof users>  // → { id: number, name: string }
  * ```
  */
-export type Rec<TSchema> = TSchema extends Sparq<infer TRow> ? TRow : never
+export type Rec<TSchema> = TSchema extends Sparq<infer TRow>
+	? { [K in keyof TRow]: MapColumnToValue<TRow[K]> }
+	: never
