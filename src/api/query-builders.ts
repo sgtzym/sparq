@@ -9,6 +9,7 @@ import {
 	type SqlString,
 } from '~core'
 import {
+	_create,
 	_delete,
 	_insert,
 	_select,
@@ -190,6 +191,20 @@ export class Delete extends SqlQueryBuilder {
 		super()
 		this.add(_delete())
 		this.add(from(this.table))
+	}
+}
+
+export class Create extends SqlQueryBuilder {
+	constructor(
+		private readonly table: string,
+		private readonly columnDefs: SqlNode[],
+		private readonly options?: {
+			ifNotExists?: boolean
+			withoutRowid?: boolean
+		},
+	) {
+		super()
+		this.add(_create(this.table, this.columnDefs, this.options))
 	}
 }
 

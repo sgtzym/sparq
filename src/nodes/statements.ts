@@ -84,6 +84,33 @@ export class DeleteNode extends SqlNode {
 	}
 }
 
+export class CreateNode extends SqlNode {
+	override _priority: number = 0
+
+	constructor(
+		private readonly table: SqlNode,
+		private readonly columnDefs: OneOrMany<SqlNode>,
+		private readonly options?: {
+			ifNotExists?: boolean
+			withoutRowid?: boolean
+		},
+	) {
+		super()
+	}
+
+	render(_params: ParameterReg): SqlString {
+		const table: string = this.table.render(_params)
+		const columns: string = castArray(this.columnDefs)
+			.map((col) => col.render(_params))
+			.join(',\n')
+
+		const ifNotExists = this.options?.ifNotExists !== false ? 'IF NOT EXISTS ' : ''
+		const withoutRowid = this.options?.withoutRowid ? ' WITHOUT ROWID' : ''
+
+		return `${sql('CREATE TABLE')} ${ifNotExists}${table} (\n${columns}\n)${withoutRowid};`
+	}
+}
+
 // -> 🏭 Factories
 
 /**
@@ -119,3 +146,20 @@ export const _update = (table: string): SqlNode => new UpdateNode(id(table))
  * Removes records from tables.
  */
 export const _delete = (): SqlNode => new DeleteNode()
+
+/**
+ * Creates a new table.
+ * Specifies the table name and column definitions.
+ *
+ * @param table - Table name
+ * @param columnDefs - Array of ColumnDefNode and TableConstraintNode
+ * @param options - CREATE TABLE options
+ */
+export const _create = (
+	table: string,
+	columnDefs: SqlNode[],
+	options?: {
+		ifNotExists?: boolean
+		withoutRowid?: boolean
+	},
+): SqlNode => new CreateNode(id(table), columnDefs, options)

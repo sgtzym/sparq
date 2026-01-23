@@ -19,6 +19,25 @@ import {
 } from '~api'
 
 // ---------------------------------------------
+// Column Options for Schema Generation
+// ---------------------------------------------
+
+export interface ColumnOptions {
+	/** Column cannot be NULL */
+	notNull?: boolean
+	/** Default value for the column */
+	default?: string | number | boolean | null
+	/** Column is a PRIMARY KEY */
+	primaryKey?: boolean
+	/** Column must be UNIQUE */
+	unique?: boolean
+	/** Auto-increment (only for INTEGER PRIMARY KEY) */
+	autoIncrement?: boolean
+	/** Check constraint */
+	check?: string
+}
+
+// ---------------------------------------------
 // Column API
 // ---------------------------------------------
 
@@ -37,6 +56,7 @@ export class Column<
 		protected readonly _name: TName,
 		protected readonly _table?: string, // Opt. table ref.
 		protected readonly _type?: TType,
+		protected readonly _options?: ColumnOptions,
 	) {
 		super()
 	}
@@ -63,12 +83,46 @@ export class Column<
 		wrapped._node = node
 		return wrapped
 	}
+
+	/** Gets the column name without table prefix */
+	get name(): string {
+		return this._name
+	}
+
+	/** Gets the column's constraint options for schema generation */
+	get options(): ColumnOptions | undefined {
+		return this._options
+	}
+
+	/** Gets the SQL type name for schema generation */
+	get sqlType(): string {
+		return 'TEXT' // Overridden in subclasses
+	}
 }
 
-export class NumberColumn<TName extends string = string> extends Column<TName, number> {}
-export class TextColumn<TName extends string = string> extends Column<TName, string> {}
-export class DateTimeColumn<TName extends string = string> extends Column<TName, Date | string> {}
-export class BooleanColumn<TName extends string = string> extends Column<TName, boolean> {}
+export class NumberColumn<TName extends string = string> extends Column<TName, number> {
+	override get sqlType(): string {
+		return 'INTEGER'
+	}
+}
+
+export class TextColumn<TName extends string = string> extends Column<TName, string> {
+	override get sqlType(): string {
+		return 'TEXT'
+	}
+}
+
+export class DateTimeColumn<TName extends string = string> extends Column<TName, Date | string> {
+	override get sqlType(): string {
+		return 'TEXT' // ISO 8601 TEXT
+	}
+}
+
+export class BooleanColumn<TName extends string = string> extends Column<TName, boolean> {
+	override get sqlType(): string {
+		return 'INTEGER' // 0/1
+	}
+}
 
 applyMixins(Column, [
 	Aggregate,
@@ -144,18 +198,41 @@ export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends 
  * @example
  * ```ts
  * const users = sparq('users', {
- *   id: SqlType.number(),
- *   name: SqlType.text(),
- *   active: SqlType.boolean(),
- *   createdAt: SqlType.date()
+ *   id: column.number({ primaryKey: true, autoIncrement: true }),
+ *   name: column.text({ notNull: true }),
+ *   active: column.boolean({ default: true })
  * })
  * ```
  */
 export const column = {
-	number: (): number => 0,
-	text: (): string => '',
-	boolean: (): boolean => true,
-	date: (): Date => new Date(),
-	list: (): Uint8Array | null => null,
-	json: (): Record<string, any> | undefined => undefined,
+	number: (options?: ColumnOptions): number => {
+		const value = new Number(0) as any
+		if (options) (value as any).__columnOptions = options
+		return value
+	},
+	text: (options?: ColumnOptions): string => {
+		const value = new String('') as any
+		if (options) (value as any).__columnOptions = options
+		return value
+	},
+	boolean: (options?: ColumnOptions): boolean => {
+		const value = new Boolean(true) as any
+		if (options) (value as any).__columnOptions = options
+		return value
+	},
+	date: (options?: ColumnOptions): Date => {
+		const value = new Date()
+		if (options) (value as any).__columnOptions = options
+		return value
+	},
+	list: (options?: ColumnOptions): Uint8Array | null => {
+		const value = {} as any
+		if (options) (value as any).__columnOptions = options
+		return value
+	},
+	json: (options?: ColumnOptions): Record<string, any> | undefined => {
+		const value = {} as any
+		if (options) (value as any).__columnOptions = options
+		return value
+	},
 } as const

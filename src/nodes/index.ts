@@ -1,5 +1,7 @@
 export * from './primitives.ts'
 
+export * from './schema.ts'
+
 export * from './clauses.ts'
 export * from './ctes.ts'
 export * from './expressions.ts'

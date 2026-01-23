@@ -2,7 +2,9 @@ import type { SqlNodeValue, SqlParam } from '~core'
 import {
 	BooleanColumn,
 	Column,
+	type ColumnOptions,
 	type ColumnTypeMapping,
+	Create,
 	DateTimeColumn,
 	Delete,
 	Insert,
@@ -11,7 +13,24 @@ import {
 	TextColumn,
 	Update,
 } from '~api'
-import { id } from '~node'
+import { columnDef, id, tableConstraint } from '~node'
+
+// ---------------------------------------------
+// Schema Generation Options
+// ---------------------------------------------
+
+export interface CreateTableOptions {
+	/** Add IF NOT EXISTS clause (default: true) */
+	ifNotExists?: boolean
+	/** Override primary key (if not defined in columns) */
+	primaryKey?: string | string[]
+	/** Add WITHOUT ROWID optimization */
+	withoutRowid?: boolean
+}
+
+// ---------------------------------------------
+// Sparq Class
+// ---------------------------------------------
 
 /**
  * Type-safe query builder for SQLite tables.
@@ -27,18 +46,20 @@ export class Sparq<T extends Record<string, any>> {
 
 		// Instanciate columns based on schema
 		for (const [name, value] of Object.entries(schema)) {
+			const options = (value as any)?.__columnOptions as ColumnOptions | undefined
+
 			let column: Column<string, SqlParam>
 
 			if (typeof value === 'number') {
-				column = new NumberColumn(name, table)
+				column = new NumberColumn(name, table, value, options)
 			} else if (typeof value === 'string') {
-				column = new TextColumn(name, table)
+				column = new TextColumn(name, table, value, options)
 			} else if (value instanceof Date) {
-				column = new DateTimeColumn(name, table)
+				column = new DateTimeColumn(name, table, value, options)
 			} else if (typeof value === 'boolean') {
-				column = new BooleanColumn(name, table)
+				column = new BooleanColumn(name, table, value, options)
 			} else {
-				column = new Column(name, table)
+				column = new Column(name, table, value, options)
 			}
 
 			;(this._$ as any)[name] = column
@@ -71,6 +92,76 @@ export class Sparq<T extends Record<string, any>> {
 		return new Delete(this.table)
 	}
 
+	/** Creates a table schema. */
+	create(options?: CreateTableOptions): Create {
+		const { ifNotExists = true, primaryKey, withoutRowid = false } = options ?? {}
+
+		const columnDefs: ReturnType<typeof columnDef>[] = []
+		const tableConstraints: ReturnType<typeof tableConstraint>[] = []
+
+		// Build column definitions
+		for (const [name, col] of Object.entries(this._$)) {
+			const column = col as Column
+			const opts = column.options
+			const constraints: string[] = []
+
+			// PRIMARY KEY constraint
+			if (opts?.primaryKey) {
+				constraints.push('PRIMARY KEY')
+				if (opts?.autoIncrement && column.sqlType === 'INTEGER') {
+					constraints.push('AUTOINCREMENT')
+				}
+			}
+
+			// NOT NULL constraint
+			if (opts?.notNull) {
+				constraints.push('NOT NULL')
+			}
+
+			// UNIQUE constraint
+			if (opts?.unique && !opts?.primaryKey) {
+				constraints.push('UNIQUE')
+			}
+
+			// DEFAULT constraint
+			if (opts?.default !== undefined) {
+				const defaultValue = typeof opts.default === 'string'
+					? opts.default.toUpperCase() === 'CURRENT_TIMESTAMP'
+						? 'CURRENT_TIMESTAMP'
+						: `'${opts.default}'`
+					: opts.default === null
+					? 'NULL'
+					: opts.default
+				constraints.push(`DEFAULT ${defaultValue}`)
+			}
+
+			// CHECK constraint
+			if (opts?.check) {
+				constraints.push(`CHECK (${opts.check})`)
+			}
+
+			columnDefs.push(columnDef(name, column.sqlType, constraints))
+		}
+
+		// Add table-level PRIMARY KEY if specified
+		if (primaryKey) {
+			if (Array.isArray(primaryKey)) {
+				tableConstraints.push(tableConstraint(`PRIMARY KEY (${primaryKey.join(', ')})`))
+			} else {
+				// Check if column already has primaryKey option
+				const col = this._$[primaryKey as keyof T] as Column
+				if (!col.options?.primaryKey) {
+					tableConstraints.push(tableConstraint(`PRIMARY KEY (${primaryKey})`))
+				}
+			}
+		}
+
+		return new Create(this.table, [...columnDefs, ...tableConstraints], {
+			ifNotExists,
+			withoutRowid,
+		})
+	}
+
 	get $(): { [P in keyof T]: ColumnTypeMapping<string & P, T[P]> } {
 		return this._$
 	}
@@ -96,9 +187,20 @@ export class Sparq<T extends Record<string, any>> {
  *   .where(users.$.active.eq(true))
  * ```
  */
-export function sparq<T extends Record<string, any>>(
+export function sparq<const TSchema extends Record<string, any>>(
 	tableName: string,
-	schema: T,
-): Sparq<T> {
-	return new Sparq(tableName, schema)
+	schema: TSchema,
+): Sparq<TSchema> {
+	return new Sparq(tableName, schema as any)
 }
+
+/**
+ * Extracts the row-type from a Sparq instance.
+ *
+ * @example
+ * ```ts
+ * const users = sparq('users', { id: column.number(), name: column.text() })
+ * type User = Rec<typeof users>  // → { id: number, name: string }
+ * ```
+ */
+export type Rec<TSchema> = TSchema extends Sparq<infer TRow> ? TRow : never
