@@ -1,1 +1,1 @@
-export { column, sparq } from './src/api/index.ts'
+export { column, type Rec, sparq } from './src/api/index.ts'
