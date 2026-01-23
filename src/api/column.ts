@@ -182,57 +182,43 @@ export interface DateTimeColumn
 		FormatDate<DateTimeColumn>
 {}
 
-export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number
+export type ColumnTypeMapping<K extends string, T> = T extends ColumnDescriptor<'number'>
 	? NumberColumn<K>
-	: T extends string ? TextColumn<K>
-	: T extends Date ? DateTimeColumn<K>
-	: T extends boolean ? BooleanColumn<K>
-	: T extends Record<string, any> ? Column<K, T> // Fallback for JSON
-	: T extends Uint8Array ? Column<K, T>
-	: T extends null ? Column<K, T>
-	: Column<K, T>
+	: T extends ColumnDescriptor<'text'> ? TextColumn<K>
+	: T extends ColumnDescriptor<'date'> ? DateTimeColumn<K>
+	: T extends ColumnDescriptor<'boolean'> ? BooleanColumn<K>
+	: T extends ColumnDescriptor<'list'> ? Column<K, Uint8Array | null>
+	: T extends ColumnDescriptor<'json'> ? Column<K, Record<string, any> | undefined>
+	: Column<K, any>
 
-/**
- * Column type factories for schema definition.
- *
- * @example
- * ```ts
- * const users = sparq('users', {
- *   id: column.number({ primaryKey: true, autoIncrement: true }),
- *   name: column.text({ notNull: true }),
- *   active: column.boolean({ default: true })
- * })
- * ```
- */
+type ColumnDescriptor<T extends string> = {
+	__type: T
+	__options?: ColumnOptions
+}
+
 export const column = {
-	number: (options?: ColumnOptions): number => {
-		const value = new Number(0) as any
-		if (options) (value as any).__columnOptions = options
-		return value
-	},
-	text: (options?: ColumnOptions): string => {
-		const value = new String('') as any
-		if (options) (value as any).__columnOptions = options
-		return value
-	},
-	boolean: (options?: ColumnOptions): boolean => {
-		const value = new Boolean(true) as any
-		if (options) (value as any).__columnOptions = options
-		return value
-	},
-	date: (options?: ColumnOptions): Date => {
-		const value = new Date()
-		if (options) (value as any).__columnOptions = options
-		return value
-	},
-	list: (options?: ColumnOptions): Uint8Array | null => {
-		const value = {} as any
-		if (options) (value as any).__columnOptions = options
-		return value
-	},
-	json: (options?: ColumnOptions): Record<string, any> | undefined => {
-		const value = {} as any
-		if (options) (value as any).__columnOptions = options
-		return value
-	},
+	number: (options?: ColumnOptions): ColumnDescriptor<'number'> => ({
+		__type: 'number',
+		__options: options,
+	}),
+	text: (options?: ColumnOptions): ColumnDescriptor<'text'> => ({
+		__type: 'text',
+		__options: options,
+	}),
+	boolean: (options?: ColumnOptions): ColumnDescriptor<'boolean'> => ({
+		__type: 'boolean',
+		__options: options,
+	}),
+	date: (options?: ColumnOptions): ColumnDescriptor<'date'> => ({
+		__type: 'date',
+		__options: options,
+	}),
+	list: (options?: ColumnOptions): ColumnDescriptor<'list'> => ({
+		__type: 'list',
+		__options: options,
+	}),
+	json: (options?: ColumnOptions): ColumnDescriptor<'json'> => ({
+		__type: 'json',
+		__options: options,
+	}),
 } as const

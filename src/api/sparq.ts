@@ -44,22 +44,35 @@ export class Sparq<T extends Record<string, any>> {
 		this.table = table
 		this._$ = {} as any
 
-		// Instanciate columns based on schema
-		for (const [name, value] of Object.entries(schema)) {
-			const options = (value as any)?.__columnOptions as ColumnOptions | undefined
+		// Instanciate schema based columns
+		for (const [name, descriptor] of Object.entries(schema)) {
+			const options = (descriptor as any)?.__options as ColumnOptions | undefined
+			const type = (descriptor as any)?.__type
 
 			let column: Column<string, SqlParam>
 
-			if (typeof value === 'number') {
-				column = new NumberColumn(name, table, value, options)
-			} else if (typeof value === 'string') {
-				column = new TextColumn(name, table, value, options)
-			} else if (value instanceof Date) {
-				column = new DateTimeColumn(name, table, value, options)
-			} else if (typeof value === 'boolean') {
-				column = new BooleanColumn(name, table, value, options)
-			} else {
-				column = new Column(name, table, value, options)
+			switch (type) {
+				case 'number':
+					column = new NumberColumn(name, table, 0, options)
+					break
+				case 'text':
+					column = new TextColumn(name, table, '', options)
+					break
+				case 'date':
+					column = new DateTimeColumn(name, table, new Date(), options)
+					break
+				case 'boolean':
+					column = new BooleanColumn(name, table, true, options)
+					break
+				case 'list':
+					column = new Column(name, table, null, options)
+					break
+				case 'json':
+					column = new Column(name, table, undefined, options)
+					break
+				default:
+					// Fallback für alte API compatibility
+					column = new Column(name, table, descriptor, options)
 			}
 
 			;(this._$ as any)[name] = column
