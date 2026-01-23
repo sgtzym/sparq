@@ -1,4 +1,4 @@
-import { SQL_KEYWORDS, type SqlSnippet } from '~/core/sql-constants.ts'
+import { SQL_KEYWORDS, type SqlSnippet } from '~core'
 
 /**
  * Union type of all SQL-compatible primitive values.

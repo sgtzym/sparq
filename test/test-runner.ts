@@ -1,12 +1,12 @@
-import { assertEquals } from 'jsr:@std/assert'
-import type { SqlQueryBuilder } from '~/api/query-builders.ts'
-import { type ArrayLike, castArray } from '~/core/utils.ts'
+import { assertEquals } from '@std/assert'
+import { castArray, type OneOrMany } from '~core'
+import type { SqlQueryBuilder } from '~api'
 
 interface TestCase {
 	name: string
 	query: SqlQueryBuilder
 	expected: {
-		sql: ArrayLike<string>
+		sql: OneOrMany<string>
 		params?: readonly unknown[]
 	}
 }

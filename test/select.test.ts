@@ -1,7 +1,5 @@
-import { and, as_, desc, gt, or } from '~/nodes/expressions.ts'
-import { count } from '~/nodes/functions.ts'
-import { test } from '~~/test-runner.ts'
-import { albums, artists, tracks } from '~~/test-data.ts'
+import { and, as_, count, desc, gt, or } from '~node'
+import { albums, artists, test, tracks } from '~test'
 
 const { $: r } = artists
 const { $: l } = albums

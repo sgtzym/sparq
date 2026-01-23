@@ -1,6 +1,11 @@
-import { type ArrayLike, castArray } from '~/core/utils.ts'
-import { isSqlDataType, type SqlDataType, type SqlString } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
+import {
+	castArray,
+	isSqlDataType,
+	type OneOrMany,
+	type ParameterReg,
+	type SqlDataType,
+	type SqlString,
+} from '~core'
 
 // ---------------------------------------------
 // SQL node basics
@@ -95,7 +100,7 @@ export function sortSqlNodes(nodes: SqlNode[]): readonly SqlNode[] {
  * Optionally sorts by priority before rendering.
  */
 export function renderSqlNodes(
-	nodes: ArrayLike<SqlNode>,
+	nodes: OneOrMany<SqlNode>,
 	params: ParameterReg,
 	sort: boolean = false,
 ): string[] {

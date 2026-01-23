@@ -1,8 +1,13 @@
-import type { ArrayLike } from '~/core/utils.ts'
-import { sql, type SqlString } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
-import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
-import { expr, id, raw } from '~/nodes/primitives.ts'
+import {
+	type OneOrMany,
+	type ParameterReg,
+	renderSqlNodes,
+	sql,
+	SqlNode,
+	type SqlNodeValue,
+	type SqlString,
+} from '~core'
+import { expr, id, raw } from '~node'
 
 // ---------------------------------------------
 // Expressions
@@ -48,7 +53,7 @@ export class BinaryNode extends SqlNode {
 export class ConjunctionNode extends SqlNode {
 	constructor(
 		private readonly operator: SqlNode,
-		private readonly conditions: ArrayLike<SqlNode>,
+		private readonly conditions: OneOrMany<SqlNode>,
 		private readonly grouped: boolean = false,
 	) {
 		super()

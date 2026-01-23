@@ -1,8 +1,12 @@
-import type { ArrayLike } from '~/core/utils.ts'
-import type { SqlString } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
-import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
-import { expr, id } from '~/nodes/primitives.ts'
+import {
+	type OneOrMany,
+	type ParameterReg,
+	renderSqlNodes,
+	SqlNode,
+	type SqlNodeValue,
+	type SqlString,
+} from '~core'
+import { expr, id } from '~node'
 
 // ---------------------------------------------
 // Values & Assignments
@@ -27,7 +31,7 @@ export class AssignmentNode extends SqlNode {
 }
 
 export class ValueListNode extends SqlNode {
-	constructor(private readonly values: ArrayLike<SqlNode>) {
+	constructor(private readonly values: OneOrMany<SqlNode>) {
 		super()
 	}
 

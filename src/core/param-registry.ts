@@ -1,4 +1,4 @@
-import type { SqlDataType } from '~/core/sql.ts'
+import type { SqlDataType } from '~core'
 
 // ---------------------------------------------
 // Parameter registry

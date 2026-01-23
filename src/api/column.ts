@@ -1,9 +1,22 @@
-// deno-fmt-ignore-file
-import { applyMixins } from '~/core/mixins.ts'
-import { needsQuoting } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
-import { SqlNode, type SqlParam } from '~/core/sql-node.ts'
-import * as mix from '~/api/mixins-column.ts'
+import { applyMixins, needsQuoting, type ParameterReg, SqlNode, type SqlParam } from '~core'
+import {
+	Aggregate,
+	AggregateArithmetic,
+	Alias,
+	Assign,
+	ComputeByArithmetic,
+	ComputeByMath,
+	ExtractDate,
+	FilterByComparison,
+	FilterByEquality,
+	FilterByInclusion,
+	FilterByNull,
+	FilterByTextPattern,
+	FormatDate,
+	Quantify,
+	Sort,
+	TransformText,
+} from '~api'
 
 // ---------------------------------------------
 // Column API
@@ -15,41 +28,41 @@ import * as mix from '~/api/mixins-column.ts'
  * comparisons, null checks, aliasing, and basic aggregates.
  */
 export class Column<
-    TName extends string = string,
-    TType extends SqlParam = SqlParam,
+	TName extends string = string,
+	TType extends SqlParam = SqlParam,
 > extends SqlNode {
-    protected _node?: SqlNode // Store expr/node for chaining
+	protected _node?: SqlNode // Store expr/node for chaining
 
-    constructor(
-        protected readonly _name: TName,
-        protected readonly _table?: string, // Opt. table ref.
-        protected readonly _type?: TType,
-    ) {
-        super()
-    }
+	constructor(
+		protected readonly _name: TName,
+		protected readonly _table?: string, // Opt. table ref.
+		protected readonly _type?: TType,
+	) {
+		super()
+	}
 
-    render(params: ParameterReg): string {
-        if (this._node) {
-            return this._node.render(params)
-        }
+	render(params: ParameterReg): string {
+		if (this._node) {
+			return this._node.render(params)
+		}
 
-        const identifier = this._table ? `${this._table}.${this._name}` : this._name
+		const identifier = this._table ? `${this._table}.${this._name}` : this._name
 
-        return identifier.split('.')
-            .map((p) => needsQuoting(p) ? `"${p}"` : p)
-            .join('.')
-    }
+		return identifier.split('.')
+			.map((p) => needsQuoting(p) ? `"${p}"` : p)
+			.join('.')
+	}
 
-    /**
-     * Creates a new column instance wrapping the given node.
-     * Immutable chaining: Preserves the column's metadata for method chaining.
-     */
-    protected wrap<T extends Column<TName, TType>>(node: SqlNode): T {
-        // Copies the original constructor and just replaces _node.
-        const wrapped = Object.assign(Object.create(Object.getPrototypeOf(this)), this) as T
-        wrapped._node = node
-        return wrapped
-    }
+	/**
+	 * Creates a new column instance wrapping the given node.
+	 * Immutable chaining: Preserves the column's metadata for method chaining.
+	 */
+	protected wrap<T extends Column<TName, TType>>(node: SqlNode): T {
+		// Copies the original constructor and just replaces _node.
+		const wrapped = Object.assign(Object.create(Object.getPrototypeOf(this)), this) as T
+		wrapped._node = node
+		return wrapped
+	}
 }
 
 export class NumberColumn<TName extends string = string> extends Column<TName, number> {}
@@ -58,67 +71,72 @@ export class DateTimeColumn<TName extends string = string> extends Column<TName,
 export class BooleanColumn<TName extends string = string> extends Column<TName, boolean> {}
 
 applyMixins(Column, [
-    mix.Aggregate,
-    mix.Alias,
-    mix.Assign,
-    mix.FilterByEquality,
-    mix.FilterByInclusion,
-    mix.FilterByNull,
-    mix.Quantify,
-    mix.Sort,
+	Aggregate,
+	Alias,
+	Assign,
+	FilterByEquality,
+	FilterByInclusion,
+	FilterByNull,
+	Quantify,
+	Sort,
 ])
 
 applyMixins(NumberColumn, [
-    mix.AggregateArithmetic,
-    mix.ComputeByArithmetic,
-    mix.ComputeByMath,
-    mix.FilterByComparison,
+	AggregateArithmetic,
+	ComputeByArithmetic,
+	ComputeByMath,
+	FilterByComparison,
 ])
 
 applyMixins(TextColumn, [
-    mix.FilterByTextPattern,
-    mix.TransformText,
+	FilterByTextPattern,
+	TransformText,
 ])
 
 applyMixins(DateTimeColumn, [
-    mix.ExtractDate,
-    mix.FilterByComparison,
-    mix.FormatDate,
+	ExtractDate,
+	FilterByComparison,
+	FormatDate,
 ])
 
-export interface Column extends
-    mix.Aggregate<Column>,
-    mix.Alias<Column>,
-    mix.Assign<Column>,
-    mix.FilterByEquality<Column>,
-    mix.FilterByInclusion<Column>,
-    mix.FilterByNull<Column>,
-    mix.Quantify<Column>,
-    mix.Sort<Column> {}
+export interface Column
+	extends
+		Aggregate<Column>,
+		Alias<Column>,
+		Assign<Column>,
+		FilterByEquality<Column>,
+		FilterByInclusion<Column>,
+		FilterByNull<Column>,
+		Quantify<Column>,
+		Sort<Column>
+{}
 
-export interface NumberColumn extends
-    mix.AggregateArithmetic<NumberColumn>,
-    mix.ComputeByArithmetic<NumberColumn>,
-    mix.ComputeByMath<NumberColumn>,
-    mix.FilterByComparison<NumberColumn> {}
+export interface NumberColumn
+	extends
+		AggregateArithmetic<NumberColumn>,
+		ComputeByArithmetic<NumberColumn>,
+		ComputeByMath<NumberColumn>,
+		FilterByComparison<NumberColumn>
+{}
 
-export interface TextColumn extends
-    mix.FilterByTextPattern<TextColumn>,
-    mix.TransformText<TextColumn> {}
+export interface TextColumn extends FilterByTextPattern<TextColumn>, TransformText<TextColumn> {}
 
-export interface DateTimeColumn extends
-    mix.ExtractDate<DateTimeColumn>,
-    mix.FilterByComparison<DateTimeColumn>,
-    mix.FormatDate<DateTimeColumn> {}
+export interface DateTimeColumn
+	extends
+		ExtractDate<DateTimeColumn>,
+		FilterByComparison<DateTimeColumn>,
+		FormatDate<DateTimeColumn>
+{}
 
-export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number ? NumberColumn<K>
-    : T extends string ? TextColumn<K>
-    : T extends Date ? DateTimeColumn<K>
-    : T extends boolean ? BooleanColumn<K>
-    : T extends Record<string, any> ? Column<K, T> // Fallback for JSON
-    : T extends Uint8Array ? Column<K, T>
-    : T extends null ? Column<K, T>
-    : Column<K, T>
+export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends number
+	? NumberColumn<K>
+	: T extends string ? TextColumn<K>
+	: T extends Date ? DateTimeColumn<K>
+	: T extends boolean ? BooleanColumn<K>
+	: T extends Record<string, any> ? Column<K, T> // Fallback for JSON
+	: T extends Uint8Array ? Column<K, T>
+	: T extends null ? Column<K, T>
+	: Column<K, T>
 
 /**
  * Column type factories for schema definition.
@@ -134,10 +152,10 @@ export type ColumnTypeMapping<K extends string, T extends SqlParam> = T extends 
  * ```
  */
 export const column = {
-    number: (): number => 0,
-    text: (): string => '',
-    boolean: (): boolean => true,
-    date: (): Date => new Date(),
-    list: (): Uint8Array | null => null,
-    json: (): Record<string, any> | undefined => undefined,
+	number: (): number => 0,
+	text: (): string => '',
+	boolean: (): boolean => true,
+	date: (): Date => new Date(),
+	list: (): Uint8Array | null => null,
+	json: (): Record<string, any> | undefined => undefined,
 } as const

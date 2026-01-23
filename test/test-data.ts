@@ -1,5 +1,4 @@
-import { sparq } from '~/api/sparq.ts'
-import { column } from '~/api/column.ts'
+import { column, sparq } from '~api'
 
 export const artists = sparq('artists', {
 	artistId: column.number(),

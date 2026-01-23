@@ -1,8 +1,14 @@
-import type { ArrayLike } from '~/core/utils.ts'
-import { sql, type SqlString } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
-import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
-import { expr, id, raw } from '~/nodes/primitives.ts'
+import {
+	type OneOrMany,
+	type ParameterReg,
+	renderSqlNodes,
+	sql,
+	SqlNode,
+	type SqlNodeValue,
+	type SqlString,
+} from '~core'
+
+import { expr, id, raw } from '~node'
 
 // ---------------------------------------------
 // Clauses
@@ -13,7 +19,7 @@ import { expr, id, raw } from '~/nodes/primitives.ts'
 export class FromNode extends SqlNode {
 	override readonly _priority: number = 1
 
-	constructor(private readonly tables: ArrayLike<SqlNode>) {
+	constructor(private readonly tables: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -51,7 +57,7 @@ export class JoinNode extends SqlNode {
 export class SetNode extends SqlNode {
 	override readonly _priority: number = 2
 
-	constructor(private readonly assignments: ArrayLike<SqlNode>) {
+	constructor(private readonly assignments: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -66,7 +72,7 @@ export class SetNode extends SqlNode {
 export class WhereNode extends SqlNode {
 	override readonly _priority: number = 3
 
-	constructor(private readonly conditions: ArrayLike<SqlNode>) {
+	constructor(private readonly conditions: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -83,7 +89,7 @@ export class WhereNode extends SqlNode {
 export class GroupByNode extends SqlNode {
 	override readonly _priority: number = 4
 
-	constructor(private readonly expr: ArrayLike<SqlNode>) {
+	constructor(private readonly expr: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -97,7 +103,7 @@ export class GroupByNode extends SqlNode {
 export class HavingNode extends SqlNode {
 	override readonly _priority: number = 5
 
-	constructor(private readonly conditions: ArrayLike<SqlNode>) {
+	constructor(private readonly conditions: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -114,7 +120,7 @@ export class HavingNode extends SqlNode {
 export class OrderByNode extends SqlNode {
 	override readonly _priority: number = 6
 
-	constructor(private readonly expr: ArrayLike<SqlNode>) {
+	constructor(private readonly expr: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -182,7 +188,7 @@ export class ValuesNode extends SqlNode {
 export class ReturningNode extends SqlNode {
 	override readonly _priority = 10
 
-	constructor(private readonly columns?: ArrayLike<SqlNode>) {
+	constructor(private readonly columns?: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -199,7 +205,7 @@ export class OnConflictNode extends SqlNode {
 
 	constructor(
 		private readonly action: SqlNode,
-		private readonly targets?: ArrayLike<SqlNode>,
+		private readonly targets?: OneOrMany<SqlNode>,
 	) {
 		super()
 	}
@@ -224,9 +230,9 @@ export class UpsertNode extends SqlNode {
 	override _priority: number = 11
 
 	constructor(
-		private readonly assignments: ArrayLike<SqlNode>,
-		private readonly targets?: ArrayLike<SqlNode>,
-		private readonly conditions?: ArrayLike<SqlNode>,
+		private readonly assignments: OneOrMany<SqlNode>,
+		private readonly targets?: OneOrMany<SqlNode>,
+		private readonly conditions?: OneOrMany<SqlNode>,
 	) {
 		super()
 	}

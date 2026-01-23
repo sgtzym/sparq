@@ -1,7 +1,5 @@
-import { column } from '~/api/column.ts'
-import { sparq } from '~/api/sparq.ts'
-import { test } from '~~/test-runner.ts'
-import { tracks } from '~~/test-data.ts'
+import { column, sparq } from '~api'
+import { test, tracks } from '~test'
 
 const { $: t } = tracks
 

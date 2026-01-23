@@ -1,8 +1,13 @@
-import type { ArrayLike } from '~/core/utils.ts'
-import { sql, type SqlString } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
-import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
-import { expr, raw } from '~/nodes/primitives.ts'
+import {
+	type OneOrMany,
+	type ParameterReg,
+	renderSqlNodes,
+	sql,
+	SqlNode,
+	type SqlNodeValue,
+	type SqlString,
+} from '~core'
+import { expr, raw } from '~node'
 
 // ---------------------------------------------
 // Functions
@@ -13,7 +18,7 @@ import { expr, raw } from '~/nodes/primitives.ts'
 export class FnNode extends SqlNode {
 	constructor(
 		private readonly name: SqlNode,
-		private readonly expr: ArrayLike<SqlNode>,
+		private readonly expr: OneOrMany<SqlNode>,
 	) {
 		super()
 	}

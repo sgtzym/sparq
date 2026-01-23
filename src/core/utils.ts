@@ -2,13 +2,13 @@
  * Represents a value that can be either a single item or an array of items.
  * Use this when a function should accept both formats flexibly.
  */
-export type ArrayLike<T> = T | T[]
+export type OneOrMany<T> = T | T[]
 
 /**
  * Normalizes values to array format.
  * Handles both single values and arrays uniformly.
  */
-export function castArray<T>(value: ArrayLike<T>): T[] {
+export function castArray<T>(value: OneOrMany<T>): T[] {
 	return Array.isArray(value) ? value : [value]
 }
 

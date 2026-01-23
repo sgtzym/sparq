@@ -1,8 +1,16 @@
-import { type ArrayLike, castArray } from '~/core/utils.ts'
-import { sql, type SqlString } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
-import { isSqlNode, renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
-import { expr, id, raw } from '~/nodes/primitives.ts'
+import {
+	castArray,
+	isSqlNode,
+	type OneOrMany,
+	type ParameterReg,
+	renderSqlNodes,
+	sql,
+	SqlNode,
+	type SqlNodeValue,
+	type SqlString,
+} from '~core'
+
+import { expr, id, raw } from '~node'
 
 // ---------------------------------------------
 // Statements
@@ -13,7 +21,7 @@ import { expr, id, raw } from '~/nodes/primitives.ts'
 export class SelectNode extends SqlNode {
 	override _priority: number = 0
 
-	constructor(private readonly columns: ArrayLike<SqlNode>) {
+	constructor(private readonly columns: OneOrMany<SqlNode>) {
 		super()
 	}
 
@@ -31,7 +39,7 @@ export class InsertNode extends SqlNode {
 
 	constructor(
 		private readonly table: SqlNode,
-		private readonly columns: ArrayLike<SqlNode>,
+		private readonly columns: OneOrMany<SqlNode>,
 	) {
 		super()
 	}

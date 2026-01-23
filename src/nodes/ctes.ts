@@ -1,8 +1,13 @@
-import type { ArrayLike } from '~/core/utils.ts'
-import { sql, type SqlString } from '~/core/sql.ts'
-import type { ParameterReg } from '~/core/param-registry.ts'
-import { renderSqlNodes, SqlNode, type SqlNodeValue } from '~/core/sql-node.ts'
-import { expr, id } from '~/nodes/primitives.ts'
+import {
+	type OneOrMany,
+	type ParameterReg,
+	renderSqlNodes,
+	sql,
+	SqlNode,
+	type SqlNodeValue,
+	type SqlString,
+} from '~core'
+import { expr, id } from '~node'
 
 // ---------------------------------------------
 // Common table expressions (CTEs)
@@ -32,7 +37,7 @@ export class WithNode extends SqlNode {
 	override readonly _priority: number = -1
 
 	constructor(
-		private readonly ctes: ArrayLike<CteNode>,
+		private readonly ctes: OneOrMany<CteNode>,
 		private readonly recursive: boolean = false,
 	) {
 		super()

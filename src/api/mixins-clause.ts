@@ -1,6 +1,25 @@
-import type { SqlNodeValue } from '~/core/sql-node.ts'
-import * as clause from '~/nodes/clauses.ts'
-import type { SqlQueryBuilder } from '~/api/query-builders.ts'
+import type { SqlNodeValue } from '~core'
+import {
+	groupBy,
+	having,
+	joinCross,
+	joinInner,
+	joinLeft,
+	joinLeftOuter,
+	limit,
+	offset,
+	onConflictAbort,
+	onConflictFail,
+	onConflictIgnore,
+	onConflictNothing,
+	onConflictReplace,
+	onConflictRollback,
+	onConflictUpdate,
+	orderBy,
+	returning,
+	where,
+} from '~node'
+import type { SqlQueryBuilder } from '~api'
 
 // ---------------------------------------------
 // Clause mixins
@@ -9,40 +28,40 @@ import type { SqlQueryBuilder } from '~/api/query-builders.ts'
 export class Filter<T extends SqlQueryBuilder = SqlQueryBuilder> {
 	/** Filters rows by conditions. */
 	where(this: T, ...conditions: SqlNodeValue[]): T {
-		return this.add(clause.where(...conditions))
+		return this.add(where(...conditions))
 	}
 
 	/** Sorts query results. */
 	orderBy(this: T, ...columns: SqlNodeValue[]): T {
-		return this.add(clause.orderBy(...columns))
+		return this.add(orderBy(...columns))
 	}
 
 	limit(this: T, count: SqlNodeValue): T {
-		return this.add(clause.limit(count))
+		return this.add(limit(count))
 	}
 
 	/** Skips initial rows. */
 	offset(this: T, count: SqlNodeValue): T {
-		return this.add(clause.offset(count))
+		return this.add(offset(count))
 	}
 }
 
 export class Group<T extends SqlQueryBuilder = SqlQueryBuilder> {
 	/** Groups rows for aggregation. */
 	groupBy(this: T, ...columns: SqlNodeValue[]): T {
-		return this.add(clause.groupBy(...columns))
+		return this.add(groupBy(...columns))
 	}
 
 	/** Filters grouped results. */
 	having(this: T, ...conditions: SqlNodeValue[]): T {
-		return this.add(clause.having(...conditions))
+		return this.add(having(...conditions))
 	}
 }
 
 export class Return<T extends SqlQueryBuilder = SqlQueryBuilder> {
 	/** Returns data from affected rows. */
 	returning(this: T, ...columns: SqlNodeValue[]): T {
-		return this.add(clause.returning(...columns))
+		return this.add(returning(...columns))
 	}
 }
 
@@ -57,14 +76,13 @@ export class Join<T extends SqlQueryBuilder = SqlQueryBuilder> {
 
 		return {
 			/** Joins tables with matching rows. */
-			inner: (condition?: SqlNodeValue): T => this.add(clause.joinInner(_table, condition)),
+			inner: (condition?: SqlNodeValue): T => this.add(joinInner(_table, condition)),
 			/** Joins tables keeping all left rows. */
-			left: (condition?: SqlNodeValue): T => this.add(clause.joinLeft(_table, condition)),
+			left: (condition?: SqlNodeValue): T => this.add(joinLeft(_table, condition)),
 			/** Joins tables keeping all left rows (outer). */
-			leftOuter: (condition?: SqlNodeValue): T =>
-				this.add(clause.joinLeftOuter(_table, condition)),
+			leftOuter: (condition?: SqlNodeValue): T => this.add(joinLeftOuter(_table, condition)),
 			/** Creates Cartesian product of tables. */
-			cross: (): T => this.add(clause.joinCross(_table)),
+			cross: (): T => this.add(joinCross(_table)),
 		}
 	}
 }
@@ -81,17 +99,17 @@ export class Resolve<T extends SqlQueryBuilder = SqlQueryBuilder> {
 	} {
 		return {
 			/** Aborts on conflict. */
-			abort: (): T => this.add(clause.onConflictAbort(...targets)),
+			abort: (): T => this.add(onConflictAbort(...targets)),
 			/** Fails on conflict. */
-			fail: (): T => this.add(clause.onConflictFail(...targets)),
+			fail: (): T => this.add(onConflictFail(...targets)),
 			/** Ignores on conflict. */
-			ignore: (): T => this.add(clause.onConflictIgnore(...targets)),
+			ignore: (): T => this.add(onConflictIgnore(...targets)),
 			/** Replaces on conflict. */
-			replace: (): T => this.add(clause.onConflictReplace(...targets)),
+			replace: (): T => this.add(onConflictReplace(...targets)),
 			/**  Rolls back on conflict. */
-			rollback: (): T => this.add(clause.onConflictRollback(...targets)),
+			rollback: (): T => this.add(onConflictRollback(...targets)),
 			/** Does nothing on conflict. */
-			nothing: (): T => this.add(clause.onConflictNothing(...targets)),
+			nothing: (): T => this.add(onConflictNothing(...targets)),
 			/**
 			 * Updates existing rows on conflict (upsert).
 			 *
@@ -104,7 +122,7 @@ export class Resolve<T extends SqlQueryBuilder = SqlQueryBuilder> {
 				...conditions: SqlNodeValue[]
 			): T =>
 				this.add(
-					clause.onConflictUpdate(assignments, targets, conditions),
+					onConflictUpdate(assignments, targets, conditions),
 				),
 		}
 	}

@@ -3,8 +3,11 @@
 	"version": "0.9.7",
 	"license": "MIT",
 	"imports": {
-		"~/": "./src/",
-		"~~/": "./test/"
+		"@std/assert": "jsr:@std/assert@^1.0.17",
+		"~core": "./src/core/index.ts",
+		"~node": "./src/nodes/index.ts",
+		"~api": "./src/api/index.ts",
+		"~test": "./test/index.ts"
 	},
 	"exports": "./mod.ts",
 	"compilerOptions": {
