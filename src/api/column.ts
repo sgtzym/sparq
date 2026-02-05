@@ -36,6 +36,13 @@ export interface ColumnOptions {
 	autoIncrement?: boolean
 	/** Check constraint */
 	check?: string
+	/** Foreign key reference */
+	references?: {
+		table: string
+		column: string
+		onDelete?: 'CASCADE' | 'RESTRICT' | 'SET NULL' | 'NO ACTION'
+		onUpdate?: 'CASCADE' | 'RESTRICT' | 'SET NULL' | 'NO ACTION'
+	}
 }
 
 /**

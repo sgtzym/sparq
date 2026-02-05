@@ -153,6 +153,23 @@ export class Sparq<T extends Record<string, any>> {
 				constraints.push(`CHECK (${opts.check})`)
 			}
 
+			// FOREIGN KEY constraint (inline)
+			if (opts?.references) {
+				const { table, column: refCol, onDelete, onUpdate } = opts.references
+
+				let foreignKey = `REFERENCES ${table}(${refCol})`
+
+				if (onDelete) {
+					foreignKey += ` ON DELETE ${onDelete}`
+				}
+
+				if (onUpdate) {
+					foreignKey += ` ON UPDATE ${onUpdate}`
+				}
+
+				constraints.push(foreignKey)
+			}
+
 			columnDefs.push(columnDef(name, column.sqlType, constraints))
 		}
 
