@@ -225,12 +225,12 @@ export function sparq<const TSchema extends Record<string, any>>(
 }
 
 /** Maps a ColumnDescriptor to its corresponding JavaScript value type. */
-type MapColumnToValue<T> = T extends { __type: 'number' } ? number
-	: T extends { __type: 'text' } ? string
-	: T extends { __type: 'boolean' } ? boolean
-	: T extends { __type: 'date' } ? Date
-	: T extends { __type: 'list' } ? Uint8Array | null
-	: T extends { __type: 'json' } ? Record<string, any> | undefined
+type MapColumnToValue<T> = T extends { type: 'number' } ? number
+	: T extends { type: 'text' } ? string
+	: T extends { type: 'boolean' } ? boolean
+	: T extends { type: 'date' } ? Date
+	: T extends { type: 'list' } ? Uint8Array | null
+	: T extends { type: 'json' } ? Record<string, any> | undefined
 	: T
 
 /**
