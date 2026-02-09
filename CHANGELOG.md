@@ -5,6 +5,12 @@ All notable changes to SPARQ will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.13 - 2026-02-09
+
+### Fixed
+
+- Column descriptor mapping from `__type` to `type`.
+
 ## 0.9.12 - 2026-02-09
 
 ### Added
@@ -14,8 +20,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Columns now render bare names by default instead of table-qualified names. This fixes
-  `"error near '.'"` in UPDATE SET, INSERT, ON CONFLICT and UPSERT statements where SQLite
-  rejects table-qualified column names.
+  `"error near '.'"` in UPDATE SET, INSERT, ON CONFLICT and UPSERT statements where SQLite rejects
+  table-qualified column names.
 - Removed the `InsertNode` workaround that stripped table prefixes by splitting on `.`.
 - Updated README with examples for all query types.
 
