@@ -46,8 +46,8 @@ export class Sparq<T extends Record<string, any>> {
 
 		// Instanciate schema based columns
 		for (const [name, descriptor] of Object.entries(schema)) {
-			const options = (descriptor as any)?.__options as ColumnOptions | undefined
-			const type = (descriptor as any)?.__type
+			const options = (descriptor as any)?.opts as ColumnOptions | undefined
+			const type = (descriptor as any)?.type
 
 			let column: Column<string, SqlParam>
 

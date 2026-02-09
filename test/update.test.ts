@@ -16,9 +16,9 @@ test('SQLite UPDATE', [
                 UPDATE
                     artists
                 SET
-                    artists.name = :p1
+                    name = :p1
                 WHERE
-                    artists.artistId = :p2
+                    artistId = :p2
             `,
 			params: ['AC⚡DC', 1],
 		},
@@ -36,10 +36,10 @@ test('SQLite UPDATE', [
                 UPDATE
                     tracks
                 SET
-                    tracks.unitPrice = :p1,
-                    tracks.composer = :p2
+                    unitPrice = :p1,
+                    composer = :p2
                 WHERE
-                    tracks.trackId = :p3
+                    trackId = :p3
             `,
 			params: [1.29, 'Lennon/McCartney', 1],
 		},
@@ -57,10 +57,10 @@ test('SQLite UPDATE', [
                 UPDATE
                     tracks
                 SET
-                    tracks.unitPrice = tracks.unitPrice * :p1,
-                    tracks.milliseconds = tracks.milliseconds + :p2
+                    unitPrice = unitPrice * :p1,
+                    milliseconds = milliseconds + :p2
                 WHERE
-                    tracks.albumId = :p3
+                    albumId = :p3
             `,
 			params: [1.1, 1000, 1],
 		},
@@ -81,9 +81,9 @@ test('SQLite UPDATE', [
                 UPDATE
                     tracks
                 SET
-                    tracks.unitPrice = :p1
+                    unitPrice = :p1
                 WHERE
-                    tracks.unitPrice > :p2 AND (tracks.genreId = :p3 OR tracks.genreId = :p4)
+                    unitPrice > :p2 AND (genreId = :p3 OR genreId = :p4)
             `,
 			params: [0.99, 1.99, 1, 2],
 		},
@@ -99,11 +99,11 @@ test('SQLite UPDATE', [
                 UPDATE
                     albums
                 SET
-                    albums.title = UPPER(albums.title)
+                    title = UPPER(title)
                 WHERE
-                    albums.artistId = :p1
+                    artistId = :p1
                 RETURNING
-                    albums.albumId, albums.title;
+                    albumId, title;
             `,
 			params: [1],
 		},

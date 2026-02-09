@@ -46,13 +46,7 @@ export class InsertNode extends SqlNode {
 
 	render(params: ParameterReg): SqlString {
 		const table: string = this.table.render(params)
-
-		// Removes table qualified names
-		const cols: string = castArray(this.columns).map((col) => {
-			const rendered = col.render(params)
-			const parts = rendered.split('.')
-			return parts.length > 1 ? parts[parts.length - 1] : rendered
-		}).join(', ')
+		const cols: string = renderSqlNodes(this.columns, params).join(', ')
 
 		return `${sql('INSERT')} ${sql('INTO')} ${table} (${cols})`
 	}

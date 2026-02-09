@@ -24,12 +24,12 @@ test('Core Features', [
                 FROM
                     tracks
                 WHERE
-                    tracks.genreId = :p1 AND
-                    tracks.mediaTypeId = :p1 AND
-                    tracks.unitPrice = :p2 AND
-                    tracks.unitPrice != :p1 AND
-                    tracks.genreId != :p3 AND
-                    tracks.mediaTypeId IN (:p1, :p3, :p4)
+                    genreId = :p1 AND
+                    mediaTypeId = :p1 AND
+                    unitPrice = :p2 AND
+                    unitPrice != :p1 AND
+                    genreId != :p3 AND
+                    mediaTypeId IN (:p1, :p3, :p4)
             `,
 			params: [1, 0.99, 2, 3],
 		},
@@ -57,11 +57,11 @@ test('Core Features', [
 		expected: {
 			sql: `
                 SELECT
-                    "order"."select",
-                    "order"."from",
-                    "order"."where",
-                    "order".normal_column,
-                    "order"."column-with-dash"
+                    "select",
+                    "from",
+                    "where",
+                    normal_column,
+                    "column-with-dash"
                 FROM
                     "order"
             `,
@@ -91,15 +91,15 @@ test('Core Features', [
 		expected: {
 			sql: `
                 SELECT
-                    "user-tracks"."track id",
-                    "user-tracks"."track-name",
-                    "user-tracks"."track:name",
-                    "user-tracks"."123_column",
-                    "user-tracks"."SELECT"
+                    "track id",
+                    "track-name",
+                    "track:name",
+                    "123_column",
+                    "SELECT"
                 FROM
                     "user-tracks"
                 WHERE
-                    "user-tracks"."track id" = :p1
+                    "track id" = :p1
             `,
 			params: [1],
 		},
@@ -178,9 +178,9 @@ test('Core Features', [
                 FROM
                     logs
                 WHERE
-                    logs.timestamp > :p1 AND
-                    logs.timestamp < :p1 AND
-                    logs.timestamp != :p2
+                    timestamp > :p1 AND
+                    timestamp < :p1 AND
+                    timestamp != :p2
             `,
 			params: ['2024-01-01T12:00:00.000Z', '2024-01-02T12:00:00.000Z'],
 		},
@@ -200,7 +200,7 @@ test('Core Features', [
                 FROM
                     tracks
                 WHERE
-                    tracks.genreId IN (:p1, :p2, :p3, :p1, :p2)
+                    genreId IN (:p1, :p2, :p3, :p1, :p2)
             `,
 			params: [1, 2, 3],
 		},
@@ -220,12 +220,12 @@ test('Core Features', [
 		expected: {
 			sql: `
                 SELECT
-                    music.albums.albumId,
-                    music.albums.title
+                    albumId,
+                    title
                 FROM
                     music.albums
                 WHERE
-                    music.albums.albumId = :p1
+                    albumId = :p1
             `,
 			params: [1],
 		},

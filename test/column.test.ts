@@ -17,14 +17,14 @@ test('Column Operations', [
 		expected: {
 			sql: `
                 SELECT
-                    tracks.name
+                    name
                 FROM
                     tracks
                 WHERE
-                    tracks.name LIKE :p1 AND
-                    tracks.name LIKE :p2 AND
-                    tracks.name LIKE :p3 AND
-                    tracks.composer LIKE :p4
+                    name LIKE :p1 AND
+                    name LIKE :p2 AND
+                    name LIKE :p3 AND
+                    composer LIKE :p4
             `,
 			params: ['The%', '%Blues', '%Love%', '%Lennon%McCartney%'],
 		},
@@ -43,11 +43,11 @@ test('Column Operations', [
 		expected: {
 			sql: `
                 SELECT
-                    UPPER(tracks.name) AS TRACK_NAME,
-                    LOWER(tracks.name) AS track_name,
-                    LENGTH(tracks.name) AS name_length,
-                    TRIM(tracks.composer) AS composer_clean,
-                    SUBSTR(tracks.name, :p1, :p2) AS preview
+                    UPPER(name) AS TRACK_NAME,
+                    LOWER(name) AS track_name,
+                    LENGTH(name) AS name_length,
+                    TRIM(composer) AS composer_clean,
+                    SUBSTR(name, :p1, :p2) AS preview
                 FROM
                     tracks
                 LIMIT :p1
@@ -70,12 +70,12 @@ test('Column Operations', [
 		expected: {
 			sql: `
                 SELECT
-                    ABS(tracks.unitPrice) AS absolute,
-                    SQRT(tracks.bytes) AS bytes_sqrt,
-                    MOD(tracks.milliseconds, :p1) AS millis_remainder,
-                    POWER(tracks.unitPrice, :p2) AS price_squared,
-                    CEIL(tracks.unitPrice) AS price_ceil,
-                    FLOOR(tracks.unitPrice) AS price_floor
+                    ABS(unitPrice) AS absolute,
+                    SQRT(bytes) AS bytes_sqrt,
+                    MOD(milliseconds, :p1) AS millis_remainder,
+                    POWER(unitPrice, :p2) AS price_squared,
+                    CEIL(unitPrice) AS price_ceil,
+                    FLOOR(unitPrice) AS price_floor
                 FROM
                     tracks
                 LIMIT :p3
@@ -98,16 +98,16 @@ test('Column Operations', [
 		expected: {
 			sql: `
                 SELECT
-                    COUNT(tracks.trackId) AS total_tracks,
-                    SUM(tracks.milliseconds) AS total_time,
-                    AVG(tracks.milliseconds) AS avg_duration,
-                    MAX(tracks.unitPrice) AS max_price,
-                    MIN(tracks.unitPrice) AS min_price,
-                    SUM(tracks.bytes) / :p1 AS total_gb
+                    COUNT(trackId) AS total_tracks,
+                    SUM(milliseconds) AS total_time,
+                    AVG(milliseconds) AS avg_duration,
+                    MAX(unitPrice) AS max_price,
+                    MIN(unitPrice) AS min_price,
+                    SUM(bytes) / :p1 AS total_gb
                 FROM
                     tracks
                 WHERE
-                    tracks.unitPrice > :p2
+                    unitPrice > :p2
             `,
 			params: [1073741824, 0],
 		},
@@ -126,15 +126,15 @@ test('Column Operations', [
 		expected: {
 			sql: `
                 SELECT
-                    STRFTIME(:p1, albums.releaseDate) AS release_year,
-                    STRFTIME(:p2, albums.releaseDate) AS release_month,
-                    STRFTIME(:p3, albums.releaseDate) AS release_day,
-                    STRFTIME(:p4, albums.releaseDate) AS formatted_date,
-                    STRFTIME(:p5, albums.releaseDate) AS week_number
+                    STRFTIME(:p1, releaseDate) AS release_year,
+                    STRFTIME(:p2, releaseDate) AS release_month,
+                    STRFTIME(:p3, releaseDate) AS release_day,
+                    STRFTIME(:p4, releaseDate) AS formatted_date,
+                    STRFTIME(:p5, releaseDate) AS week_number
                 FROM
                     albums
                 WHERE
-                    albums.albumId = :p6
+                    albumId = :p6
             `,
 			params: ['%Y', '%m', '%d', '%Y-%m-%d', '%W', 1],
 		},
@@ -153,12 +153,12 @@ test('Column Operations', [
 		expected: {
 			sql: `
                 SELECT
-                    albums.title
+                    title
                 FROM
                     albums
                 WHERE
-                    albums.releaseDate > :p1 AND
-                    albums.releaseDate BETWEEN :p1 AND :p2
+                    releaseDate > :p1 AND
+                    releaseDate BETWEEN :p1 AND :p2
             `,
 			params: ['2000-01-01T00:00:00.000Z', '2020-12-31T00:00:00.000Z'],
 		},
@@ -173,8 +173,8 @@ test('Column Operations', [
 		expected: {
 			sql: `
                 SELECT
-                    DISTINCT tracks.composer AS unique_composers,
-                    COUNT(DISTINCT tracks.unitPrice) AS price_variations
+                    DISTINCT composer AS unique_composers,
+                    COUNT(DISTINCT unitPrice) AS price_variations
                 FROM
                     tracks
             `,

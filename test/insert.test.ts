@@ -135,7 +135,7 @@ test('SQLite INSERT', [
                 VALUES
                     (:p1, :p2, :p1)
                 ON CONFLICT (albumId)
-                DO UPDATE SET albums.title = :p3
+                DO UPDATE SET title = :p3
             `,
 			params: [
 				1,
@@ -158,8 +158,8 @@ test('SQLite INSERT', [
                 VALUES
                     (:p1)
                 RETURNING
-                    artists.artistId,
-                    artists.name;
+                    artistId,
+                    name;
             `,
 			params: ['Radiohead'],
 		},

@@ -14,13 +14,13 @@ test('SQLite SELECT', [
 		expected: {
 			sql: `
                 SELECT
-                    tracks.name,
-                    tracks.milliseconds,
-                    tracks.unitPrice
+                    name,
+                    milliseconds,
+                    unitPrice
                 FROM
                     tracks
                 WHERE
-                    tracks.albumId = :p1
+                    albumId = :p1
             `,
 			params: [1],
 		},
@@ -37,14 +37,14 @@ test('SQLite SELECT', [
 		expected: {
 			sql: `
                 SELECT
-                    tracks.name,
-                    tracks.composer
+                    name,
+                    composer
                 FROM
                     tracks
                 WHERE
-                    tracks.milliseconds > :p1
-                    AND tracks.unitPrice BETWEEN :p2 AND :p3
-                    AND tracks.composer IS NOT NULL
+                    milliseconds > :p1
+                    AND unitPrice BETWEEN :p2 AND :p3
+                    AND composer IS NOT NULL
             `,
 			params: [200000, 0.99, 1.99],
 		},
@@ -69,14 +69,14 @@ test('SQLite SELECT', [
 		expected: {
 			sql: `
                 SELECT
-                    tracks.trackId,
-                    tracks.name
+                    trackId,
+                    name
                 FROM
                     tracks
                 WHERE
-                    ((tracks.genreId = :p1 AND tracks.milliseconds < :p2)
-                    OR (tracks.genreId = :p3 AND tracks.milliseconds > :p4))
-                    AND tracks.unitPrice >= :p5
+                    ((genreId = :p1 AND milliseconds < :p2)
+                    OR (genreId = :p3 AND milliseconds > :p4))
+                    AND unitPrice >= :p5
             `,
 			params: [1, 180000, 2, 300000, 0.99],
 		},
@@ -84,9 +84,9 @@ test('SQLite SELECT', [
 	{
 		name: 'with INNER JOIN',
 		query: albums
-			.select(l.title, r.name.as('artist'))
-			.join(artists).inner(r.artistId.eq(l.artistId))
-			.where(r.name.like('The%')),
+			.select(l.title.q, r.name.q.as('artist'))
+			.join(artists).inner(r.artistId.q.eq(l.artistId.q))
+			.where(r.name.q.like('The%')),
 		expected: {
 			sql: `
                 SELECT
@@ -103,9 +103,9 @@ test('SQLite SELECT', [
 	{
 		name: 'with LEFT JOIN and NULL check',
 		query: albums
-			.select(l.albumId, l.title, r.name)
-			.join(artists).left(r.artistId.eq(l.artistId))
-			.where(r.name.isNull()),
+			.select(l.albumId.q, l.title.q, r.name.q)
+			.join(artists).left(r.artistId.q.eq(l.artistId.q))
+			.where(r.name.q.isNull()),
 		expected: {
 			sql: `
                 SELECT
@@ -123,14 +123,14 @@ test('SQLite SELECT', [
 		name: 'with multi-table JOIN',
 		query: tracks
 			.select(
-				t.name.as('track'),
-				l.title.as('album'),
-				r.name.as('artist'),
+				t.name.q.as('track'),
+				l.title.q.as('album'),
+				r.name.q.as('artist'),
 			)
-			.join(albums).inner(l.albumId.eq(t.albumId))
-			.join(artists).inner(r.artistId.eq(l.artistId))
-			.where(t.unitPrice.gt(0.99))
-			.orderBy(r.name.asc(), l.title.asc(), t.trackId.asc())
+			.join(albums).inner(l.albumId.q.eq(t.albumId.q))
+			.join(artists).inner(r.artistId.q.eq(l.artistId.q))
+			.where(t.unitPrice.q.gt(0.99))
+			.orderBy(r.name.q.asc(), l.title.q.asc(), t.trackId.q.asc())
 			.limit(10),
 		expected: {
 			sql: `
@@ -166,16 +166,16 @@ test('SQLite SELECT', [
 		expected: {
 			sql: `
                 SELECT
-                    albums.artistId,
-                    COUNT(albums.artistId) AS album_count
+                    artistId,
+                    COUNT(artistId) AS album_count
                 FROM
                     albums
                 GROUP BY
-                    albums.artistId
+                    artistId
                 HAVING
-                    COUNT(albums.artistId) > :p1
+                    COUNT(artistId) > :p1
                 ORDER BY
-                    COUNT(albums.artistId) DESC
+                    COUNT(artistId) DESC
             `,
 			params: [5],
 		},
@@ -193,14 +193,14 @@ test('SQLite SELECT', [
 		expected: {
 			sql: `
                 SELECT
-                    tracks.name,
-                    tracks.milliseconds / :p1 AS seconds,
-                    tracks.bytes / :p2 AS megabytes,
-                    tracks.unitPrice * :p3 AS price_with_tax
+                    name,
+                    milliseconds / :p1 AS seconds,
+                    bytes / :p2 AS megabytes,
+                    unitPrice * :p3 AS price_with_tax
                 FROM
                     tracks
                 WHERE
-                    tracks.albumId = :p4
+                    albumId = :p4
             `,
 			params: [1000, 1048576, 1.1, 1],
 		},
@@ -216,12 +216,12 @@ test('SQLite SELECT', [
 		expected: {
 			sql: `
                 SELECT
-                    tracks.name,
-                    tracks.unitPrice
+                    name,
+                    unitPrice
                 FROM
                     tracks
                 WHERE
-                    tracks.unitPrice > (SELECT AVG(tracks.unitPrice) FROM tracks)
+                    unitPrice > (SELECT AVG(unitPrice) FROM tracks)
             `,
 		},
 	},
@@ -240,13 +240,13 @@ test('SQLite SELECT', [
 		expected: {
 			sql: `
                 WITH
-                    long_tracks AS (SELECT tracks.albumId, tracks.name FROM tracks WHERE tracks.milliseconds > :p1)
+                    long_tracks AS (SELECT albumId, name FROM tracks WHERE milliseconds > :p1)
                 SELECT
-                    albums.title
+                    title
                 FROM
                     albums
                 WHERE
-                    albums.albumId IN (:p2, :p3, :p4)
+                    albumId IN (:p2, :p3, :p4)
             `,
 			params: [300000, 1, 2, 3],
 		},

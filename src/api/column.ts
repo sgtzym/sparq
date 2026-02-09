@@ -55,6 +55,7 @@ export class Column<
 	TType extends SqlParam = SqlParam,
 > extends SqlNode {
 	protected _node?: SqlNode // Store expr/node for chaining
+	protected _qualified = false
 
 	constructor(
 		protected readonly _name: TName,
@@ -70,7 +71,9 @@ export class Column<
 			return this._node.render(params)
 		}
 
-		const identifier = this._table ? `${this._table}.${this._name}` : this._name
+		const identifier = this._qualified && this._table
+			? `${this._table}.${this._name}`
+			: this._name
 
 		return identifier.split('.')
 			.map((p) => needsQuoting(p) ? `"${p}"` : p)
@@ -86,6 +89,16 @@ export class Column<
 		const wrapped = Object.assign(Object.create(Object.getPrototypeOf(this)), this) as T
 		wrapped._node = node
 		return wrapped
+	}
+
+	/**
+	 * Returns a table-qualified version of this column (e.g. `table.column`).
+	 * Use in JOINs to disambiguate columns from different tables.
+	 */
+	get q(): this {
+		const qualified = Object.assign(Object.create(Object.getPrototypeOf(this)), this)
+		qualified._qualified = true
+		return qualified
 	}
 
 	/** Gets the column name without table prefix */
@@ -200,35 +213,32 @@ export type ColumnTypeMapping<K extends string, T> = T extends ColumnDescriptor<
 	: T extends ColumnDescriptor<'json'> ? Column<K, Record<string, any> | undefined>
 	: Column<K, any>
 
-type ColumnDescriptor<T extends string> = {
-	__type: T
-	__options?: ColumnOptions
-}
+type ColumnDescriptor<T extends string> = { type: T; opts?: ColumnOptions }
 
 /** Column API interface */
 export const column = {
 	number: (options?: ColumnOptions): ColumnDescriptor<'number'> => ({
-		__type: 'number',
-		__options: options,
+		type: 'number',
+		opts: options,
 	}),
 	text: (options?: ColumnOptions): ColumnDescriptor<'text'> => ({
-		__type: 'text',
-		__options: options,
+		type: 'text',
+		opts: options,
 	}),
 	boolean: (options?: ColumnOptions): ColumnDescriptor<'boolean'> => ({
-		__type: 'boolean',
-		__options: options,
+		type: 'boolean',
+		opts: options,
 	}),
 	date: (options?: ColumnOptions): ColumnDescriptor<'date'> => ({
-		__type: 'date',
-		__options: options,
+		type: 'date',
+		opts: options,
 	}),
 	list: (options?: ColumnOptions): ColumnDescriptor<'list'> => ({
-		__type: 'list',
-		__options: options,
+		type: 'list',
+		opts: options,
 	}),
 	json: (options?: ColumnOptions): ColumnDescriptor<'json'> => ({
-		__type: 'json',
-		__options: options,
+		type: 'json',
+		opts: options,
 	}),
 } as const

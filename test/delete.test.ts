@@ -16,7 +16,7 @@ test('DELETE Operations', [
                 DELETE FROM
                     tracks
                 WHERE
-                    tracks.trackId = :p1
+                    trackId = :p1
             `,
 			params: [1],
 		},
@@ -34,7 +34,7 @@ test('DELETE Operations', [
                 DELETE FROM
                     tracks
                 WHERE
-                    tracks.albumId = :p1 AND tracks.milliseconds < :p2
+                    albumId = :p1 AND milliseconds < :p2
             `,
 			params: [1, 180000],
 		},
@@ -55,7 +55,7 @@ test('DELETE Operations', [
                 DELETE FROM
                     albums
                 WHERE
-                    (albums.title LIKE :p1 OR albums.title LIKE :p2 OR albums.artistId IS NULL)
+                    (title LIKE :p1 OR title LIKE :p2 OR artistId IS NULL)
             `,
 			params: ['%Demo%', '%Test%'],
 		},
@@ -72,9 +72,9 @@ test('DELETE Operations', [
                 DELETE FROM
                     tracks
                 WHERE
-                    tracks.unitPrice = :p1
+                    unitPrice = :p1
                 ORDER BY
-                    tracks.trackId ASC
+                    trackId ASC
                 LIMIT :p2
             `,
 			params: [0, 100],
@@ -91,7 +91,7 @@ test('DELETE Operations', [
                 DELETE FROM
                     artists
                 WHERE
-                    artists.name LIKE :p1
+                    name LIKE :p1
                 RETURNING *;
             `,
 			params: ['Test%'],
