@@ -224,24 +224,24 @@ export function sparq<const TSchema extends Record<string, any>>(
 	return new Sparq(tableName, schema as any)
 }
 
+type IsRequired<O> = O extends { notNull: true } | { primaryKey: true } ? true : false
+
+// deno-fmt-ignore
 /** Maps a ColumnDescriptor to its corresponding JavaScript value type. */
-type MapColumnToValue<T> = T extends { type: 'number' } ? number
-	: T extends { type: 'text' } ? string
-	: T extends { type: 'boolean' } ? boolean
-	: T extends { type: 'date' } ? Date
-	: T extends { type: 'list' } ? Uint8Array | null
+type MapColumnToValue<T> = 
+	  T extends { type: 'number'; opts: infer O }
+		? IsRequired<O> extends true ? number : number | undefined
+	: T extends { type: 'text'; opts: infer O }
+		? IsRequired<O> extends true ? string : string | undefined
+	: T extends { type: 'boolean'; opts: infer O }
+		? IsRequired<O> extends true ? boolean : boolean | undefined
+	: T extends { type: 'date'; opts: infer O }
+		? IsRequired<O> extends true ? Date : Date | undefined
+	: T extends { type: 'list' } ? Uint8Array | undefined
 	: T extends { type: 'json' } ? Record<string, any> | undefined
 	: T
 
-/**
- * Extracts the row-type from a Sparq instance.
- *
- * @example
- * ```ts
- * const users = sparq('users', { id: column.number(), name: column.text() })
- * type User = Rec<typeof users>  // → { id: number, name: string }
- * ```
- */
-export type Rec<TSchema> = TSchema extends Sparq<infer TRow>
+/** Infers the row type from a Sparq schema */
+export type Infer<TSchema> = TSchema extends Sparq<infer TRow>
 	? { [K in keyof TRow]: MapColumnToValue<TRow[K]> }
 	: never

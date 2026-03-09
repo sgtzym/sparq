@@ -28,22 +28,22 @@ deno add jsr:@sgtzym/sparq
 ### Define Schemas
 
 ```ts
-import { sparq, column, type Rec } from '@sgtzym/sparq'
+import { column, type Infer, sparq } from '@sgtzym/sparq'
 
 const artists = sparq('artists', {
-    id: column.number({ primaryKey: true, autoIncrement: true }),
-    name: column.text({ notNull: true }),
+	id: column.number({ primaryKey: true, autoIncrement: true }),
+	name: column.text({ notNull: true }),
 })
 
 const albums = sparq('albums', {
-    id: column.number({ primaryKey: true, autoIncrement: true }),
-    title: column.text({ notNull: true }),
-    artistId: column.number({ references: { table: 'artists', column: 'id' } }),
+	id: column.number({ primaryKey: true, autoIncrement: true }),
+	title: column.text({ notNull: true }),
+	artistId: column.number({ references: { table: 'artists', column: 'id' } }),
 })
 
 // Extract row types from schemas
-type Artist = Rec<typeof artists>  // { id: number, name: string }
-type Album = Rec<typeof albums>    // { id: number, title: string, artistId: number }
+type Artist = Infer<typeof artists> // { id: number, name: string }
+type Album = Infer<typeof albums> // { id: number, title: string, artistId: number }
 ```
 
 ### SELECT
@@ -52,12 +52,12 @@ type Album = Rec<typeof albums>    // { id: number, title: string, artistId: num
 const { $: a } = albums
 
 const query = albums
-    .select(a.title, a.artistId)
-    .where(a.artistId.eq(1))
-    .orderBy(a.title.asc())
-    .limit(10)
+	.select(a.title, a.artistId)
+	.where(a.artistId.eq(1))
+	.orderBy(a.title.asc())
+	.limit(10)
 
-query.sql    // SELECT title, artistId FROM albums WHERE artistId = :p1 ORDER BY title ASC LIMIT :p2
+query.sql // SELECT title, artistId FROM albums WHERE artistId = :p1 ORDER BY title ASC LIMIT :p2
 query.params // [1, 10]
 ```
 
@@ -65,11 +65,11 @@ query.params // [1, 10]
 
 ```ts
 const query = artists
-    .insert('name')
-    .values('Daft Punk')
-    .values('Radiohead')
+	.insert('name')
+	.values('Daft Punk')
+	.values('Radiohead')
 
-query.sql    // INSERT INTO artists (name) VALUES (:p1), (:p2)
+query.sql // INSERT INTO artists (name) VALUES (:p1), (:p2)
 query.params // ['Daft Punk', 'Radiohead']
 ```
 
@@ -79,10 +79,10 @@ query.params // ['Daft Punk', 'Radiohead']
 const { $: a } = artists
 
 const query = artists
-    .update([a.name.to('AC/DC')])
-    .where(a.id.eq(1))
+	.update([a.name.to('AC/DC')])
+	.where(a.id.eq(1))
 
-query.sql    // UPDATE artists SET name = :p1 WHERE id = :p2
+query.sql // UPDATE artists SET name = :p1 WHERE id = :p2
 query.params // ['AC/DC', 1]
 ```
 
@@ -92,10 +92,10 @@ query.params // ['AC/DC', 1]
 const { $: a } = artists
 
 const query = artists
-    .delete()
-    .where(a.id.eq(1))
+	.delete()
+	.where(a.id.eq(1))
 
-query.sql    // DELETE FROM artists WHERE id = :p1
+query.sql // DELETE FROM artists WHERE id = :p1
 query.params // [1]
 ```
 
@@ -108,12 +108,12 @@ const { $: r } = artists
 const { $: l } = albums
 
 const query = albums
-    .select(
-        l.title.q,
-        r.name.q.as('artist'),
-    )
-    .join(artists).inner(r.id.q.eq(l.artistId.q))
-    .where(r.name.q.like('The%'))
+	.select(
+		l.title.q,
+		r.name.q.as('artist'),
+	)
+	.join(artists).inner(r.id.q.eq(l.artistId.q))
+	.where(r.name.q.like('The%'))
 
 query.sql
 // SELECT albums.title, artists.name AS artist
@@ -129,22 +129,22 @@ query.params // ['The%']
 const { $: t } = tracks
 
 // Text
-t.name.upper()                  // UPPER(name)
-t.name.startsWith('The')       // name LIKE 'The%'
-t.name.substr(1, 10)           // SUBSTR(name, 1, 10)
+t.name.upper() // UPPER(name)
+t.name.startsWith('The') // name LIKE 'The%'
+t.name.substr(1, 10) // SUBSTR(name, 1, 10)
 
 // Numbers
-t.price.mul(1.1)               // price * 1.1
-t.price.between(5, 20)         // price BETWEEN 5 AND 20
-t.price.avg().as('avg_price')  // AVG(price) AS avg_price
+t.price.mul(1.1) // price * 1.1
+t.price.between(5, 20) // price BETWEEN 5 AND 20
+t.price.avg().as('avg_price') // AVG(price) AS avg_price
 
 // Dates
-t.createdAt.year()             // STRFTIME('%Y', createdAt)
-t.createdAt.gt(someDate)       // createdAt > :p1
+t.createdAt.year() // STRFTIME('%Y', createdAt)
+t.createdAt.gt(someDate) // createdAt > :p1
 
 // Aggregation
-t.id.count().as('total')       // COUNT(id) AS total
-t.price.sum().as('revenue')    // SUM(price) AS revenue
+t.id.count().as('total') // COUNT(id) AS total
+t.price.sum().as('revenue') // SUM(price) AS revenue
 ```
 
 ### Upsert
@@ -153,11 +153,11 @@ t.price.sum().as('revenue')    // SUM(price) AS revenue
 const { $: a } = albums
 
 const query = albums
-    .insert('id', 'title', 'artistId')
-    .values(1, 'Updated Title', 1)
-    .conflict('id').upsert([
-        a.title.to('Updated Title'),
-    ])
+	.insert('id', 'title', 'artistId')
+	.values(1, 'Updated Title', 1)
+	.conflict('id').upsert([
+		a.title.to('Updated Title'),
+	])
 
 query.sql
 // INSERT INTO albums (id, title, artistId) VALUES (:p1, :p2, :p1)

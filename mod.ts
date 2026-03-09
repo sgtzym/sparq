@@ -7,27 +7,22 @@ export {
 } from './src/core/sql-node.ts'
 
 export {
-	column,
-	type Column,
-	type NumberColumn,
-	type TextColumn,
-	type DateTimeColumn,
 	type BooleanColumn,
+	type Column,
+	column,
 	type ColumnOptions,
 	type ColumnTypeMapping,
+	type DateTimeColumn,
+	type NumberColumn,
+	type TextColumn,
 } from './src/api/column.ts'
 
 export {
-	type Select,
-	type Insert,
-	type Update,
-	type Delete,
 	type Create,
+	type Delete,
+	type Insert,
+	type Select,
+	type Update,
 } from './src/api/query-builders.ts'
 
-export {
-	type CreateTableOptions,
-	type Rec,
-	type Sparq,
-	sparq,
-} from './src/api/sparq.ts'
+export { type CreateTableOptions, type Infer, type Sparq, sparq } from './src/api/sparq.ts'
