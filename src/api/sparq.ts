@@ -229,13 +229,13 @@ type IsRequired<O> = O extends { notNull: true } | { primaryKey: true } ? true :
 // deno-fmt-ignore
 /** Maps a ColumnDescriptor to its corresponding JavaScript value type. */
 type MapColumnToValue<T> = 
-	  T extends { type: 'number'; opts: infer O }
+	  T extends { type: 'number'; opts?: infer O }
 		? IsRequired<O> extends true ? number : number | undefined
-	: T extends { type: 'text'; opts: infer O }
+	: T extends { type: 'text'; opts?: infer O }
 		? IsRequired<O> extends true ? string : string | undefined
-	: T extends { type: 'boolean'; opts: infer O }
+	: T extends { type: 'boolean'; opts?: infer O }
 		? IsRequired<O> extends true ? boolean : boolean | undefined
-	: T extends { type: 'date'; opts: infer O }
+	: T extends { type: 'date'; opts?: infer O }
 		? IsRequired<O> extends true ? Date : Date | undefined
 	: T extends { type: 'list' } ? Uint8Array | undefined
 	: T extends { type: 'json' } ? Record<string, any> | undefined
