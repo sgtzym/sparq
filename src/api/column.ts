@@ -204,40 +204,43 @@ export interface DateTimeColumn
 {}
 
 /** Maps column types to primitives. */
-export type ColumnTypeMapping<K extends string, T> = T extends ColumnDescriptor<'number'>
+export type ColumnTypeMapping<K extends string, T> = T extends ColumnDescriptor<'number', any>
 	? NumberColumn<K>
-	: T extends ColumnDescriptor<'text'> ? TextColumn<K>
-	: T extends ColumnDescriptor<'date'> ? DateTimeColumn<K>
-	: T extends ColumnDescriptor<'boolean'> ? BooleanColumn<K>
-	: T extends ColumnDescriptor<'list'> ? Column<K, Uint8Array | null>
-	: T extends ColumnDescriptor<'json'> ? Column<K, Record<string, any> | undefined>
+	: T extends ColumnDescriptor<'text', any> ? TextColumn<K>
+	: T extends ColumnDescriptor<'date', any> ? DateTimeColumn<K>
+	: T extends ColumnDescriptor<'boolean', any> ? BooleanColumn<K>
+	: T extends ColumnDescriptor<'list', any> ? Column<K, Uint8Array | null>
+	: T extends ColumnDescriptor<'json', any> ? Column<K, Record<string, any> | undefined>
 	: Column<K, any>
 
-type ColumnDescriptor<T extends string> = { type: T; opts?: ColumnOptions }
+type ColumnDescriptor<T extends string, O extends ColumnOptions = ColumnOptions> = {
+	type: T
+	opts?: O
+}
 
 /** Column API interface */
 export const column = {
-	number: (options?: ColumnOptions): ColumnDescriptor<'number'> => ({
+	number: <O extends ColumnOptions>(options?: O): ColumnDescriptor<'number', O> => ({
 		type: 'number',
 		opts: options,
 	}),
-	text: (options?: ColumnOptions): ColumnDescriptor<'text'> => ({
+	text: <O extends ColumnOptions>(options?: O): ColumnDescriptor<'text', O> => ({
 		type: 'text',
 		opts: options,
 	}),
-	boolean: (options?: ColumnOptions): ColumnDescriptor<'boolean'> => ({
+	boolean: <O extends ColumnOptions>(options?: O): ColumnDescriptor<'boolean', O> => ({
 		type: 'boolean',
 		opts: options,
 	}),
-	date: (options?: ColumnOptions): ColumnDescriptor<'date'> => ({
+	date: <O extends ColumnOptions>(options?: O): ColumnDescriptor<'date', O> => ({
 		type: 'date',
 		opts: options,
 	}),
-	list: (options?: ColumnOptions): ColumnDescriptor<'list'> => ({
+	list: <O extends ColumnOptions>(options?: O): ColumnDescriptor<'list', O> => ({
 		type: 'list',
 		opts: options,
 	}),
-	json: (options?: ColumnOptions): ColumnDescriptor<'json'> => ({
+	json: <O extends ColumnOptions>(options?: O): ColumnDescriptor<'json', O> => ({
 		type: 'json',
 		opts: options,
 	}),
