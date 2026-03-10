@@ -25,15 +25,15 @@ import {
 /** Column Options for Schema Generation */
 export interface ColumnOptions {
 	/** Column cannot be NULL */
-	notNull?: boolean
+	notNull?: true
 	/** Default value for the column */
 	default?: string | number | boolean | null
 	/** Column is a PRIMARY KEY */
-	primaryKey?: boolean
+	primaryKey?: true
 	/** Column must be UNIQUE */
-	unique?: boolean
+	unique?: true
 	/** Auto-increment (only for INTEGER PRIMARY KEY) */
-	autoIncrement?: boolean
+	autoIncrement?: true
 	/** Check constraint */
 	check?: string
 	/** Foreign key reference */
